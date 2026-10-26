@@ -10,6 +10,7 @@ baseline wherever the operating systems permit it.
 - Game contains orders and control groups; Options contains zoom and joystick tuning.
 - Stack controls vertically in portrait and arrange them in side-by-side columns
   in landscape. Keep dragging, collapsing, safe-area bounds and overflow scrolling.
+- Rotation and window resizing (including Duo folding/unfolding) collapse the controller back to its floating icon, retaining the selected tab.
 - Physical-device tab and rotation verification remains pending.
 
 ## 0.4.7 — 2026-10-25

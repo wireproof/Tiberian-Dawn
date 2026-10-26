@@ -84,6 +84,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @end
 
 @interface WPOrdersPanel : UIView
+@property(nonatomic) NSInteger layoutOrientation;
+@property(nonatomic) CGSize lastWindowSize;
 @property(nonatomic,strong) UISegmentedControl *tabs;
 @property(nonatomic,strong) UIStackView *gamePage;
 @property(nonatomic,strong) UIStackView *optionsPage;
@@ -389,6 +391,15 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.zoomMinus.enabled=quarters>2; self.zoomPlus.enabled=quarters<12;
     self.hidden=!s.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
     if (self.hidden) {WPOrders::Shared().hold_pan(false);WPOrders::Shared().setStick(0,0);}
+    if(self.window) {
+        NSInteger orientation=self.window.windowScene.interfaceOrientation;
+        if(!orientation)orientation=self.window.bounds.size.width>self.window.bounds.size.height?UIInterfaceOrientationLandscapeLeft:UIInterfaceOrientationPortrait;
+        CGSize size=self.window.bounds.size;
+        BOOL resized=self.lastWindowSize.width>0 && (fabs(size.width-self.lastWindowSize.width)>0.5 || fabs(size.height-self.lastWindowSize.height)>0.5);
+        if((self.layoutOrientation && self.layoutOrientation!=orientation) || resized)self.expanded=NO;
+        self.lastWindowSize=size;
+        self.layoutOrientation=orientation;
+    }
     if (!self.configured && self.window) { self.expanded=NO; self.configured=YES; }
     NSString *title=s.force==1?@"Force Attack: tap target • Cancel below":s.force==2?@"Force Move: tap destination • Cancel below":[NSString stringWithFormat:@"Orders & Groups %@ · %d selected",self.expanded?@"▾":@"▸",s.selected];
     [self.toggle setTitle:title forState:UIControlStateNormal];

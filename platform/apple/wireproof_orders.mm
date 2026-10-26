@@ -88,6 +88,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic) CGSize lastWindowSize;
 @property(nonatomic,strong) UISegmentedControl *tabs;
 @property(nonatomic,strong) UIStackView *gamePage;
+@property(nonatomic,strong) UIStackView *numberGrid;
+@property(nonatomic,strong) UIStackView *modeGrid;
 @property(nonatomic,strong) UIStackView *optionsPage;
 @property(nonatomic,strong) UIStackView *cheatStack;
 @property(nonatomic,strong) UIButton *cheatButton;
@@ -213,6 +215,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.shroudSwitch=[UISwitch new];self.shroudSwitch.tag=1;
         NSMutableArray *cheatRows=[NSMutableArray arrayWithObject:self.cheatStatus];
         [cheatRows addObject:[self gridRow:@[[self button:@"+$1,000" tag:510],[self button:@"+$10,000" tag:511]]]];
+        [cheatRows addObject:[self gridRow:@[[self button:@"+100 power" tag:512],[self button:@"+1,000 power" tag:513]]]];
         self.instantSwitch=[UISwitch new];self.instantSwitch.tag=2;
         self.freeSwitch=[UISwitch new];self.freeSwitch.tag=3;
         NSArray *switchNames=@[@"Invincibility",@"Shroud",@"Instant Build",@"Zero Cost"];
@@ -225,7 +228,6 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             row.axis=UILayoutConstraintAxisHorizontal;row.alignment=UIStackViewAlignmentCenter;
             [row.heightAnchor constraintEqualToConstant:44].active=YES;[cheatRows addObject:row];
         }
-        [cheatRows addObject:[self gridRow:@[[self button:@"+100 power" tag:512],[self button:@"+1,000 power" tag:513]]]];
         NSMutableArray *speedSliders=[NSMutableArray array],*speedLabels=[NSMutableArray array];
         for(int i=0;i<3;++i) {
             UILabel *label=[UILabel new];label.textColor=UIColor.whiteColor;label.font=[UIFont systemFontOfSize:13];
@@ -240,9 +242,10 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         help.text=@"Player only • Single player\nShroud on restores the earlier explored area and current unit sight. Toggles/speed reset on mission load.";
         [cheatRows addObject:help];
         NSMutableArray *cheatColumns=[NSMutableArray new];
-        for(NSUInteger start=0;start<cheatRows.count;start+=6) {
-            UIStackView *column=[[UIStackView alloc] initWithArrangedSubviews:[cheatRows subarrayWithRange:NSMakeRange(start,MIN(6,cheatRows.count-start))]];
-            column.axis=UILayoutConstraintAxisVertical;column.spacing=6;[cheatColumns addObject:column];
+        for(NSUInteger start=0;start<cheatRows.count;) {
+            NSUInteger count=start==0?3:start==3?4:cheatRows.count-start;
+            UIStackView *column=[[UIStackView alloc] initWithArrangedSubviews:[cheatRows subarrayWithRange:NSMakeRange(start,count)]];
+            column.axis=UILayoutConstraintAxisVertical;column.spacing=6;[cheatColumns addObject:column];start+=count;
         }
         self.cheatStack=[[UIStackView alloc] initWithArrangedSubviews:cheatColumns];self.cheatStack.spacing=8;
         NSMutableArray *stickRows=[NSMutableArray new], *stickSliders=[NSMutableArray new], *stickLabels=[NSMutableArray new];
@@ -262,14 +265,18 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.joystickSliders=stickSliders;self.joystickLabels=stickLabels;
         UIStackView *stickControls=[[UIStackView alloc] initWithArrangedSubviews:stickRows];stickControls.axis=UILayoutConstraintAxisVertical;stickControls.spacing=6;
         UIStackView *zoomControls=[[UIStackView alloc] initWithArrangedSubviews:@[self.zoomLabel,zoomRow]];zoomControls.axis=UILayoutConstraintAxisVertical;zoomControls.spacing=6;
-        self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,stickControls]];self.optionsPage.spacing=8;
+        UIStackView *sizeControls=[[UIStackView alloc] initWithArrangedSubviews:@[stickRows[0],stickRows[1]]];sizeControls.axis=UILayoutConstraintAxisVertical;sizeControls.spacing=6;
+        UIStackView *speedControls=[[UIStackView alloc] initWithArrangedSubviews:@[stickRows[2],stickRows[3]]];speedControls.axis=UILayoutConstraintAxisVertical;speedControls.spacing=6;
+        self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,sizeControls,speedControls]];self.optionsPage.spacing=8;
+        self.numberGrid=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],[self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]]]];
+        self.numberGrid.spacing=6;self.numberGrid.distribution=UIStackViewDistributionFillEqually;
+        self.modeGrid=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:@[modes[0],modes[1]]],[self gridRow:@[modes[2],modes[3]]]]];self.modeGrid.spacing=6;self.modeGrid.distribution=UIStackViewDistributionFillEqually;
         UIStackView *groupColumn=[[UIStackView alloc] initWithArrangedSubviews:@[
-            [self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],
-            [self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]],
-            [self gridRow:@[modes[0],modes[1]]],[self gridRow:@[modes[2],modes[3]]]]];
+            self.numberGrid,
+            self.modeGrid]];
         groupColumn.axis=UILayoutConstraintAxisVertical;groupColumn.spacing=6;
         UIStackView *orderColumn=[[UIStackView alloc] initWithArrangedSubviews:@[
-            [self gridRow:@[orders[3],orders[4]]],[self gridRow:@[orders[0],orders[1]]],[self gridRow:@[orders[2],orders[5]]]]];
+            [self gridRow:@[orders[0],orders[1]]],[self gridRow:@[orders[2],orders[5]]],[self gridRow:@[orders[3],orders[4]]]]];
         orderColumn.axis=UILayoutConstraintAxisVertical;orderColumn.spacing=6;
         self.gamePage=[[UIStackView alloc] initWithArrangedSubviews:@[groupColumn,orderColumn]];self.gamePage.spacing=8;
         self.tabs=[[UISegmentedControl alloc] initWithItems:@[@"Game",@"Cheats",@"Options"]];self.tabs.selectedSegmentIndex=0;
@@ -410,12 +417,16 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.layer.cornerRadius=self.expanded?12:28;
     CGRect safe=[self availableRect];
     BOOL landscape=self.window.bounds.size.width>self.window.bounds.size.height;
+    self.modeGrid.axis=landscape?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
+    self.numberGrid.axis=landscape?UILayoutConstraintAxisVertical:UILayoutConstraintAxisHorizontal;
+    self.numberGrid.alignment=landscape?UIStackViewAlignmentFill:UIStackViewAlignmentTop;
+    for(UIStackView *column in self.numberGrid.arrangedSubviews)column.axis=landscape?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
     for(UIStackView *page in @[self.gamePage,self.cheatStack,self.optionsPage]) {
         page.axis=landscape?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
         page.distribution=landscape?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
         page.alignment=landscape?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
     }
-    CGFloat width=self.expanded?MIN(landscape?520:256,MAX(56,safe.size.width)):56;
+    CGFloat width=self.expanded?MIN(landscape?820:256,MAX(56,safe.size.width)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {

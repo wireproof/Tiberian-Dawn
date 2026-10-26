@@ -52,6 +52,11 @@ int main()
         assert(std::abs(fit.viewport.height-size.second)<=2);
         assert(w>=640 && h>=400 && w<=2048 && h<=2048);
     }
+    int underX=550,underY=600;
+    Map_Battlefield_Point(underX,underY,480,16,640,800,1.0f,446);
+    assert(underX==550 && underY==600);
+    Map_Battlefield_Point(underX,underY,480,16,640,800,2.0f,446);
+    assert(underX==275 && underY==308);
     int x=300,y=216;
     Unzoom_IPad_Battlefield_Point(x,y,480,16,2.0f);
     assert(x==150 && y==116);

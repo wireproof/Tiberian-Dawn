@@ -9,6 +9,7 @@ inline int ClampAxis(int position, int delta, int minimum, int extent, int viewp
     const long long desired=static_cast<long long>(position)+delta;
     return static_cast<int>(std::max(static_cast<long long>(minimum),std::min(maximum,desired)));
 }
+inline int PortraitSidebarSlots(int width,int height) { return height>width ? (height>width*1.65?5:8) : 0; }
 inline int SidebarSlots(int height,int top,int row,int arrows,int capacity) {
     return std::max(1,std::min(capacity,(height-top-arrows)/std::max(1,row)));
 }

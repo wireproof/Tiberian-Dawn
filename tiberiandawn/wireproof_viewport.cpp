@@ -2,6 +2,7 @@
 #include "common/video.h"
 #include "common/wireproof_viewport.h"
 #include "common/wireproof_orders.h"
+#include "common/wireproof_camera.h"
 #include <algorithm>
 #include <cmath>
 
@@ -23,17 +24,21 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu)
     if (adaptive) Video_Adaptive_Size(width, height);
     const int right = width - (Map.IsSidebarActive ? Map.SideBarWidth : 0);
     const int view_height=height;
+    const int slots=WPCamera::PortraitSidebarSlots(width,height);
+    const int visibleSlots=WPCamera::SidebarSlots(height,182,48,24,24);
+    const int bottom=Map.IsSidebarActive?std::min(height,182+(slots?std::min(slots,visibleSlots):visibleSlots)*48+24):height;
+    const int worldRight=bottom<height?width:right;
     const float zoom=active?WPOrders::Shared().zoomQuarters()/4.0f:1.0f;
-    Video_Set_Battlefield(adaptive, right, Map.Get_Tab_Height(), width, height, zoom);
+    Video_Set_Battlefield(adaptive, right, Map.Get_Tab_Height(), width, height, zoom,bottom);
     static float previous_zoom = 1.0f;
     // Below 1x, render additional world pixels into a larger backing surface;
     // the presentation keeps the sidebar/top bar at their normal size.
-    if (active && zoom<1.0f) {
-        width=(int)std::ceil(right/zoom)+(width-right);
-        height=Map.Get_Tab_Height()+(int)std::ceil((height-Map.Get_Tab_Height())/zoom);
+    if (active && (zoom<1.0f || bottom<height)) {
+        width=(int)std::max(width,(int)std::ceil(worldRight/zoom)+(width-right));
+        height=std::max(height,Map.Get_Tab_Height()+(int)std::ceil((height-Map.Get_Tab_Height())/zoom));
     }
     if (ScreenWidth == width && ScreenHeight == height) {
-        const int target_w = (int)std::ceil(right / zoom);
+        const int target_w = (int)std::ceil(worldRight / zoom);
         const int target_h = (int)std::ceil((view_height - Map.Get_Tab_Height()) / zoom);
         if (Map.TacLeptonWidth != Pixel_To_Lepton(target_w) || Map.TacLeptonHeight != Pixel_To_Lepton(target_h)) {
             const int center_x = Coord_X(Map.TacticalCoord) + Map.TacLeptonWidth / 2;
@@ -66,7 +71,7 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu)
     Set_Logic_Page(HidPage);
     Video_Set_Logical_Size(width, height);
     Map.Resize_Apple_Viewport();
-    Map.Set_View_Dimensions(0, Map.Get_Tab_Height(), (int)std::ceil(right / zoom),
+    Map.Set_View_Dimensions(0, Map.Get_Tab_Height(), (int)std::ceil(worldRight / zoom),
         (int)std::ceil((view_height - Map.Get_Tab_Height()) / zoom));
     if (zoom!=previous_zoom) Map.Set_Tactical_Position(XY_Coord(std::max(0,center_x-Map.TacLeptonWidth/2),
         std::max(0,center_y-Map.TacLeptonHeight/2)));

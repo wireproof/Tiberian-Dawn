@@ -1032,7 +1032,7 @@ void Get_Video_Mouse(int& x, int& y)
 #ifdef TIBERIAN_DAWN_APPLE_PORT
 // Updated only by the game thread between frames.
 static float battlefield_zoom = 1.5f;
-static int battlefield_right = 480, battlefield_top = 16;
+static int battlefield_right = 480, battlefield_top = 16, battlefield_bottom = 400;
 void Video_Publish_Order_Icon(int kind) {
 #ifdef IPADOS_PORT
     extern void WP_Publish_Order_Icon(int, const unsigned char*, int, int);
@@ -1047,15 +1047,16 @@ void Video_Publish_Order_Icon(int kind) {
 #endif
 }
 float Video_Battlefield_Zoom() { return battlefield_active ? battlefield_zoom : 1.0f; }
-void Video_Set_Battlefield(bool active, int right, int top, int view_width, int view_height, float zoom) {
+void Video_Set_Battlefield(bool active, int right, int top, int view_width, int view_height, float zoom, int sidebar_bottom) {
     if (battlefield_active != active || battlefield_right != right || battlefield_top != top || battlefield_zoom!=zoom
         || battlefield_view_w!=view_width || battlefield_view_h!=view_height) force_present = true;
+    battlefield_bottom=sidebar_bottom>0?sidebar_bottom:view_height;
     battlefield_active = active; battlefield_right = right; battlefield_top = top;
     battlefield_view_w=view_width; battlefield_view_h=view_height; battlefield_zoom=zoom;
 }
 static void Unzoom_Battlefield_Point(int& x, int& y) {
     if (!battlefield_active) return;
-    Map_Battlefield_Point(x,y,battlefield_right,battlefield_top,Presentation_Width(),hwcursor.GameW,battlefield_zoom);
+    Map_Battlefield_Point(x,y,battlefield_right,battlefield_top,Presentation_Width(),hwcursor.GameW,battlefield_zoom,battlefield_bottom);
 }
 static SDL_Rect Battlefield_Destination() {
     SDL_Rect result = render_dst;
@@ -1919,7 +1920,7 @@ public:
                                                 metal_cursor,
                                                 Video_Battlefield_Zoom(),
                                                 battlefield_active ? battlefield_right : 0,
-                                                battlefield_top, Presentation_Width(), Presentation_Height());
+                                                battlefield_top, Presentation_Width(), Presentation_Height(),battlefield_bottom);
         }
 #endif
 
@@ -1991,8 +1992,11 @@ public:
                     (int)std::ceil((Presentation_Height()-battlefield_top)/battlefield_zoom)},
                     0,battlefield_top,battlefield_right,Presentation_Height()-battlefield_top);
                 const int sidebar=Presentation_Width()-battlefield_right;
-                if (sidebar) copyPiece({surface->w-sidebar,battlefield_top,sidebar,Presentation_Height()-battlefield_top},
-                    battlefield_right,battlefield_top,sidebar,Presentation_Height()-battlefield_top);
+                if (sidebar) copyPiece({surface->w-sidebar,battlefield_top,sidebar,battlefield_bottom-battlefield_top},
+                    battlefield_right,battlefield_top,sidebar,battlefield_bottom-battlefield_top);
+                if(sidebar && battlefield_bottom<Presentation_Height())copyPiece({(int)std::floor(battlefield_right/battlefield_zoom),battlefield_top+(int)std::floor((battlefield_bottom-battlefield_top)/battlefield_zoom),
+                    (int)std::ceil(sidebar/battlefield_zoom),(int)std::ceil((Presentation_Height()-battlefield_bottom)/battlefield_zoom)},
+                    battlefield_right,battlefield_bottom,sidebar,Presentation_Height()-battlefield_bottom);
                 copyPiece({0,0,Presentation_Width()-320,battlefield_top},0,0,Presentation_Width()-320,battlefield_top);
                 copyPiece({surface->w-320,0,320,battlefield_top},Presentation_Width()-320,0,320,battlefield_top);
             }

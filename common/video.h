@@ -69,7 +69,7 @@ void Refresh_Video_Layout();
 float Video_Battlefield_Zoom();
 void Video_Presentation_Size(int& width, int& height);
 void Video_Publish_Order_Icon(int kind);
-void Video_Set_Battlefield(bool active, int right, int top, int view_width, int view_height, float zoom);
+void Video_Set_Battlefield(bool active, int right, int top, int view_width, int view_height, float zoom, int sidebar_bottom = 0);
 void Video_Adaptive_Size(int& width, int& height);
 void Video_Set_Logical_Size(int width, int height);
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)

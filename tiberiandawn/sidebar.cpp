@@ -2706,13 +2706,18 @@ void SidebarClass::Resize_Apple_Viewport()
     if(Upgrade){Upgrade->X=SideX+(scale==2?57:36);Upgrade->Y=buttonY;}
     if(Zoom){Zoom->X=SideX+(scale==2?110:70);Zoom->Y=buttonY;}
     int sidebarHeight=SeenBuff.Get_Height();
+    int presentationWidth=SeenBuff.Get_Width();
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
-    int presentationWidth;
     Video_Presentation_Size(presentationWidth,sidebarHeight);
 #endif
     MaxVisible=WPCamera::SidebarSlots(sidebarHeight,SideY+TopHeight+1,
         StripClass::OBJECT_HEIGHT*scale,StripClass::BUTTON_HEIGHT*scale,StripClass::MAX_VISIBLE_CAPACITY);
-    Resize_Apple_Power(sidebarHeight);
+    const int portraitSlots=WPCamera::PortraitSidebarSlots(presentationWidth,sidebarHeight);
+    if(portraitSlots)MaxVisible=MIN(MaxVisible,portraitSlots);
+    const int sidebarBottom=SideY+TopHeight+1+MaxVisible*StripClass::OBJECT_HEIGHT*scale+StripClass::BUTTON_HEIGHT*scale;
+    SideHeight=sidebarBottom-SideY;
+    Background.Height=SideHeight-1;
+    Resize_Apple_Power(sidebarBottom);
     WindowList[WINDOW_SIDEBAR][WINDOWX]=SideX+PowWidth;
     WindowList[WINDOW_SIDEBAR][WINDOWY]=SideY+TopHeight+(scale==1?1:0);
     WindowList[WINDOW_SIDEBAR][WINDOWWIDTH]=SideWidth-PowWidth;

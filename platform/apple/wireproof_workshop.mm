@@ -34,7 +34,52 @@ static BOOL SaveValue(int index,NSString* text) {
     values[@(WP_RuleKey(index))]=@(value);
     [[NSUserDefaults standardUserDefaults] setObject:values forKey:StoreKey()]; return YES;
 }
+static NSString* RuleGroup(int i) { NSString *n=@(WP_RuleName(i));return [n substringToIndex:[n rangeOfString:@" / " options:NSBackwardsSearch].location]; }
+static NSString* RuleField(int i) { NSString *n=@(WP_RuleName(i));return [n substringFromIndex:[n rangeOfString:@" / " options:NSBackwardsSearch].location+3]; }
+static NSArray<NSNumber*>* GroupRules(NSString *group) { NSMutableArray *a=[NSMutableArray new];for(int i=0;i<WP_RuleCount();i++)if([RuleGroup(i) isEqual:group])[a addObject:@(i)];return a; }
+static NSDictionary* CopyPlan(NSDictionary* fields,NSString* group) {
+    NSMutableDictionary *plan=[NSMutableDictionary new];
+    for(NSNumber *index in GroupRules(group)){int i=index.intValue;NSNumber *v=fields[RuleField(i)];if(v && v.intValue>=WP_RuleMin(i) && v.intValue<=WP_RuleMax(i) && WP_RuleValueValid(i,v.intValue))plan[@(WP_RuleKey(i))]=v;}
+    return plan.count==fields.count?plan:nil;
+}
+static NSArray* CopyTargets(NSDictionary* fields,NSString* source) {
+    NSMutableOrderedSet *groups=[NSMutableOrderedSet new];for(int i=0;i<WP_RuleCount();i++){NSString *g=RuleGroup(i);if(![g isEqual:source] && CopyPlan(fields,g))[groups addObject:g];}return groups.array;
+}
+static void ApplyCopies(NSDictionary* fields,NSArray* targets) {
+    if([Profile() isEqual:@"Stock"])return;
+    NSMutableDictionary *values=[Values() mutableCopy];for(NSString *g in targets){NSDictionary *plan=CopyPlan(fields,g);if(plan)[values addEntriesFromDictionary:plan];}
+    [[NSUserDefaults standardUserDefaults] setObject:values forKey:StoreKey()];
+}
 #if TARGET_OS_IPHONE
+@interface WPApplyPicker : UITableViewController
+@property(nonatomic,copy) NSString *source;
+@property(nonatomic,copy) NSArray *items;
+@property(nonatomic,strong) NSMutableIndexSet *selected;
+@property(nonatomic,copy) NSDictionary *fields;
+@end
+@implementation WPApplyPicker
+- (void)viewDidLoad {
+    [super viewDidLoad];self.selected=[NSMutableIndexSet new];self.title=self.fields?@"Choose target units":@"Choose settings";
+    self.items=self.fields?CopyTargets(self.fields,self.source):GroupRules(self.source);
+    self.navigationItem.rightBarButtonItem=[[UIBarButtonItem alloc] initWithTitle:self.fields?@"Apply":@"Next" style:UIBarButtonItemStyleDone target:self action:@selector(next)];self.navigationItem.rightBarButtonItem.enabled=NO;
+}
+- (NSInteger)tableView:(UITableView*)t numberOfRowsInSection:(NSInteger)s {return self.items.count;}
+- (NSString*)tableView:(UITableView*)t titleForHeaderInSection:(NSInteger)s {return self.fields?@"Only targets supporting every selected value are listed. Unselected settings stay unchanged.":@"Select the current values to copy. Changes affect all owners after restart and a new mission.";}
+- (UITableViewCell*)tableView:(UITableView*)t cellForRowAtIndexPath:(NSIndexPath*)p {
+    UITableViewCell *c=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
+    if(self.fields)c.textLabel.text=self.items[p.row];else{int i=[self.items[p.row] intValue];c.textLabel.text=RuleField(i);c.detailTextLabel.text=DisplayValue(i,WP_LoadRule(WP_RuleKey(i),WP_RuleDefault(i),WP_RuleMin(i),WP_RuleMax(i)));}
+    c.textLabel.numberOfLines=0;c.accessoryType=[self.selected containsIndex:p.row]?UITableViewCellAccessoryCheckmark:UITableViewCellAccessoryNone;return c;
+}
+- (void)tableView:(UITableView*)t didSelectRowAtIndexPath:(NSIndexPath*)p {if([self.selected containsIndex:p.row])[self.selected removeIndex:p.row];else[self.selected addIndex:p.row];self.navigationItem.rightBarButtonItem.enabled=self.selected.count>0;[t reloadData];}
+- (void)next {
+    if(!self.fields){NSMutableDictionary *fields=[NSMutableDictionary new];[self.selected enumerateIndexesUsingBlock:^(NSUInteger n,BOOL *stop){int i=[self.items[n] intValue];fields[RuleField(i)]=@(WP_LoadRule(WP_RuleKey(i),WP_RuleDefault(i),WP_RuleMin(i),WP_RuleMax(i)));}];WPApplyPicker *targets=[[WPApplyPicker alloc] initWithStyle:UITableViewStyleInsetGrouped];targets.source=self.source;targets.fields=fields;[self.navigationController pushViewController:targets animated:YES];return;}
+    NSMutableArray *targets=[NSMutableArray new];[self.selected enumerateIndexesUsingBlock:^(NSUInteger n,BOOL *stop){[targets addObject:self.items[n]];}];
+    NSMutableArray *summary=[NSMutableArray new];for(NSNumber *index in GroupRules(self.source)){int i=index.intValue;NSNumber *v=self.fields[RuleField(i)];if(v)[summary addObject:[NSString stringWithFormat:@"%@: %@",RuleField(i),DisplayValue(i,v.intValue)]];}
+    UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Apply selected settings?" message:[NSString stringWithFormat:@"%@\n\nTo: %@\n\nRestart and start a new mission to use these changes.",[summary componentsJoinedByString:@"\n"],[targets componentsJoinedByString:@", "]] preferredStyle:UIAlertControllerStyleAlert];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Apply" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){ApplyCopies(self.fields,targets);[self.navigationController popToViewController:self.navigationController.viewControllers[self.navigationController.viewControllers.count-3] animated:YES];}]];[self presentViewController:a animated:YES completion:nil];
+}
+@end
 @interface WPWorkshop : UITableViewController
 @property BOOL finished;
 @property NSString* group;
@@ -58,8 +103,10 @@ static BOOL SaveValue(int index,NSString* text) {
         NSMutableArray* indices=[NSMutableArray new];
         for(int i=0;i<WP_RuleCount();++i) if ([@(WP_RuleName(i)) hasPrefix:[self.group stringByAppendingString:@" / "]]) [indices addObject:@(i)];
         self.indices=indices;
+        self.navigationItem.rightBarButtonItem=[[UIBarButtonItem alloc] initWithTitle:@"Apply to…" style:UIBarButtonItemStylePlain target:self action:@selector(applyTo)];
     }
 }
+- (void)applyTo {if([Profile() isEqual:@"Stock"]){[self preset];return;}WPApplyPicker *picker=[[WPApplyPicker alloc] initWithStyle:UITableViewStyleInsetGrouped];picker.source=self.group;[self.navigationController pushViewController:picker animated:YES];}
 - (void)done { self.finished=YES; }
 - (void)viewWillAppear:(BOOL)animated { [super viewWillAppear:animated]; [self.tableView reloadData]; }
 - (NSString*)tableView:(UITableView*)t titleForHeaderInSection:(NSInteger)s {
@@ -138,6 +185,23 @@ void WP_ShowWorkshop(void) {
     }
 }
 #else
+static NSArray* PickCopies(NSArray* titles,NSString* heading) {
+    NSAlert *a=[NSAlert new];a.messageText=heading;
+    NSScrollView *scroll=[[NSScrollView alloc] initWithFrame:NSMakeRect(0,0,440,320)];scroll.hasVerticalScroller=YES;
+    NSView *content=[[NSView alloc] initWithFrame:NSMakeRect(0,0,420,MAX(320,titles.count*32))];NSMutableArray *checks=[NSMutableArray new];
+    for(NSUInteger n=0;n<titles.count;n++){NSButton *b=[NSButton checkboxWithTitle:titles[n] target:nil action:nil];b.frame=NSMakeRect(0,content.frame.size.height-(n+1)*32,420,30);[content addSubview:b];[checks addObject:b];}
+    scroll.documentView=content;a.accessoryView=scroll;[a addButtonWithTitle:@"Next"];[a addButtonWithTitle:@"Cancel"];if([a runModal]!=NSAlertFirstButtonReturn)return nil;
+    NSMutableArray *indices=[NSMutableArray new];for(NSUInteger n=0;n<checks.count;n++)if([checks[n] state]==NSControlStateValueOn)[indices addObject:@(n)];return indices;
+}
+static void MacApplyCopies(int sourceIndex) {
+    NSString *source=RuleGroup(sourceIndex);NSArray *rules=GroupRules(source);NSMutableArray *titles=[NSMutableArray new];
+    for(NSNumber *n in rules){int i=n.intValue;[titles addObject:[NSString stringWithFormat:@"%@: %@",RuleField(i),DisplayValue(i,WP_LoadRule(WP_RuleKey(i),WP_RuleDefault(i),WP_RuleMin(i),WP_RuleMax(i)))]];}
+    NSArray *chosen=PickCopies(titles,@"Choose settings to copy");if(!chosen.count)return;NSMutableDictionary *fields=[NSMutableDictionary new];
+    for(NSNumber *n in chosen){int i=[rules[n.integerValue] intValue];fields[RuleField(i)]=@(WP_LoadRule(WP_RuleKey(i),WP_RuleDefault(i),WP_RuleMin(i),WP_RuleMax(i)));}
+    NSArray *targets=CopyTargets(fields,source);NSArray *selected=PickCopies(targets,@"Choose compatible target units");if(!selected.count)return;
+    NSMutableArray *dest=[NSMutableArray new];for(NSNumber *n in selected)[dest addObject:targets[n.integerValue]];
+    NSAlert *confirm=[NSAlert new];confirm.messageText=@"Apply selected settings?";confirm.informativeText=[NSString stringWithFormat:@"Copy %lu settings from %@ to %@. Unselected settings stay unchanged. Restart and start a new mission afterwards.",(unsigned long)fields.count,source,[dest componentsJoinedByString:@", "]];[confirm addButtonWithTitle:@"Apply"];[confirm addButtonWithTitle:@"Cancel"];if([confirm runModal]==NSAlertFirstButtonReturn)ApplyCopies(fields,dest);
+}
 // AppKit modal panels can retain key-window focus after dismissal. Restore
 // the SDL game window on every exit, including the save-manager branch.
 struct WPGameWindowRestore {
@@ -158,8 +222,13 @@ void WP_ShowWorkshop(void) {
             NSPopUpButton* rules=[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0,50,440,28) pullsDown:NO];
             for(int i=0;i<WP_RuleCount();++i)[rules addItemWithTitle:[NSString stringWithFormat:@"%s (stock %d; %d…%d)",WP_RuleName(i),WP_RuleDefault(i),WP_RuleMin(i),WP_RuleMax(i)]];[view addSubview:rules];
             NSTextField* value=[[NSTextField alloc] initWithFrame:NSMakeRect(0,10,440,28)];value.placeholderString=@"New whole-number value (leave blank to select preset only)";[view addSubview:value];a.accessoryView=view;
-            [a addButtonWithTitle:@"Save"];[a addButtonWithTitle:@"Done"];[a addButtonWithTitle:@"Reset preset…"];[a addButtonWithTitle:@"Edit selected rule…"];
+            [a addButtonWithTitle:@"Save"];[a addButtonWithTitle:@"Done"];[a addButtonWithTitle:@"Reset preset…"];[a addButtonWithTitle:@"Edit selected rule…"];[a addButtonWithTitle:@"Apply to…"];
             NSInteger action=[a runModal];
+            if(action==NSAlertFirstButtonReturn+4) {
+                [[NSUserDefaults standardUserDefaults] setObject:profiles.titleOfSelectedItem forKey:@"WPActiveRules"];
+                if(![Profile() isEqual:@"Stock"])MacApplyCopies((int)rules.indexOfSelectedItem);
+                else {NSAlert *error=[NSAlert new];error.messageText=@"Choose a Custom preset first.";[error runModal];}continue;
+            }
             if(action==NSAlertFirstButtonReturn+3) {
                 [[NSUserDefaults standardUserDefaults] setObject:profiles.titleOfSelectedItem forKey:@"WPActiveRules"];
                 if([Profile() isEqualToString:@"Stock"]) { NSAlert* error=[NSAlert new];error.messageText=@"Choose a Custom preset first.";[error runModal];continue; }

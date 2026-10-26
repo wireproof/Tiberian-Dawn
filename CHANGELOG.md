@@ -4,6 +4,20 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.9 — 2026-10-26
+
+- Regroup controller tabs: money and power together, two number columns in
+  portrait, force orders last, and wider landscape panels. All three Options
+  sliders share one landscape row; Game uses three rows per column.
+- Shorten portrait build sidebars to five rows on narrow displays and eight on
+  wider portrait displays. Render and map taps to the battlefield below the
+  arrows, including the remaining strip on landscape layouts.
+- Add Workshop Apply to…: choose settings, choose compatible targets, review and
+  apply. Unselected settings remain unchanged; Stock is read-only. Available on
+  iOS and Mac. Changes require restart and a new mission and affect all owners.
+- Apple builds and 26 host tests pass. Physical-device layout and interaction
+  confirmation remains pending.
+
 ## 0.4.8 — 2026-10-26
 
 - Organize the floating controller into Game, Cheats and Options tabs.

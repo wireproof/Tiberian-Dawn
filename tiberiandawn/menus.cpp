@@ -526,6 +526,7 @@ int Main_Menu(unsigned int timeout)
         // gets an ID after the original entries, even though it is displayed
         // before Multiplayer.
         BUTTON_SAVES,
+        BUTTON_CAMPAIGN,
 #endif
     };
 
@@ -538,20 +539,20 @@ int Main_Menu(unsigned int timeout)
 #ifdef NEWMENU
 #ifdef BONUS_MISSIONS
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
-    TextButtonClass* buttons[9];
+    TextButtonClass* buttons[10];
 #else
     TextButtonClass* buttons[8];
 #endif
 #else
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
-    TextButtonClass* buttons[8];
+    TextButtonClass* buttons[9];
 #else
     TextButtonClass* buttons[7];
 #endif
 #endif // BONUS_MISSIONS
 #else
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
-    TextButtonClass* buttons[6];
+    TextButtonClass* buttons[7];
 #else
     TextButtonClass* buttons[5];
 #endif
@@ -794,6 +795,8 @@ int Main_Menu(unsigned int timeout)
 
     loadbtn.Add_Tail(*commands);
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    TextButtonClass campaignbtn(BUTTON_CAMPAIGN,"Mission Select",TPF_CENTER | TPF_6PT_GRAD | TPF_USE_GRAD_PAL | TPF_NOSHADOW,D_LOAD_X,D_LOAD_Y,D_LOAD_W,D_LOAD_H);
+    campaignbtn.Add_Tail(*commands);
     savebtn.Add_Tail(*commands);
 #endif
     multibtn.Add_Tail(*commands);
@@ -818,6 +821,7 @@ int Main_Menu(unsigned int timeout)
 #endif // BONUS_MISSIONS
     buttons[butt++] = &loadbtn;
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    buttons[butt++] = &campaignbtn;
     buttons[butt++] = &savebtn;
 #endif
     buttons[butt++] = &multibtn;
@@ -830,11 +834,12 @@ int Main_Menu(unsigned int timeout)
     buttons[0] = &startbtn;
     buttons[1] = &loadbtn;
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
-    buttons[2] = &savebtn;
-    buttons[3] = &multibtn;
-    buttons[4] = &introbtn;
-    buttons[5] = &exitbtn;
-    const int last_menu_button = 5;
+    buttons[2] = &campaignbtn;
+    buttons[3] = &savebtn;
+    buttons[4] = &multibtn;
+    buttons[5] = &introbtn;
+    buttons[6] = &exitbtn;
+    const int last_menu_button = 6;
 #else
     buttons[2] = &multibtn;
     buttons[3] = &introbtn;
@@ -995,6 +1000,8 @@ int Main_Menu(unsigned int timeout)
             break;
 
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        case (BUTTON_CAMPAIGN | KN_BUTTON):
+            retval=1000;process=false;break;
         case (BUTTON_SAVES | KN_BUTTON):
             WP_ShowWorkshop();
             Keyboard->Clear();

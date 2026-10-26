@@ -2,7 +2,7 @@
 #include <mutex>
 namespace WPCheats {
 struct Snapshot {
-    bool available=false, invincible=false, reveal=false, instant=false, free=false, weapons=false, anywhere=false;
+    bool available=false, invincible=false, reveal=false, instant=false, free=false, weapons=false, anywhere=false, unlock=false, damagedHealth=false;
     int infantry=4, vehicles=4, aircraft=4;
     int money=0, power=0, drain=0;
 };
@@ -32,6 +32,8 @@ public:
     void free(bool value) { std::lock_guard<std::mutex> lock(mutex);if(state.available){state.free=value;persist();} }
     void weapons(bool value) { std::lock_guard<std::mutex> lock(mutex);if(state.available){state.weapons=value;persist();} }
     void anywhere(bool value) { std::lock_guard<std::mutex> lock(mutex);if(state.available){state.anywhere=value;persist();} }
+    void unlock(bool value) { std::lock_guard<std::mutex> lock(mutex);if(state.available){state.unlock=value;persist();} }
+    void damagedHealth(bool value) { std::lock_guard<std::mutex> lock(mutex);if(state.available){state.damagedHealth=value;persist();} }
     void speed(int category,int quarters) {
         std::lock_guard<std::mutex> lock(mutex);if(!state.available)return;
         quarters=quarters<1?1:quarters>12?12:quarters;

@@ -18,11 +18,11 @@ Snapshot LoadPreferences() {
     NSDictionary *values=[NSUserDefaults.standardUserDefaults dictionaryForKey:@"Wireproof.CheatPreferences.v1"];
     auto flag=[&](NSString *key) { id v=values[key];return [v isKindOfClass:NSNumber.class] && [v boolValue]; };
     auto speed=[&](NSString *key) { id v=values[key];if(![v isKindOfClass:NSNumber.class])return 4;double n=[v doubleValue];return std::isfinite(n)&&n==std::floor(n)&&n>=1&&n<=12?(int)n:4; };
-    s.invincible=flag(@"invincible");s.reveal=flag(@"reveal");s.instant=flag(@"instant");s.free=flag(@"free");s.weapons=flag(@"weapons");s.anywhere=flag(@"anywhere");
+    s.invincible=flag(@"invincible");s.reveal=flag(@"reveal");s.instant=flag(@"instant");s.free=flag(@"free");s.weapons=flag(@"weapons");s.anywhere=flag(@"anywhere");s.unlock=flag(@"unlock");s.damagedHealth=flag(@"damagedHealth");
     s.infantry=speed(@"infantry");s.vehicles=speed(@"vehicles");s.aircraft=speed(@"aircraft");return s;
 }
 void SavePreferences(const Snapshot& s) {
-    [NSUserDefaults.standardUserDefaults setObject:@{@"invincible":@(s.invincible),@"reveal":@(s.reveal),@"instant":@(s.instant),@"free":@(s.free),@"weapons":@(s.weapons),@"anywhere":@(s.anywhere),@"infantry":@(s.infantry),@"vehicles":@(s.vehicles),@"aircraft":@(s.aircraft)} forKey:@"Wireproof.CheatPreferences.v1"];
+    [NSUserDefaults.standardUserDefaults setObject:@{@"invincible":@(s.invincible),@"reveal":@(s.reveal),@"instant":@(s.instant),@"free":@(s.free),@"weapons":@(s.weapons),@"anywhere":@(s.anywhere),@"unlock":@(s.unlock),@"damagedHealth":@(s.damagedHealth),@"infantry":@(s.infantry),@"vehicles":@(s.vehicles),@"aircraft":@(s.aircraft)} forKey:@"Wireproof.CheatPreferences.v1"];
 }
 }
 #if !TARGET_OS_IPHONE
@@ -298,13 +298,15 @@ extern "C" void WP_ShowLiveCheats(void) {
         WPGameWindowRestore restore{NSApp.keyWindow};
         NSAlert* a=[NSAlert new];a.messageText=@"Battlefield Cheats";
         a.informativeText=@"Player only, single-player. Changes apply after closing. Shroud On restores previous exploration plus current unit sight. Toggles and speed persist across missions and launches. Money and power remain in saves. UI size: 75–150%, default 100%.";
-        NSView* view=[[NSView alloc] initWithFrame:NSMakeRect(0,0,360,385)];
+        NSView* view=[[NSView alloc] initWithFrame:NSMakeRect(0,0,360,465)];
         NSButton* inv=[NSButton checkboxWithTitle:@"Invincibility" target:nil action:nil];inv.frame=NSMakeRect(0,230,180,24);inv.state=state.invincible;[view addSubview:inv];
         NSButton* shroud=[NSButton checkboxWithTitle:@"Shroud On" target:nil action:nil];shroud.frame=NSMakeRect(180,230,180,24);shroud.state=!state.reveal;[view addSubview:shroud];
         NSButton* instant=[NSButton checkboxWithTitle:@"Instant Build" target:nil action:nil];instant.frame=NSMakeRect(0,270,180,24);instant.state=state.instant;[view addSubview:instant];
         NSButton* freeBuild=[NSButton checkboxWithTitle:@"Zero Cost" target:nil action:nil];freeBuild.frame=NSMakeRect(180,270,180,24);freeBuild.state=state.free;[view addSubview:freeBuild];
         NSButton* weapons=[NSButton checkboxWithTitle:@"Instant Weapons" target:nil action:nil];weapons.frame=NSMakeRect(0,310,180,24);weapons.state=state.weapons;[view addSubview:weapons];
         NSButton* anywhere=[NSButton checkboxWithTitle:@"Build Anywhere" target:nil action:nil];anywhere.frame=NSMakeRect(180,310,180,24);anywhere.state=state.anywhere;[view addSubview:anywhere];
+        NSButton* unlock=[NSButton checkboxWithTitle:@"Unlock GDI + Nod" target:nil action:nil];unlock.frame=NSMakeRect(0,390,360,24);unlock.state=state.unlock;[view addSubview:unlock];
+        NSButton* health=[NSButton checkboxWithTitle:@"Damaged building health" target:nil action:nil];health.frame=NSMakeRect(0,430,360,24);health.state=state.damagedHealth;[view addSubview:health];
         NSMutableArray<NSSlider*>* speeds=[NSMutableArray array];
         NSArray* names=@[@"Infantry",@"Vehicles",@"Aircraft"];
         int values[]={state.infantry,state.vehicles,state.aircraft};
@@ -323,6 +325,8 @@ extern "C" void WP_ShowLiveCheats(void) {
             [NSUserDefaults.standardUserDefaults setInteger:WPOrders::Shared().uiScale() forKey:@"Wireproof.UIScale.Mac"];
             WPCheats::Shared().weapons(weapons.state==NSControlStateValueOn);
             WPCheats::Shared().anywhere(anywhere.state==NSControlStateValueOn);
+            WPCheats::Shared().unlock(unlock.state==NSControlStateValueOn);
+            WPCheats::Shared().damagedHealth(health.state==NSControlStateValueOn);
             WPCheats::Shared().instant(instant.state==NSControlStateValueOn);
             WPCheats::Shared().free(freeBuild.state==NSControlStateValueOn);
             WPCheats::Shared().invincible(inv.state==NSControlStateValueOn);

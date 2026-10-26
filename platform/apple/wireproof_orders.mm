@@ -151,6 +151,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UISwitch *instantSwitch;
 @property(nonatomic,strong) UISwitch *weaponsSwitch;
 @property(nonatomic,strong) UISwitch *anywhereSwitch;
+@property(nonatomic,strong) UISwitch *unlockSwitch;
+@property(nonatomic,strong) UISwitch *healthSwitch;
 @property(nonatomic,strong) UISwitch *freeSwitch;
 @property(nonatomic,strong) UISwitch *shroudSwitch;
 @property(nonatomic,strong) NSArray<UISlider*> *speedSliders;
@@ -279,9 +281,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.freeSwitch=[UISwitch new];self.freeSwitch.tag=3;
         self.weaponsSwitch=[UISwitch new];self.weaponsSwitch.tag=4;
         self.anywhereSwitch=[UISwitch new];self.anywhereSwitch.tag=5;
-        NSArray *switchNames=@[@"Invincibility",@"Shroud",@"Instant Build",@"Zero Cost",@"Instant Weapons",@"Build Anywhere"];
-        NSArray *switches=@[self.invincibleSwitch,self.shroudSwitch,self.instantSwitch,self.freeSwitch,self.weaponsSwitch,self.anywhereSwitch];
-        for(int i=0;i<6;++i) {
+        self.unlockSwitch=[UISwitch new];self.unlockSwitch.tag=6;
+        self.healthSwitch=[UISwitch new];self.healthSwitch.tag=7;
+        NSArray *switchNames=@[@"Invincibility",@"Shroud",@"Instant Build",@"Zero Cost",@"Instant Weapons",@"Build Anywhere",@"Unlock GDI + Nod",@"Damaged building health"];
+        NSArray *switches=@[self.invincibleSwitch,self.shroudSwitch,self.instantSwitch,self.freeSwitch,self.weaponsSwitch,self.anywhereSwitch,self.unlockSwitch,self.healthSwitch];
+        for(int i=0;i<8;++i) {
             UILabel *label=[UILabel new];label.text=switchNames[i];label.font=[UIFont systemFontOfSize:13];label.numberOfLines=2;label.textColor=UIColor.whiteColor;
             UISwitch *control=switches[i];control.accessibilityLabel=switchNames[i];
             [control addTarget:self action:@selector(cheatSwitchChanged:) forControlEvents:UIControlEventValueChanged];
@@ -405,7 +409,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     else if(control.tag==2)WPCheats::Shared().instant(control.on);
     else if(control.tag==3)WPCheats::Shared().free(control.on);
     else if(control.tag==4)WPCheats::Shared().weapons(control.on);
-    else WPCheats::Shared().anywhere(control.on);
+    else if(control.tag==5)WPCheats::Shared().anywhere(control.on);
+    else if(control.tag==6)WPCheats::Shared().unlock(control.on);
+    else WPCheats::Shared().damagedHealth(control.on);
     [self refresh];
 }
 - (void)speedChanged:(UISlider*)slider {
@@ -494,7 +500,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.optionsPage.hidden=self.tabs.selectedSegmentIndex!=2;
     self.cheatStack.userInteractionEnabled=cheats.available;
     self.cheatStatus.text=[NSString stringWithFormat:@"Credits: %d\nPower: %d / %d",cheats.money,cheats.power,cheats.drain];
-    self.weaponsSwitch.on=cheats.weapons;self.anywhereSwitch.on=cheats.anywhere;
+    self.weaponsSwitch.on=cheats.weapons;self.anywhereSwitch.on=cheats.anywhere;self.unlockSwitch.on=cheats.unlock;self.healthSwitch.on=cheats.damagedHealth;
     self.instantSwitch.on=cheats.instant;self.freeSwitch.on=cheats.free;
     self.invincibleSwitch.on=cheats.invincible;self.shroudSwitch.on=!cheats.reveal;
     int speeds[]={cheats.infantry,cheats.vehicles,cheats.aircraft};
@@ -537,7 +543,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             UIStackView *switchGrid=[[UIStackView alloc] initWithArrangedSubviews:@[
                 [self gridRow:@[self.cheatRows[3],self.cheatRows[4]]],
                 [self gridRow:@[self.cheatRows[5],self.cheatRows[6]]],
-                [self gridRow:@[self.cheatRows[7],self.cheatRows[8]]]]];
+                [self gridRow:@[self.cheatRows[7],self.cheatRows[8]]],[self gridRow:@[self.cheatRows[9],self.cheatRows[10]]]]];
             switchGrid.axis=UILayoutConstraintAxisVertical;switchGrid.spacing=6;
             UIStackView *resources=[[UIStackView alloc] initWithArrangedSubviews:@[self.cheatRows[1],self.cheatRows[2]]];
             resources.axis=UILayoutConstraintAxisVertical;resources.spacing=6;
@@ -559,11 +565,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.panelHeader.distribution=landscape?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
     self.panelHeader.alignment=landscape?UIStackViewAlignmentCenter:UIStackViewAlignmentFill;
     for(UIStackView *page in @[self.gamePage,self.cheatStack]){page.axis=UILayoutConstraintAxisVertical;page.distribution=UIStackViewDistributionFill;page.alignment=UIStackViewAlignmentFill;}
-    const BOOL wideOptions=landscape && safe.size.width/(WPOrders::Shared().uiScale()/100.0)>=800;
+    const BOOL wideOptions=landscape && safe.size.width>=800;
     self.optionsPage.axis=wideOptions?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
     self.optionsPage.distribution=wideOptions?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
     self.optionsPage.alignment=wideOptions?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
-    const CGFloat uiScale=self.expanded?WPOrders::Shared().uiScale()/100.0:1.0;
+    const CGFloat uiScale=1.0; // Floating controls have their own fixed touch-target size.
     CGFloat width=self.expanded?MIN(landscape?(self.tabs.selectedSegmentIndex==2?1000:820):256,MAX(56,safe.size.width/uiScale)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;

@@ -90,6 +90,7 @@ enum TouchFeedbackKind
 void Video_Set_Touch_Feedback_Kind(TouchFeedbackKind kind);
 void Video_Clear_Touch_Feedback(void);
 void Video_Set_Touch_Input(bool touch_input);
+bool Video_Touch_Help_Expired();
 void Video_Set_Touch_Selection_Box(bool active, int x1, int y1, int x2, int y2);
 // 0 = original/action cursor, 1 = normal pointer eligible for HD artwork.
 void Video_Set_Cursor_Kind(int kind);

@@ -45,6 +45,8 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_rules.h"
+#include "common/wireproof_build_roster.h"
 
 void const* UnitTypeClass::WakeShapes = 0;
 
@@ -1508,7 +1510,7 @@ void UnitTypeClass::One_Time(void)
         void const* ptr = NULL; // Shape pointer and set pointer.
 
         largest = 0;
-        if (uclass.IsBuildable) {
+        if (uclass.IsBuildable || WPCheats::MilitaryBuildType(uclass.IniName)) {
 
             /*
             **	Fetch the supporting data files for the unit.
@@ -1587,7 +1589,7 @@ void UnitTypeClass::Init(TheaterType theater)
 
                 ((void const*&)uclass.CameoData) = NULL;
 
-                if (uclass.IsBuildable) {
+                if (uclass.IsBuildable || WPCheats::MilitaryBuildType(uclass.IniName)) {
                     sprintf(buffer, "%sICNH", uclass.IniName);
                     _makepath(fullname, NULL, NULL, buffer, Theaters[theater].Suffix);
                     cameo_ptr = MFCD::Retrieve(fullname);
@@ -1681,7 +1683,7 @@ BuildingClass* UnitTypeClass::Who_Can_Build_Me(bool intheory, bool legal, Houses
 
         if (building && !building->IsInLimbo && building->House->Class->House == house
             && building->Class->ToBuild == RTTI_UNITTYPE && building->Mission != MISSION_DECONSTRUCTION
-            && ((1L << building->ActLike) & Ownable) && (!legal || building->House->Can_Build(Type, building->ActLike))
+            && (((1L << building->ActLike) & Ownable) || WP_UnlockBuildType(building->House,IniName)) && (!legal || building->House->Can_Build(Type, building->ActLike))
             && (intheory || !building->In_Radio_Contact())) {
 
             if (building->IsLeader)

@@ -55,6 +55,8 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_rules.h"
+#include "common/wireproof_build_roster.h"
 
 #define MCW MAP_CELL_W
 
@@ -3823,7 +3825,7 @@ void BuildingTypeClass::One_Time(void)
         /*
         **	Fetch the sidebar cameo image for this building.
         */
-        if (building.IsBuildable) {
+        if (building.IsBuildable || WPCheats::MilitaryBuildType(building.IniName)) {
             if (Get_Resolution_Factor()) {
                 sprintf(buffer, "%sICNH", building.IniName);
             } else {
@@ -4150,7 +4152,7 @@ BuildingClass* BuildingTypeClass::Who_Can_Build_Me(bool intheory, bool legal, Ho
 
         if (building && !building->IsInLimbo && building->House->Class->House == house
             && building->Class->ToBuild == RTTI_BUILDINGTYPE && building->Mission != MISSION_DECONSTRUCTION
-            && ((1L << building->ActLike) & Ownable) && (!legal || building->House->Can_Build(Type, building->ActLike))
+            && (((1L << building->ActLike) & Ownable) || WP_UnlockBuildType(building->House,IniName)) && (!legal || building->House->Can_Build(Type, building->ActLike))
             && (intheory || !building->In_Radio_Contact())) {
             return (building);
         }

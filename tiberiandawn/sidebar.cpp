@@ -2064,7 +2064,7 @@ bool SidebarClass::StripClass::Recalc(void)
     for (int index = 0; index < BuildableCount; index++) {
         TechnoTypeClass const* tech = Fetch_Techno_Type(Buildables[index].BuildableType, Buildables[index].BuildableID);
         if (tech != NULL) {
-            ok = tech->Who_Can_Build_Me(true, false, PlayerPtr->Class->House) != NULL;
+            ok = tech->Who_Can_Build_Me(true, true, PlayerPtr->Class->House) != NULL;
         } else {
             switch (Buildables[index].BuildableID) {
             case SPC_ION_CANNON:
@@ -2730,7 +2730,7 @@ void SidebarClass::Resize_Apple_Viewport()
 #endif
     MaxVisible=WPCamera::SidebarSlots(sidebarHeight,SideY+TopHeight+1,
         StripClass::OBJECT_HEIGHT*scale,StripClass::BUTTON_HEIGHT*scale,StripClass::MAX_VISIBLE_CAPACITY);
-    const int portraitSlots=WPCamera::PortraitSidebarSlots(presentationWidth,sidebarHeight);
+    const int portraitSlots=0; // Fill the usable screen height in both orientations.
     if(portraitSlots)MaxVisible=MIN(MaxVisible,portraitSlots);
     const int sidebarBottom=portraitSlots?SideY+TopHeight+1+MaxVisible*StripClass::OBJECT_HEIGHT*scale+StripClass::BUTTON_HEIGHT*scale:sidebarHeight;
     SideHeight=sidebarBottom-SideY;

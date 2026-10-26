@@ -47,6 +47,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_rules.h"
 
 void const* AircraftTypeClass::LRotorData = NULL;
 void const* AircraftTypeClass::RRotorData = NULL;
@@ -593,7 +594,7 @@ BuildingClass* AircraftTypeClass::Who_Can_Build_Me(bool, bool legal, HousesType 
         BuildingClass* building = Buildings.Ptr(index);
 
         if (building && !building->IsInLimbo && building->House->Class->House == house
-            && building->Mission != MISSION_DECONSTRUCTION && ((1L << building->ActLike) & Ownable)
+            && building->Mission != MISSION_DECONSTRUCTION && (((1L << building->ActLike) & Ownable) || WP_UnlockBuildType(building->House,IniName))
             && (!legal || building->House->Can_Build(Type, building->ActLike))
             && building->Class->ToBuild == RTTI_AIRCRAFTTYPE) {
 

@@ -152,6 +152,7 @@ struct TouchSelectionBoxState
 
 TouchSelectionBoxState touch_selection_box;
 bool touch_input_active = false;
+uint32_t last_touch_help_activity = 0;
 
 struct RegisteredSelectionOverlay
 {
@@ -2192,6 +2193,7 @@ void Video_Record_Input_Timestamp(uint32_t timestamp_ms)
 
 void Video_Set_Touch_Feedback(int game_x, int game_y, bool pencil, bool released)
 {
+    last_touch_help_activity=SDL_GetTicks();
     Video_Set_Touch_Input(true);
     touch_feedback.x = std::max(0, std::min(game_x, hwcursor.GameW - 1));
     touch_feedback.y = std::max(0, std::min(game_y, hwcursor.GameH - 1));
@@ -2223,6 +2225,11 @@ void Video_Clear_Touch_Feedback(void)
     ++touch_feedback.generation;
     force_present = true;
     last_frame_idle = false;
+}
+
+bool Video_Touch_Help_Expired()
+{
+    return touch_input_active && SDL_GetTicks()-last_touch_help_activity >= 2000;
 }
 
 void Video_Set_Touch_Input(bool touch_input)

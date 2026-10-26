@@ -98,6 +98,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_rules.h"
 
 /*
 ** New sidebar for GlyphX multiplayer. ST - 3/26/2019 12:24PM
@@ -551,6 +552,7 @@ HouseClass::HouseClass(HousesType house)
 bool HouseClass::Can_Build(TechnoTypeClass const* type, HousesType house) const
 {
     Validate();
+    if (type && WP_UnlockBuildType(this,type->IniName))return true;
     if (!type || !type->IsBuildable || !((1L << house) & type->Ownable))
         return (false);
 

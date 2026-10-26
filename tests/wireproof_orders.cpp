@@ -1,6 +1,7 @@
 #include "common/wireproof_menu_layout.h"
 #include "common/wireproof_camera.h"
 #include <climits>
+#include "common/wireproof_build_roster.h"
 #include "common/wireproof_orders.h"
 #include <cassert>
 #include "common/wireproof_cheats.h"
@@ -45,6 +46,9 @@ int main() {
     assert(edge==256);
     assert(ClampAxis(edge,100,256,8192,2048)==356); // immediate reverse away from edge
 
+    for(const char* name:{"FACT","WEAP","HAND","TMPL","EYE","E1","RMBO","MCV","STNK","ORCA","HELI"})assert(WPCheats::MilitaryBuildType(name));
+    for(const char* name:{"V01","HOSP","BIO","MISS","C1","MOEBIUS","TREX","VICE","C17"})assert(!WPCheats::MilitaryBuildType(name));
+    assert(!WPCheats::MilitaryBuildType(nullptr));
     WPCheats::State cheats;
     cheats.addMoney(1000);cheats.invincible(true);cheats.speed(0,12);
     assert(!cheats.snapshot().invincible && cheats.snapshot().infantry==4 && cheats.take().money==0);
@@ -54,19 +58,19 @@ int main() {
     auto snapshot=cheats.snapshot();assert(snapshot.invincible && snapshot.reveal && snapshot.infantry==1 && snapshot.vehicles==12 && snapshot.aircraft==7);
     cheats.addMoney(1000);cheats.publish(false,0,0,0);assert(cheats.take().money==0);
     cheats.publish(true,0,0,0);cheats.instant(true);cheats.free(true);assert(cheats.snapshot().instant && cheats.snapshot().free);
-    cheats.weapons(true);cheats.anywhere(true);assert(cheats.snapshot().weapons && cheats.snapshot().anywhere);
+    cheats.weapons(true);cheats.anywhere(true);cheats.unlock(true);assert(cheats.snapshot().weapons && cheats.snapshot().anywhere);
     cheats.addMoney(1000);cheats.addPower(100);
     cheats.reset();snapshot=cheats.snapshot();
     assert(!snapshot.available && snapshot.money==0 && snapshot.power==0 && cheats.take().money==0 && cheats.take().power==0);
-    assert(snapshot.weapons && snapshot.anywhere && snapshot.instant && snapshot.free && snapshot.invincible && snapshot.reveal);
+    assert(snapshot.unlock && snapshot.weapons && snapshot.anywhere && snapshot.instant && snapshot.free && snapshot.invincible && snapshot.reveal);
     assert(snapshot.infantry==1 && snapshot.vehicles==12 && snapshot.aircraft==7);
     cheats.weapons(false);assert(cheats.snapshot().weapons); // inactive settings cannot change
     cheats.publish(true,20,30,40);assert(cheats.snapshot().weapons);
     static WPCheats::Snapshot disk;
     WPCheats::State persisted({},[](const WPCheats::Snapshot& value){disk=value;});
-    persisted.publish(true,999,100,50);persisted.weapons(true);persisted.reveal(true);persisted.speed(2,9);persisted.addMoney(1000);
+    persisted.publish(true,999,100,50);persisted.weapons(true);persisted.unlock(true);persisted.damagedHealth(true);persisted.reveal(true);persisted.speed(2,9);persisted.addMoney(1000);
     WPCheats::State relaunched(disk);auto loaded=relaunched.snapshot();
-    assert(loaded.weapons && loaded.reveal && loaded.aircraft==9 && !loaded.available && loaded.money==0 && loaded.power==0 && relaunched.take().money==0);
+    assert(loaded.damagedHealth && loaded.unlock && loaded.weapons && loaded.reveal && loaded.aircraft==9 && !loaded.available && loaded.money==0 && loaded.power==0 && relaunched.take().money==0);
     persisted.weapons(false);WPCheats::State disabled(disk);assert(!disabled.snapshot().weapons);
     using namespace WPOrders;
     State s; Command c;

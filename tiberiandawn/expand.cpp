@@ -35,6 +35,8 @@
 #include "function.h"
 #include "common/framelimit.h"
 #include "common/ini.h"
+#include <vector>
+#include <string>
 
 #ifdef NEWMENU
 
@@ -77,7 +79,7 @@ void EListClass::Draw_Entry(int index, int x, int y, int width, int selected)
     }
 }
 
-bool Expansion_Dialog(void)
+bool Expansion_Dialog(bool campaign)
 {
     int factor = (SeenBuff.Get_Width() == 320) ? 1 : 2;
 
@@ -125,6 +127,24 @@ bool Expansion_Dialog(void)
     int index;
     INIClass ini;
 
+    struct CampaignEntry { int number; ScenarioPlayerType player; ScenarioDirType direction; std::string name; };
+    std::vector<CampaignEntry> campaignEntries;
+    if(campaign) {
+        for(auto player : {SCEN_PLAYER_GDI,SCEN_PLAYER_NOD})
+        for(int number=1;number<=15;++number)
+        for(auto direction : {SCEN_DIR_EAST,SCEN_DIR_WEST})
+        for(auto variant : {SCEN_VAR_A,SCEN_VAR_B,SCEN_VAR_C,SCEN_VAR_D}) {
+            char name[64], filename[80], title[128], label[240];
+            Set_Scenario_Name(name,number,player,direction,variant);
+            snprintf(filename,sizeof(filename),"%s.INI",name);
+            CCFileClass file(filename);if(!file.Is_Available())continue;
+            ini.Clear();ini.Load(file);ini.Get_String("Basic","Name",name,title,sizeof(title));
+            snprintf(label,sizeof(label),"%s %02d %s: %s",player==SCEN_PLAYER_GDI?"GDI":"Nod",number,name,title);
+            char* data=new char[sizeof(int)+strlen(label)+1];
+            *((int*)data)=(int)campaignEntries.size();strcpy(data+sizeof(int),label);
+            campaignEntries.push_back({number,player,direction,name});list.Add_Item(data);
+        }
+    } else {
     for (index = 20; index < 60; index++) {
         char buffer[128];
         CCFileClass file;
@@ -165,6 +185,8 @@ bool Expansion_Dialog(void)
         }
     }
 
+    }
+
     Set_Logic_Page(SeenBuff);
     bool recalc = true;
     bool display = true;
@@ -195,7 +217,8 @@ bool Expansion_Dialog(void)
             Blit_Hid_Page_To_Seen_Buff();
 
             Dialog_Box(option_x, option_y, option_width, option_height);
-            Draw_Caption(TXT_MISSION_DESCRIPTION, option_x, option_y, option_width);
+            if(campaign) Fancy_Text_Print("Mission Select",option_x+option_width/2,option_y+4*factor,CC_GREEN,TBLACK,TPF_CENTER | TPF_6PT_GRAD | TPF_NOSHADOW);
+            else Draw_Caption(TXT_MISSION_DESCRIPTION, option_x, option_y, option_width);
             buttons->Draw_All();
             Show_Mouse();
         }
@@ -205,6 +228,13 @@ bool Expansion_Dialog(void)
         case KN_RETURN:
         case 200 | KN_BUTTON:
             if (list.Current_Item()) {
+                if(campaign) {
+                    const auto& entry=campaignEntries[*(int*)list.Current_Item()];
+                    ScenPlayer=entry.player;ScenDir=entry.direction;Scen.Scenario=entry.number;
+                    Whom=entry.player==SCEN_PLAYER_GDI?HOUSE_GOOD:HOUSE_BAD;
+                    strcpy(Scen.ScenarioName,entry.name.c_str());
+                    okval=true;process=false;break;
+                }
                 if (list.Current_Item()[sizeof(int)] == 'G') {
                     ScenPlayer = SCEN_PLAYER_GDI;
                 } else {

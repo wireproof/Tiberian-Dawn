@@ -461,7 +461,7 @@ void Nod_Ending(void);
 **	EXPAND.CPP
 */
 bool Expansion_Present(void);
-bool Expansion_Dialog(void);
+bool Expansion_Dialog(bool campaign = false);
 bool Bonus_Dialog(void);
 
 /*

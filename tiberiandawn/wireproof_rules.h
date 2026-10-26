@@ -7,6 +7,11 @@ void WP_TickCheats(void);
 void WP_ResetLiveCheats(void);
 int WP_InstantBuild(const void* house);
 int WP_BuildAnywhere(const void* house);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+int WP_UnlockBuildType(const void* house,const char* name);
+#else
+static inline int WP_UnlockBuildType(const void*,const char*) { return 0; }
+#endif
 int WP_ZeroCost(const void* house);
 int WP_PlayerInvincible(const void* house);
 int WP_ScalePlayerSpeed(const void* house,int base,int category);

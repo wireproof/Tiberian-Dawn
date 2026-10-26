@@ -150,6 +150,9 @@ short const* HelpClass::Overlap_List(void) const
  *=============================================================================================*/
 void HelpClass::AI(KeyNumType& key, int x, int y)
 {
+#ifdef IPADOS_PORT
+    if(Video_Touch_Help_Expired())Help_Text(TXT_NONE);
+#endif
     /*
     **	If there is any keyboard input, then the help text goes away.
     */
@@ -208,6 +211,10 @@ void HelpClass::AI(KeyNumType& key, int x, int y)
  *=============================================================================================*/
 void HelpClass::Help_Text(int text, int x, int y, int color, bool quick, int cost)
 {
+#ifdef IPADOS_PORT
+    // A touch leaves the emulated pointer parked. Do not recreate its expired tooltip.
+    if(text!=TXT_NONE && Video_Touch_Help_Expired())return;
+#endif
     if (text != Text) {
 
         /*

@@ -56,6 +56,12 @@ Owner-supplied on October 26, 2026: 11 screenshots plus two browser-playable rec
 
 ![iPad Pro 11: Gameplay — landscape](ipad-gameplay-landscape.jpg)
 
+### Build Anywhere and customized build options
+
+![iPad Pro 11: Build Anywhere and customized build options](ipad-build-anywhere.jpg)
+
+Owner-supplied v0.5.7 screenshot. Shows existing Build Anywhere and Workshop customization; the dedicated Unlock GDI + Nod toggle is new in the next candidate.
+
 ### Orders and groups
 
 ![iPad Pro 11: Orders and groups](ipad-groups.jpg)

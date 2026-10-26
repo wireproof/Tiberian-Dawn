@@ -116,6 +116,9 @@
 
 #include "function.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "common/wireproof_cheats.h"
+#endif
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #include "wireproof_rules.h"
 #endif
 
@@ -1023,6 +1026,10 @@ void TechnoClass::Draw_It(int x, int y, WindowNumberType window)
 
     const bool show_health_bar = (Strength > 0) && !Is_Cloaked(PlayerPtr)
                                  && (Is_Selected_By_Player()
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+                                     || (What_Am_I()==RTTI_BUILDING && WPCheats::Shared().snapshot().damagedHealth
+                                         && Strength < Techno_Type_Class()->MaxStrength)
+#endif
                                      || ((Special.HealthBarDisplayMode == SpecialClass::HB_DAMAGED)
                                          && (Strength < Techno_Type_Class()->MaxStrength))
                                      || (Special.HealthBarDisplayMode == SpecialClass::HB_ALWAYS));

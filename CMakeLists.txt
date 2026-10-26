@@ -21,12 +21,12 @@ if(NOT DEFINED CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo" FORCE)
 endif()
 
-project(TiberianDawnApple VERSION 0.5.7 LANGUAGES C CXX)
+project(TiberianDawnApple VERSION 0.5.8 LANGUAGES C CXX)
 
 # All native Apple applications use the same public version and monotonically
 # increasing build number. Keep these values centralized so macOS, iPadOS,
 # local builds, and distributed releases cannot silently drift apart.
-set(TIBERIAN_DAWN_BUILD_VERSION "507")
+set(TIBERIAN_DAWN_BUILD_VERSION "508")
 
 option(BUILD_REMASTERTD "Build Tiberian Dawn remaster dll." OFF)
 option(BUILD_REMASTERRA "Build Red Alert remaster dll." OFF)

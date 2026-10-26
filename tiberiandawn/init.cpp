@@ -930,9 +930,10 @@ bool Select_Game(bool fade)
             /*
             **	Pick an expansion scenario.
             */
+            case 1000: // Explicit campaign mission selection from the Apple menu.
             case SEL_NEW_SCENARIO:
                 Scen.CarryOverMoney = 0;
-                if (Expansion_Dialog()) {
+                if (Expansion_Dialog(selection==1000)) {
                     int difficulty = Fetch_Difficulty();
                     if (difficulty != -1) {
                         switch (difficulty) {
@@ -1427,7 +1428,9 @@ bool Select_Game(bool fade)
     **	Skip this if we've already loaded a save-game.
     */
     if (!gameloaded) {
-        if (Debug_Map) {
+        if (selection==1000) {
+            // Keep the exact campaign variant selected in Mission Select.
+        } else if (Debug_Map) {
             Set_Scenario_Name(Scen.ScenarioName, Scen.Scenario, ScenPlayer, ScenDir, SCEN_VAR_A);
         } else {
             Set_Scenario_Name(Scen.ScenarioName, Scen.Scenario, ScenPlayer, ScenDir);

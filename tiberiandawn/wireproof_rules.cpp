@@ -1,5 +1,6 @@
 #include "common/wireproof_cheats.h"
 #include "function.h"
+#include "common/wireproof_build_roster.h"
 #include "wireproof_rules.h"
 #include <vector>
 #include <string>
@@ -158,6 +159,11 @@ void WP_ResetLiveCheats(void) {
 }
 int WP_InstantBuild(const void* house) { return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.instant; }
 int WP_BuildAnywhere(const void* house) { return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.anywhere; }
+int WP_UnlockBuildType(const void* house,const char* name) {
+    if(PlaybackGame || GameToPlay!=GAME_NORMAL || !PlayerPtr || house!=PlayerPtr || !liveCheats.unlock || !name)return 0;
+    // Explicit military roster: never infer eligibility from modifiable ownership bits.
+    return WPCheats::MilitaryBuildType(name);
+}
 int WP_ZeroCost(const void* house) { return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.free; }
 int WP_PlayerInvincible(const void* house) {
     return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.invincible;
@@ -169,7 +175,11 @@ int WP_ScalePlayerSpeed(const void* house,int base,int category) {
 }
 static void WP_ApplyLiveCheats() {
     if(GameToPlay!=GAME_NORMAL || !PlayerPtr || PlaybackGame) return;
+    const bool oldHealth=liveCheats.damagedHealth;
+    const bool wasUnlocked=liveCheats.unlock;
     liveCheats=WPCheats::Shared().snapshot();
+    if(oldHealth!=liveCheats.damagedHealth)Map.Flag_To_Redraw(true);
+    if(wasUnlocked!=liveCheats.unlock)PlayerPtr->IsRecalcNeeded=true;
     if(liveCheats.weapons) {
         // Let the normal house logic grant weapons and add sidebar cameos.
         if(PlayerPtr->ActiveBScan & STRUCTF_TEMPLE) PlayerPtr->NukePieces=7;

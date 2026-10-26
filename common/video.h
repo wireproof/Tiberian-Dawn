@@ -66,6 +66,13 @@ void Set_Video_Cursor_Clip(bool clipped);
 void Move_Video_Mouse(float xrel, float yrel);
 void Get_Video_Mouse(int& x, int& y);
 void Refresh_Video_Layout();
+float Video_Battlefield_Zoom();
+bool Video_Battlefield_Contains(float normalized_x, float normalized_y);
+void Video_Publish_Order_Icon(int kind);
+void Video_Adjust_Battlefield_Zoom(float ratio);
+void Video_Set_Battlefield(bool active, int right, int top);
+void Video_Adaptive_Size(int& width, int& height);
+void Video_Set_Logical_Size(int width, int height);
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 void Set_Video_Mouse_Window(float window_x, float window_y, int& game_x, int& game_y);
 #endif

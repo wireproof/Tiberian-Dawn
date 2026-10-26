@@ -1,3 +1,6 @@
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "common/wireproof_orders.h"
+#endif
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -2627,7 +2630,13 @@ ActionType TechnoClass::What_Action(ObjectClass* object) const
         bool shiftdown = DLL_Export_Get_Input_Key_State(KN_LSHIFT);
 #else
         bool altdown = (Keyboard->Down(Options.KeyForceMove1) || Keyboard->Down(Options.KeyForceMove2));
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        altdown = altdown || WPOrders::Shared().snapshot().force==2;
+#endif
         bool ctrldown = (Keyboard->Down(Options.KeyForceAttack1) || Keyboard->Down(Options.KeyForceAttack2));
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        ctrldown = ctrldown || WPOrders::Shared().snapshot().force==1;
+#endif
         bool shiftdown = (Keyboard->Down(Options.KeySelect1) || Keyboard->Down(Options.KeySelect2));
 #endif
         /*
@@ -2744,7 +2753,13 @@ ActionType TechnoClass::What_Action(CELL cell) const
     bool shiftdown = DLL_Export_Get_Input_Key_State(KN_LSHIFT);
 #else
     bool altdown = Keyboard->Down(Options.KeyForceMove1) || Keyboard->Down(Options.KeyForceMove2);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    altdown = altdown || WPOrders::Shared().snapshot().force==2;
+#endif
     bool ctrldown = Keyboard->Down(Options.KeyForceAttack1) || Keyboard->Down(Options.KeyForceAttack2);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    ctrldown = ctrldown || WPOrders::Shared().snapshot().force==1;
+#endif
     bool shiftdown = (Keyboard->Down(Options.KeySelect1) || Keyboard->Down(Options.KeySelect2));
 #endif
     /*

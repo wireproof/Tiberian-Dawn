@@ -120,6 +120,7 @@ public:
     /*
     ** Initialization
     */
+    void Resize_Apple_Viewport();
     virtual void One_Time(void);                    // One-time inits
     virtual void Init_Clear(void);                  // Clears all to known state
     virtual void Init_IO(void);                     // Inits button list

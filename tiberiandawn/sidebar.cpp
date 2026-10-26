@@ -2664,3 +2664,27 @@ SidebarClass::~SidebarClass()
         Zoom = NULL;
     }
 }
+
+// Reposition existing gadgets; do not rerun One_Time or reset production.
+void SidebarClass::Resize_Apple_Viewport()
+{
+    const int dx = SeenBuff.Get_Width() - SideBarWidth - SideX;
+    SideX += dx; RadX += dx; PowX += dx;
+    RadarButton.X += dx; PowerButton.X += dx;
+    Background.X += dx;
+    if (Repair) Repair->X += dx;
+    if (Upgrade) Upgrade->X += dx;
+    if (Zoom) Zoom->X += dx;
+    WindowList[WINDOW_SIDEBAR][WINDOWX] += dx;
+    for (int i = 0; i < COLUMNS; ++i) {
+        Column[i].X += dx;
+        Column[i].Init_IO(i);
+        Column[i].Flag_To_Redraw();
+    }
+    Set_View_Dimensions(0, Map.Get_Tab_Height(),
+        SeenBuff.Get_Width() - (IsSidebarActive ? SideBarWidth : 0),
+        SeenBuff.Get_Height() - Map.Get_Tab_Height());
+    IsToRedraw = true;
+    RadarClass::IsToRedraw = true;
+    PowerClass::IsToRedraw = true;
+}

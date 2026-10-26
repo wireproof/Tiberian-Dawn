@@ -4,6 +4,74 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.3.4 — 2026-10-25 (prerelease; device validation pending)
+
+- Adapt the gameplay framebuffer to portrait/landscape window proportions,
+  with the top bar and sidebar repositioned without resetting production.
+- Add 1x–3x battlefield pinch zoom while keeping the interface at its normal
+  size; retain two-finger pan, two-finger tap and hold for right-click.
+- Offer Control+wheel battlefield zoom on macOS and with a connected mouse.
+- Use groups 1–9 in a horizontal strip, with group modes and orders in a
+  compact two-column layout below. Keep collapse and drag controls.
+- Decode Force Attack and Force Move icons from the game's own cursor frames.
+- Restore the original CnCGEdit weapon labels, including High-V Machine Gun
+  and Ballistic Charges. Saved numeric rules remain unchanged.
+- Includes the keyboard, draggable toolbar, and proportional-layout changes
+  from 0.2.9–0.3.3, which were not previously published to GitHub.
+
+## 0.3.3 — 2026-10-25 (device validation pending)
+
+- Restore CnCGEdit’s familiar Ballistic Charges name alongside 155 mm artillery.
+
+- Resolve the Orders overlay through the retained SDL game-window ID when
+  keyboard focus is temporarily absent.
+- Restore overlay stacking and cancelled drag recognizers after keyboard
+  dismissal, and avoid inheriting keyboard animations for toolbar geometry.
+- Keep the toolbar refresh timer active in common run-loop modes.
+
+## 0.3.2 — 2026-10-25 (device validation pending)
+
+- Ignore keyboard-show notifications from native UIKit editors when SDL's
+  hidden field is not the first responder. Those notifications previously
+  could activate SDL text input and reposition the game behind native dialogs.
+- Add a Done accessory button to SDL's software keyboard. Dismissal stops
+  text input, resigns the responder and restores the game view position.
+- Always resign SDL's responder when stopping text input, even if delayed
+  visibility notifications incorrectly report that its keyboard is hidden.
+- Retain the user-confirmed centered cover layout from v0.3.1.
+
+## 0.3.1 — 2026-10-25 (device validation pending)
+
+- Start the Orders toolbar as a draggable circle; tap to expand/collapse, drag
+  the circle or heading, and retain a clamped relative position after rotation.
+- Migrate previous Fill defaults to proportional fit. Portrait remains
+  proportional even with Fill selected. Balance horizontal safe-area margins.
+- Track SDL text-edit ownership through focus loss/destruction, end stale
+  single-player battlefield text sessions, and restore keyboard-adjusted views
+  using window-local bounds.
+- Suppress the desktop-style enlargement warning on phones.
+
+## 0.3.0 — 2026-10-25 (device validation pending)
+
+- Add a native iOS Orders & Groups tray with Stop, Guard, Scatter, one-target
+  Force Attack/Move and Cancel.
+- Expose all ten native control groups with Recall, Assign, Add and Center.
+- Compact screens use separate Orders/Groups tabs; larger displays show both.
+- Retain v0.2.9 scene bounds and display refresh fixes.
+- Record production queues, Remastered artwork and Red Alert/RedEdit98 as
+  future plans in docs/WIREPROOF-FUTURE-PLANS.md.
+
+## 0.2.9 — 2026-10-25 (device validation pending)
+
+- Keep UIKit fullscreen views within active scene/window bounds rather than
+  replacing their frame with physical-screen geometry.
+- Recheck actual drawable, window and safe-area geometry before each Apple
+  frame so delayed display transitions do not retain a stale viewport.
+- Keep rendering and touch coordinates based on the same refreshed layout.
+- Add cover/inner-size transition coverage for fit and fill presentation.
+- iPadOS and Universal 2 macOS compile; 25 host tests pass. Physical Duo
+  cover-screen alignment remains pending user verification.
+
 ## 0.2.3 — 2026-08-15
 
 This release publishes the current shared Apple-platform source together with

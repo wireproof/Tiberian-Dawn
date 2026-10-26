@@ -133,6 +133,7 @@ if(IPADOS_PORT)
         ${CMAKE_SOURCE_DIR}/common/relay_protocol.cpp
         ${CMAKE_SOURCE_DIR}/platform/apple/apple_relay_transport.mm
         ${CMAKE_SOURCE_DIR}/platform/apple/ipados_platform.mm
+        ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_orders.mm
         ${CMAKE_SOURCE_DIR}/third_party/unshieldv3/ISArchiveV3.cpp
         ${CMAKE_SOURCE_DIR}/third_party/unshieldv3/blast.c
     )
@@ -159,7 +160,7 @@ elseif(MACOS_PORT)
 endif()
 
 if(APPLE_NATIVE_PORT)
-    list(APPEND TIBDAWN_SRC wireproof_rules.cpp ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_workshop.mm)
+    list(APPEND TIBDAWN_SRC ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp wireproof_rules.cpp wireproof_viewport.cpp ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_workshop.mm)
     set_source_files_properties(${CMAKE_SOURCE_DIR}/platform/apple/wireproof_workshop.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
     set_source_files_properties(
         ${CMAKE_SOURCE_DIR}/platform/apple/apple_relay_transport.mm
@@ -521,4 +522,8 @@ endif()
 
 if(TARGET TiberianDawn AND (IPADOS_PORT OR MACOS_PORT OR VISIONOS_PORT OR CMAKE_SYSTEM_NAME STREQUAL "iOS"))
     target_compile_definitions(TiberianDawn PRIVATE WIREPROOF_APP_VERSION="${PROJECT_VERSION}")
+endif()
+
+if(IPADOS_PORT)
+set_source_files_properties(${CMAKE_SOURCE_DIR}/platform/apple/wireproof_orders.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
 endif()

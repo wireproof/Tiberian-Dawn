@@ -47,18 +47,21 @@
 #endif
 
 #ifdef IPADOS_PORT
+static EditClass* activeTextEditor = nullptr;
 void EditClass::Set_Focus(void)
 {
     ControlClass::Set_Focus();
     Set_IPadOS_Text_Input_Rect(X, Y, Width, Height);
+    activeTextEditor = this;
     SDL_StartTextInput();
 }
 
 void EditClass::Clear_Focus(void)
 {
-    const bool had_focus = Has_Focus();
+    const bool had_focus = activeTextEditor == this;
     ControlClass::Clear_Focus();
     if (had_focus) {
+        activeTextEditor = nullptr;
         SDL_StopTextInput();
     }
 }
@@ -140,6 +143,9 @@ EditClass::EditClass(int id, char* text, int max_len, TextPrintType flags, int x
  *=============================================================================================*/
 EditClass::~EditClass(void)
 {
+#ifdef IPADOS_PORT
+    if (activeTextEditor == this) Clear_Focus();
+#endif
     if (Has_Focus()) {
         Clear_Focus();
     }

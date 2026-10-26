@@ -160,16 +160,23 @@ static float4 modernized_color(texture2d<uint, access::read> indices,
 
 fragment float4 TiberianDawnPaletteFragment(PaletteVertexOutput input [[stage_in]],
                                          constant PaletteParameters& parameters [[buffer(0)]],
+                                         constant float4& scene [[buffer(1)]],
                                          texture2d<uint, access::read> indices [[texture(0)]],
                                          texture2d<float, access::read> palette [[texture(1)]])
 {
     const float2 source_size = float2(parameters.source_size);
     const int2 integer_source_size = int2(source_size);
-    const float2 source_position = input.uv * source_size - 0.5;
+    float2 point = input.uv * source_size;
+    if (scene.y > 0 && point.x < scene.y && point.y >= scene.z) {
+        point.x /= scene.x;
+        point.y = scene.z + (point.y - scene.z) / scene.x;
+    }
+    const float2 uv = point / source_size;
+    const float2 source_position = point - 0.5;
     const int2 base = int2(floor(source_position));
     float4 presented;
     if (parameters.mode != 0) {
-        presented = palette_color(indices, palette, int2(input.uv * source_size), integer_source_size);
+        presented = palette_color(indices, palette, int2(point), integer_source_size);
     } else {
         const float2 scale = max(float2(parameters.output_size) / source_size, float2(1.0));
         const float2 fraction = fract(source_position);
@@ -183,7 +190,7 @@ fragment float4 TiberianDawnPaletteFragment(PaletteVertexOutput input [[stage_in
     }
     return parameters.artwork_mode == 0
         ? presented
-        : modernized_color(indices, palette, input.uv, integer_source_size, presented);
+        : modernized_color(indices, palette, uv, integer_source_size, presented);
 }
 
 fragment float4 TiberianDawnPaletteCursorFragment(PaletteVertexOutput input [[stage_in]],
@@ -867,7 +874,7 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
                          int infantry_count,
                          const IPadSelectionOverlay* selections,
                          int selection_count,
-                         IPadPaletteCursor cursor)
+                         IPadPaletteCursor cursor, float map_zoom, int map_right, int map_top)
 {
     TiberianDawnPaletteRendererState* state = State(renderer);
     if (!state || !sdl_renderer || !indexed_pixels || indexed_pitch < state->Width || !rgb6_palette
@@ -920,6 +927,8 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
                                           static_cast<float>(viewport.height),
                                           static_cast<std::uint32_t>(presentation_mode),
                                           static_cast<std::uint32_t>(artwork_mode)};
+    const float scene[4] = {map_zoom, float(map_right), float(map_top), 0};
+    [encoder setFragmentBytes:scene length:sizeof(scene) atIndex:1];
     SetViewport(encoder, viewport);
     SetScissor(encoder, viewport, layer);
     [encoder setRenderPipelineState:state->BasePipeline];

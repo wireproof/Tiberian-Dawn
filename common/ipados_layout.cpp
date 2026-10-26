@@ -60,6 +60,11 @@ IPadLayout Calculate_IPad_Layout(int output_width,
     layout.safe_area.right = Clamp(safe_area.right, 0, layout.output_width - layout.safe_area.left - 1);
     layout.safe_area.bottom = Clamp(safe_area.bottom, 0, layout.output_height - layout.safe_area.top - 1);
 
+    // Keep the image centered even when only one edge has a camera cutout.
+    const int horizontal = std::min(std::max(layout.safe_area.left, layout.safe_area.right),
+                                    (layout.output_width - 1) / 2);
+    layout.safe_area.left = layout.safe_area.right = horizontal;
+
     const int available_width = layout.output_width - layout.safe_area.left - layout.safe_area.right;
     const int available_height = layout.output_height - layout.safe_area.top - layout.safe_area.bottom;
     layout.viewport = Fit_Viewport(available_width,
@@ -67,7 +72,7 @@ IPadLayout Calculate_IPad_Layout(int output_width,
                                    layout.game_width,
                                    layout.game_height,
                                    integer_scaling);
-    if (fill_display) { layout.viewport.width = available_width; layout.viewport.height = available_height; }
+    if (fill_display && output_width >= output_height) { layout.viewport.width = available_width; layout.viewport.height = available_height; }
     layout.viewport.x = layout.safe_area.left + (available_width - layout.viewport.width) / 2;
     layout.viewport.y = layout.safe_area.top + (available_height - layout.viewport.height) / 2;
     return layout;
@@ -119,4 +124,19 @@ int IPad_Game_Pixels_For_Window_Points(const IPadLayout& layout, float points)
                     static_cast<int>(std::ceil(points
                                                * std::max(game_pixels_per_point_x,
                                                           game_pixels_per_point_y))));
+}
+
+void Calculate_Adaptive_Game_Size(int available_width, int available_height, int& width, int& height)
+{
+    if (available_width <= 0 || available_height <= 0) return;
+    const double scale = std::min(available_width / 640.0, available_height / 400.0);
+    width = std::min(2048, std::max(640, (int)std::lround(available_width / scale)));
+    height = std::min(2048, std::max(400, (int)std::lround(available_height / scale)));
+}
+
+void Unzoom_IPad_Battlefield_Point(int& x, int& y, int right, int top, float zoom)
+{
+    if (!std::isfinite(zoom) || zoom < 1.0f || x >= right || y < top) return;
+    x = (int)(x / zoom);
+    y = top + (int)((y - top) / zoom);
 }

@@ -88,6 +88,39 @@ void* Get_Shape_Header_Data(void* ptr);
 *****************************************/
 bool Main_Loop();
 void Keyboard_Process(KeyNumType& input);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "common/wireproof_orders.h"
+#include "common/wireproof_viewport.h"
+static void WP_ProcessOrders() {
+    using namespace WPOrders;
+    Shared().publish(InMainLoop && GameActive && GameInFocus && SpecialDialog==SDLG_NONE && !PlaybackGame,
+                     CurrentObject.Count());
+#ifdef IPADOS_PORT
+    // Single-player battlefield has no text entry. End stale SDL edit sessions
+    // left behind by save/load dialogs without interrupting multiplayer chat.
+    if (Shared().snapshot().active && GameToPlay==GAME_NORMAL && SDL_IsTextInputActive())
+        SDL_StopTextInput();
+#endif
+    Command command;
+    while (Shared().take(command)) {
+        if (command.kind==Attack || command.kind==Move) {
+            Shared().force(command.kind==Attack?1:2); continue;
+        }
+        Shared().force(0);
+        if (command.kind==Cancel) continue;
+        if (command.kind>=Recall) {
+            if (command.kind==Assign && CurrentObject.Count()==0) continue;
+            if (command.kind==Recall || command.kind==Center) Unselect_All();
+            Handle_Team(command.group,command.kind==Assign?2:1);
+            if (command.kind==Center && CurrentObject.Count()) { Map.Center_Map(); Map.Flag_To_Redraw(true); }
+        } else {
+            KeyNumType key=command.kind==Stop?Options.KeyStop:command.kind==Guard?Options.KeyGuard:Options.KeyScatter;
+            Keyboard_Process(key);
+        }
+    }
+}
+#endif
+
 #ifndef DEMO
 static void Message_Input(KeyNumType& input);
 #endif
@@ -192,6 +225,9 @@ void Main_Game(int argc, char* argv[])
         }
 
         InMainLoop = true;
+#ifdef IPADOS_PORT
+        SDL_StopTextInput();
+#endif
         Set_Video_Cursor_Clip(true);
 
 #ifdef SCENARIO_EDITOR
@@ -210,6 +246,10 @@ void Main_Game(int argc, char* argv[])
                 }
 
                 if (SpecialDialog != SDLG_NONE) {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                WPOrders::Shared().publish(false,0);
+                WP_Update_Battlefield_Viewport(false);
+#endif
                     Set_Video_Cursor_Clip(false);
 
                     switch (SpecialDialog) {
@@ -225,6 +265,9 @@ void Main_Game(int argc, char* argv[])
                         Map.Help_Text(TXT_NONE);
                         Map.Override_Mouse_Shape(MOUSE_NORMAL, false);
                         Options.Process();
+#ifdef IPADOS_PORT
+                    SDL_StopTextInput();
+#endif
                         Map.Revert_Mouse_Shape();
                         SpecialDialog = SDLG_NONE;
                         break;
@@ -275,6 +318,10 @@ void Main_Game(int argc, char* argv[])
             **	Main_Loop(), allowing the game to run in the background.
             */
             if (SpecialDialog != SDLG_NONE) {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                WPOrders::Shared().publish(false,0);
+                WP_Update_Battlefield_Viewport(false);
+#endif
                 Set_Video_Cursor_Clip(false);
 
                 switch (SpecialDialog) {
@@ -290,6 +337,9 @@ void Main_Game(int argc, char* argv[])
                     Map.Help_Text(TXT_NONE);
                     Map.Override_Mouse_Shape(MOUSE_NORMAL, false);
                     Options.Process();
+#ifdef IPADOS_PORT
+                    SDL_StopTextInput();
+#endif
                     Map.Revert_Mouse_Shape();
                     SpecialDialog = SDLG_NONE;
                     break;
@@ -314,6 +364,10 @@ void Main_Game(int argc, char* argv[])
 #endif
         Set_Video_Cursor_Clip(false);
         InMainLoop = false;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        WPOrders::Shared().publish(false,0);
+                WP_Update_Battlefield_Viewport(false);
+#endif
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
         // Do not let presentation-layer sprites survive into score screens or
         // the main menu while scenario objects are being torn down.
@@ -1533,6 +1587,9 @@ static void Sync_Delay(void)
             KeyNumType input = KN_NONE;
             int x, y;
             WWMouse->Erase_Mouse(&HidPage, false);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+            WP_ProcessOrders();
+#endif
             Map.Input(input, x, y);
             if (input) {
                 Keyboard_Process(input);
@@ -1597,6 +1654,10 @@ bool Scroll_Apple_Touch_Map(int pixel_delta_x, int pixel_delta_y)
 
 bool Main_Loop()
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WP_Update_Battlefield_Viewport(InMainLoop && GameActive && SpecialDialog == SDLG_NONE);
+    WP_ProcessOrders();
+#endif
     KeyNumType input; // Player input.
     int x;
     int y;
@@ -1632,9 +1693,9 @@ bool Main_Loop()
                                           : (Settings.Touch.ScrollSpeed == 2 ? 1.40f : 1.0f);
 #endif
         const int map_delta_x = -static_cast<int>(
-            std::round(touch_pan_x * SeenBuff.Get_Width() * touch_pan_speed));
+            std::round(touch_pan_x * SeenBuff.Get_Width() * touch_pan_speed / Video_Battlefield_Zoom()));
         const int map_delta_y = -static_cast<int>(
-            std::round(touch_pan_y * SeenBuff.Get_Height() * touch_pan_speed));
+            std::round(touch_pan_y * SeenBuff.Get_Height() * touch_pan_speed / Video_Battlefield_Zoom()));
         Scroll_Apple_Touch_Map(map_delta_x, map_delta_y);
     }
 #ifdef VISIONOS_PORT
@@ -1710,6 +1771,9 @@ bool Main_Loop()
         if (SpecialDialog == SDLG_NONE && GameInFocus) {
 
             WWMouse->Erase_Mouse(&HidPage, true);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+            WP_ProcessOrders();
+#endif
             Map.Input(input, x, y);
             if (input) {
                 Keyboard_Process(input);

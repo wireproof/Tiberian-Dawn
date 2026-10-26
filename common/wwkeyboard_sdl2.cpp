@@ -142,6 +142,10 @@ struct TouchGestureState
     float pan_centroid_x = 0.0f;
     float pan_centroid_y = 0.0f;
     float pan_travel = 0.0f;
+    float pinch_distance = 0.0f;
+    float pinch_start = 0.0f;
+    bool pinched = false;
+    bool pinch_allowed = false;
     Uint32 started_at = 0;
     Uint32 two_finger_started_at = 0;
     bool left_button_down = false;
@@ -305,12 +309,25 @@ void Begin_Primary_Touch(const SDL_TouchFingerEvent& event)
     TouchGesture.current_y = TouchGesture.start_y;
 }
 
+float Two_Finger_Distance() {
+    int width=1,height=1;
+    SDL_Window* window=SDL_GetKeyboardFocus();
+    if (window) SDL_GetWindowSize(window,&width,&height);
+    const float dx=(TouchGesture.fingers[0].normalized_x-TouchGesture.fingers[1].normalized_x)*width;
+    const float dy=(TouchGesture.fingers[0].normalized_y-TouchGesture.fingers[1].normalized_y)*height;
+    return std::sqrt(dx*dx+dy*dy);
+}
+
 void Begin_Two_Finger_Pan(WWKeyboardClassSDL2& keyboard)
 {
     Release_Touch_Left_Button(keyboard);
     TouchGesture.long_press_sent = true;
     TouchGesture.panning = true;
     TouchGesture.pan_travel = 0.0f;
+    TouchGesture.pinch_distance = TouchGesture.pinch_start = Two_Finger_Distance();
+    TouchGesture.pinched = false;
+    TouchGesture.pinch_allowed = Video_Battlefield_Contains(TouchGesture.fingers[0].normalized_x,TouchGesture.fingers[0].normalized_y)
+        && Video_Battlefield_Contains(TouchGesture.fingers[1].normalized_x,TouchGesture.fingers[1].normalized_y);
     TouchGesture.two_finger_started_at = SDL_GetTicks();
     TouchGesture.two_finger_tap_sent = false;
     TouchGesture.pan_centroid_x =
@@ -362,6 +379,11 @@ void Handle_Touch_Motion(WWKeyboardClassSDL2& keyboard, const SDL_TouchFingerEve
     }
 
     if (TouchGesture.panning && Active_Finger_Count() == 2) {
+        const float distance=Two_Finger_Distance();
+        if (std::fabs(distance-TouchGesture.pinch_start)>8.0f) TouchGesture.pinched=true;
+        if (TouchGesture.pinch_allowed && TouchGesture.pinched && TouchGesture.pinch_distance>1.0f && distance>1.0f)
+            Video_Adjust_Battlefield_Zoom(distance/TouchGesture.pinch_distance);
+        TouchGesture.pinch_distance=distance;
         const float centroid_x =
             (TouchGesture.fingers[0].normalized_x + TouchGesture.fingers[1].normalized_x) * 0.5f;
         const float centroid_y =
@@ -404,7 +426,7 @@ void Handle_Touch_Up(WWKeyboardClassSDL2& keyboard, const SDL_TouchFingerEvent& 
     }
 
     if (!cancelled && TouchGesture.panning && !TouchGesture.two_finger_tap_sent
-        && TouchGesture.pan_travel < 0.012f
+        && !TouchGesture.pinched && TouchGesture.pan_travel < 0.012f
         && SDL_GetTicks() - TouchGesture.two_finger_started_at <= TwoFingerTapMilliseconds) {
         int x = 0;
         int y = 0;
@@ -859,6 +881,12 @@ void WWKeyboardClassSDL2::Fill_Buffer_From_System(void)
             }
             break;
         case SDL_MOUSEWHEEL:
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+            if (SDL_GetModState() & KMOD_CTRL) {
+                Video_Adjust_Battlefield_Zoom(std::pow(1.12f, float(event.wheel.y)));
+                break;
+            }
+#endif
 #ifdef IPADOS_PORT
             Video_Record_Input_Timestamp(event.wheel.timestamp);
 #endif

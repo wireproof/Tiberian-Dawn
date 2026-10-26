@@ -2,6 +2,19 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
+## Prerelease 0.3.4
+
+[Download the 0.3.4 IPA](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.3.4).
+This candidate adds adaptive portrait/landscape gameplay, battlefield-only pinch
+zoom (1x–3x), a draggable Orders/Groups panel with game cursor icons, and the
+original CnCGEdit weapon names. Two-finger drag pans; two-finger tap or a hold
+right-clicks. macOS supports Control+wheel zoom. See [touch controls](docs/TOUCH-ORDERS.md).
+
+Both Apple targets compile and the 26 host tests pass. The Metal shaders compile
+on macOS. Duo cover/inner transitions, touch targeting, keyboard dismissal and
+zoom require physical-device confirmation; this is a prerelease, not a claim of
+completed device validation. The previous stable release remains available below.
+
 ## Release 0.2.8
 
 - Native touch controls and adaptable display layout.

@@ -11,15 +11,34 @@ static const std::vector<WPChoice> factionChoices={{-1,"Use ownership mask"},{0,
 static const std::vector<WPChoice> toggles={{0,"Off"},{1,"On"}};
 static const std::vector<WPChoice> armorChoices={{ARMOR_NONE,"None"},{ARMOR_WOOD,"Wood"},{ARMOR_ALUMINUM,"Aluminum"},{ARMOR_STEEL,"Steel"},{ARMOR_CONCRETE,"Concrete"}};
 static const std::vector<WPChoice> factoryChoices={{RTTI_NONE,"None"},{RTTI_INFANTRYTYPE,"Infantry"},{RTTI_UNITTYPE,"Vehicles"},{RTTI_AIRCRAFTTYPE,"Aircraft"},{RTTI_BUILDINGTYPE,"Buildings"}};
+// Original CnCGEdit weapon labels, in its verified numeric weapon order.
 static const std::vector<WPChoice> weaponChoices={
-    {WEAPON_NONE,"None"},{WEAPON_RIFLE,"Sniper rifle"},{WEAPON_CHAIN_GUN,"Chain gun"},{WEAPON_PISTOL,"Pistol"},
-    {WEAPON_M16,"M16 rifle"},{WEAPON_DRAGON,"Dragon rocket"},{WEAPON_FLAMETHROWER,"Infantry flamethrower"},
-    {WEAPON_FLAME_TONGUE,"Tank flamethrower"},{WEAPON_CHEMSPRAY,"Chemical spray"},{WEAPON_GRENADE,"Grenade"},
-    {WEAPON_75MM,"75 mm cannon"},{WEAPON_105MM,"105 mm cannon"},{WEAPON_120MM,"120 mm cannon"},
-    {WEAPON_TURRET_GUN,"Turret cannon"},{WEAPON_MAMMOTH_TUSK,"Mammoth missiles"},{WEAPON_MLRS,"MLRS rockets"},
-    {WEAPON_155MM,"155 mm artillery"},{WEAPON_M60MG,"M60 machine gun"},{WEAPON_TOMAHAWK,"Gunboat missile"},
-    {WEAPON_TOW_TWO,"TOW missile"},{WEAPON_NAPALM,"Napalm"},{WEAPON_OBELISK_LASER,"Obelisk laser"},
-    {WEAPON_NIKE,"SAM missile"},{WEAPON_HONEST_JOHN,"Honest John missile"},{WEAPON_STEG,"Stegosaurus attack"},{WEAPON_TREX,"T. rex attack"}};
+    {WEAPON_NONE,"None"},
+    {WEAPON_RIFLE,"Sniper's Rifle"},
+    {WEAPON_CHAIN_GUN,"High-V Machine Gun"},
+    {WEAPON_PISTOL,"Pistol"},
+    {WEAPON_M16,"5.56mm ChainGun"},
+    {WEAPON_DRAGON,"Rockets"},
+    {WEAPON_FLAMETHROWER,"Infantry Flamer"},
+    {WEAPON_FLAME_TONGUE,"Tank Flamer"},
+    {WEAPON_CHEMSPRAY,"Chem Spray"},
+    {WEAPON_GRENADE,"Grenade"},
+    {WEAPON_75MM,"70mm Cannon"},
+    {WEAPON_105MM,"120mm Cannon"},
+    {WEAPON_120MM,"120mm Cannon (apr)"},
+    {WEAPON_TURRET_GUN,"Turret Cannon"},
+    {WEAPON_MAMMOTH_TUSK,"Missle Pack"},
+    {WEAPON_MLRS,"277mm Rockets"},
+    {WEAPON_155MM,"Ballistic Charges"},
+    {WEAPON_M60MG,"Machine Gun"},
+    {WEAPON_TOMAHAWK,"Gunboat Missile"},
+    {WEAPON_TOW_TWO,"Rocket Launcher"},
+    {WEAPON_NAPALM,"Napalm Bomb"},
+    {WEAPON_OBELISK_LASER,"Laser"},
+    {WEAPON_NIKE,"SAM Missile"},
+    {WEAPON_HONEST_JOHN,"Honest John Missile"},
+    {WEAPON_STEG,"DinoBite 1"},
+    {WEAPON_TREX,"DinoBite 2"}};
 static std::vector<WPRuleEntry> rules;
 static std::map<std::string,std::string> displayGroups;
 static bool active = false;

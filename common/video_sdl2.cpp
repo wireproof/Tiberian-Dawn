@@ -507,7 +507,7 @@ Uint32 SettingsPixelFormat()
 
 static void Update_HWCursor();
 
-static void Update_HWCursor_Settings()
+static void Update_HWCursor_Settings(bool geometry_only = false)
 {
     if (window == nullptr || renderer == nullptr || hwcursor.GameW <= 0 || hwcursor.GameH <= 0) {
         return;
@@ -518,6 +518,9 @@ static void Update_HWCursor_Settings()
     ** are UIKit points. Keep both sizes so Retina windows and Stage Manager
     ** use the same mapping as normalized touch input.
     */
+    const SDL_Rect previous_destination = render_dst;
+    const int previous_points_w = window_points_w;
+    const int previous_points_h = window_points_h;
     int previous_output_w = renderer_output_w;
     int previous_output_h = renderer_output_h;
     SDL_GetRendererOutputSize(renderer, &renderer_output_w, &renderer_output_h);
@@ -593,6 +596,19 @@ static void Update_HWCursor_Settings()
         render_dst.x = 0;
         render_dst.y = 0;
     }
+#endif
+
+    const bool geometry_changed = previous_output_w != renderer_output_w
+                                  || previous_output_h != renderer_output_h
+                                  || previous_points_w != window_points_w
+                                  || previous_points_h != window_points_h
+                                  || previous_destination.x != render_dst.x
+                                  || previous_destination.y != render_dst.y
+                                  || previous_destination.w != render_dst.w
+                                  || previous_destination.h != render_dst.h;
+    if (geometry_only && !geometry_changed) return;
+#ifdef TIBERIAN_DAWN_APPLE_PORT
+    if (geometry_changed) force_present = true;
 #endif
 
     hwcursor.ScaleX = render_dst.w / (float)hwcursor.GameW;
@@ -1006,9 +1022,73 @@ void Get_Video_Mouse(int& x, int& y)
 }
 
 #ifdef TIBERIAN_DAWN_APPLE_PORT
+static bool battlefield_active = false;
+static float battlefield_zoom = 1.0f;
+static int battlefield_right = 480, battlefield_top = 16;
+void Video_Publish_Order_Icon(int kind) {
+#ifdef IPADOS_PORT
+    extern void WP_Publish_Order_Icon(int, const unsigned char*, int, int);
+    if (!hwcursor.Raw || !palette) return;
+    std::vector<unsigned char> rgba(hwcursor.W * hwcursor.H * 4);
+    const unsigned char* pixels = (const unsigned char*)hwcursor.Raw;
+    for (int i=0; i<hwcursor.W*hwcursor.H; ++i) {
+        const SDL_Color c=palette->colors[pixels[i]];
+        rgba[i*4]=c.r; rgba[i*4+1]=c.g; rgba[i*4+2]=c.b; rgba[i*4+3]=pixels[i]?255:0;
+    }
+    WP_Publish_Order_Icon(kind, rgba.data(), hwcursor.W, hwcursor.H);
+#endif
+}
+float Video_Battlefield_Zoom() { return battlefield_active ? battlefield_zoom : 1.0f; }
+bool Video_Battlefield_Contains(float x, float y) {
+    if (!battlefield_active) return false;
+    int gx,gy;
+    Map_IPad_Normalized_Point(ipad_layout,x,y,gx,gy);
+    const float px=x*renderer_output_w, py=y*renderer_output_h;
+    return px>=render_dst.x && py>=render_dst.y && px<render_dst.x+render_dst.w && py<render_dst.y+render_dst.h
+        && gx<battlefield_right && gy>=battlefield_top;
+}
+void Video_Adjust_Battlefield_Zoom(float ratio) {
+    if (!battlefield_active || !std::isfinite(ratio) || ratio <= 0) return;
+    battlefield_zoom = std::max(1.0f, std::min(3.0f, battlefield_zoom * ratio));
+    force_present = true;
+}
+void Video_Set_Battlefield(bool active, int right, int top) {
+    if (battlefield_active != active || battlefield_right != right || battlefield_top != top) force_present = true;
+    battlefield_active = active; battlefield_right = right; battlefield_top = top;
+}
+static void Unzoom_Battlefield_Point(int& x, int& y) {
+    if (battlefield_active) Unzoom_IPad_Battlefield_Point(x, y, battlefield_right, battlefield_top, battlefield_zoom);
+}
+static SDL_Rect Battlefield_Destination() {
+    SDL_Rect result = render_dst;
+    const float zoom = Video_Battlefield_Zoom();
+    result.y += (int)std::lround(battlefield_top * (render_dst.h / float(hwcursor.GameH)) * (1 - zoom));
+    result.w = (int)std::lround(result.w * zoom);
+    result.h = (int)std::lround(result.h * zoom);
+    return result;
+}
+
+void Video_Adaptive_Size(int& width, int& height)
+{
+    Update_HWCursor_Settings(true);
+    const int available_w = renderer_output_w - ipad_layout.safe_area.left - ipad_layout.safe_area.right;
+    const int available_h = renderer_output_h - ipad_layout.safe_area.top - ipad_layout.safe_area.bottom;
+    Calculate_Adaptive_Game_Size(available_w, available_h, width, height);
+}
+
+void Video_Set_Logical_Size(int width, int height)
+{
+    hwcursor.GameW = width; hwcursor.GameH = height;
+    hwcursor.X = std::min(hwcursor.X, float(width - 1));
+    hwcursor.Y = std::min(hwcursor.Y, float(height - 1));
+    force_present = true;
+    Update_HWCursor_Settings();
+}
+
 static void Set_Video_Mouse_Output(float pixel_x, float pixel_y, int& game_x, int& game_y)
 {
     Map_IPad_Output_Point(ipad_layout, pixel_x, pixel_y, game_x, game_y);
+    Unzoom_Battlefield_Point(game_x, game_y);
     hwcursor.X = game_x;
     hwcursor.Y = game_y;
 }
@@ -1020,6 +1100,7 @@ void Set_Video_Mouse_Window(float window_x, float window_y, int& game_x, int& ga
     }
 
     Map_IPad_Window_Point(ipad_layout, window_x, window_y, game_x, game_y);
+    Unzoom_Battlefield_Point(game_x, game_y);
     hwcursor.X = game_x;
     hwcursor.Y = game_y;
 }
@@ -1031,6 +1112,7 @@ void Set_Video_Mouse_Normalized(float normalized_x, float normalized_y, int& gam
     }
 
     Map_IPad_Normalized_Point(ipad_layout, normalized_x, normalized_y, game_x, game_y);
+    Unzoom_Battlefield_Point(game_x, game_y);
     hwcursor.X = game_x;
     hwcursor.Y = game_y;
 }
@@ -1040,7 +1122,7 @@ int Video_Game_Pixels_For_Window_Points(float points)
     if (renderer_output_w <= 0 || renderer_output_h <= 0 || window_points_w <= 0 || window_points_h <= 0) {
         Refresh_Video_Layout();
     }
-    return IPad_Game_Pixels_For_Window_Points(ipad_layout, points);
+    return std::max(1, (int)std::ceil(IPad_Game_Pixels_For_Window_Points(ipad_layout, points) / Video_Battlefield_Zoom()));
 }
 #endif
 
@@ -1509,6 +1591,11 @@ public:
             return false;
         }
 
+        // UIKit/Metal drawable geometry may settle after the SDL resize event
+        // during rotation, folding or window resizing. Refresh before deriving
+        // any rendering or input coordinates, including otherwise idle frames.
+        Update_HWCursor_Settings(true);
+
         int cursor_x = -1;
         int cursor_y = -1;
         const bool software_cursor = !touch_input_active && !Settings.Video.HardwareCursor
@@ -1573,6 +1660,8 @@ public:
 
         bool metal_rendered = false;
 #ifdef TIBERIAN_DAWN_APPLE_PORT
+        const SDL_Rect base_destination = render_dst;
+        render_dst = Battlefield_Destination();
         IPadPaletteCursor metal_cursor = {};
         std::vector<IPadSelectionOverlay> metal_selections;
         std::vector<IPadHDBuildingOverlay> metal_buildings;
@@ -1746,6 +1835,7 @@ public:
                 metal_selections.push_back(overlay);
             }
         }
+        render_dst = base_destination;
         if (software_cursor) {
             const float cursor_scale = Settings.Video.LargeCursor ? 2.5f : 1.0f;
             const int game_x = cursor_x - static_cast<int>(hwcursor.HotX * cursor_scale);
@@ -1761,6 +1851,13 @@ public:
             metal_cursor.destination.y = render_dst.y + static_cast<int>(game_y * hwcursor.ScaleY);
             metal_cursor.destination.width = std::max(1, static_cast<int>(hwcursor.Surface->w * cursor_scale * hwcursor.ScaleX));
             metal_cursor.destination.height = std::max(1, static_cast<int>(hwcursor.Surface->h * cursor_scale * hwcursor.ScaleY));
+            if (battlefield_active && cursor_x < battlefield_right / battlefield_zoom && cursor_y >= battlefield_top) {
+                const SDL_Rect world = Battlefield_Destination();
+                metal_cursor.destination.x = world.x + (int)std::lround(game_x * world.w / float(surface->w));
+                metal_cursor.destination.y = world.y + (int)std::lround(game_y * world.h / float(surface->h));
+                metal_cursor.destination.width = (int)std::lround(metal_cursor.destination.width * battlefield_zoom);
+                metal_cursor.destination.height = (int)std::lround(metal_cursor.destination.height * battlefield_zoom);
+            }
             metal_cursor.visible = true;
             metal_cursor.pixels_changed = lastCursorGeneration != cursor_generation || !hadSoftwareCursor;
         }
@@ -1792,6 +1889,11 @@ public:
                               std::max(0, clip_right - clip_left),
                               std::max(0, clip_bottom - clip_top)};
             }
+            if (battlefield_active) {
+                const float sx = render_dst.w / float(surface->w), sy = render_dst.h / float(surface->h);
+                world_clip = {render_dst.x, render_dst.y + (int)std::lround(battlefield_top * sy),
+                    (int)std::lround(battlefield_right * sx), render_dst.h - (int)std::lround(battlefield_top * sy)};
+            }
             metal_rendered = IPad_Palette_Render(paletteRenderer,
                                                 renderer,
                                                 surface->pixels,
@@ -1812,7 +1914,10 @@ public:
                                                 static_cast<int>(metal_infantry.size()),
                                                 metal_selections.empty() ? nullptr : metal_selections.data(),
                                                 static_cast<int>(metal_selections.size()),
-                                                metal_cursor);
+                                                metal_cursor,
+                                                Video_Battlefield_Zoom(),
+                                                battlefield_active ? battlefield_right : 0,
+                                                battlefield_top);
         }
 #endif
 
@@ -1872,8 +1977,20 @@ public:
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
             SDL_RenderCopy(renderer, texture, NULL, &render_dst);
+#ifdef TIBERIAN_DAWN_APPLE_PORT
+            if (battlefield_active && battlefield_zoom > 1.0f) {
+                SDL_Rect src = {0, battlefield_top, (int)std::ceil(battlefield_right / battlefield_zoom),
+                    (int)std::ceil((surface->h - battlefield_top) / battlefield_zoom)};
+                SDL_Rect dst = {render_dst.x, render_dst.y + (int)std::lround(battlefield_top * render_dst.h / float(surface->h)),
+                    (int)std::lround(battlefield_right * render_dst.w / float(surface->w)),
+                    (int)std::lround((surface->h - battlefield_top) * render_dst.h / float(surface->h))};
+                SDL_RenderCopy(renderer, texture, &src, &dst);
+            }
+#endif
         }
 #ifdef TIBERIAN_DAWN_APPLE_PORT
+        const SDL_Rect feedback_base = render_dst;
+        render_dst = Battlefield_Destination();
         if (touch_selection_box.active) {
             const float scale_x = render_dst.w / static_cast<float>(hwcursor.GameW);
             const float scale_y = render_dst.h / static_cast<float>(hwcursor.GameH);
@@ -1887,7 +2004,13 @@ public:
                 std::max(1, static_cast<int>(std::lround((right_game - left_game) * scale_x))),
                 std::max(1, static_cast<int>(std::lround((bottom_game - top_game) * scale_y))),
             };
-            SDL_RenderSetClipRect(renderer, &render_dst);
+            SDL_Rect selection_clip=feedback_base;
+            if (battlefield_active) {
+                selection_clip.y += (int)std::lround(battlefield_top * feedback_base.h / float(surface->h));
+                selection_clip.h -= selection_clip.y-feedback_base.y;
+                selection_clip.w = (int)std::lround(battlefield_right * feedback_base.w / float(surface->w));
+            }
+            SDL_RenderSetClipRect(renderer, &selection_clip);
             SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
             if (Settings.Video.HighContrast) {
                 SDL_Rect shadow = {box.x - 2, box.y - 2, box.w + 4, box.h + 4};
@@ -1903,7 +2026,10 @@ public:
             }
             SDL_RenderSetClipRect(renderer, nullptr);
         }
+        render_dst = feedback_base;
         if (touch_feedback.active) {
+            if (battlefield_active && touch_feedback.x < battlefield_right / battlefield_zoom && touch_feedback.y >= battlefield_top)
+                render_dst = Battlefield_Destination();
             const float scale_x = render_dst.w / static_cast<float>(hwcursor.GameW);
             const float scale_y = render_dst.h / static_cast<float>(hwcursor.GameH);
             const int center_x = render_dst.x + static_cast<int>(touch_feedback.x * scale_x);
@@ -1953,6 +2079,7 @@ public:
                 SDL_RenderDrawLines(renderer, ring, 33);
             }
         }
+        render_dst = feedback_base;
         const Uint64 present_started = SDL_GetPerformanceCounter();
 #endif
         SDL_RenderPresent(renderer);
@@ -2155,6 +2282,8 @@ void Video_Set_HD_World_Artwork_Visible(bool visible)
     hd_world_artwork_visible = visible;
     if (!visible) {
         Video_Clear_HD_Artwork();
+        const SDL_Rect feedback_base = render_dst;
+        render_dst = Battlefield_Destination();
         if (touch_selection_box.active) {
             touch_selection_box.active = false;
             ++touch_selection_box.generation;

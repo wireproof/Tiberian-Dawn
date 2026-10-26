@@ -1354,9 +1354,12 @@ void TiberianDawn_ManageSaveGames(void)
     }
 }
 
+extern "C" void WP_InstallOrdersPanel(void);
+
 void TiberianDawn_ConfigureAudioSession(void)
 {
     @autoreleasepool {
+        WP_InstallOrdersPanel();
         AVAudioSession* session = AVAudioSession.sharedInstance;
         NSError* error = nil;
         [session setCategory:AVAudioSessionCategoryAmbient
@@ -1402,6 +1405,8 @@ bool TiberianDawn_RebuildAudioEngine(void)
 
 void TiberianDawn_SetCompactWindowWarning(bool visible)
 {
+    // Phone layouts are intentionally compact; an enlargement warning obscures play.
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) visible = false;
     dispatch_async(dispatch_get_main_queue(), ^{
         UILabel* label = CompactWarningLabel();
         label.text = L("compact_warning");

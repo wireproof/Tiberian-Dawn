@@ -1,3 +1,6 @@
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "common/wireproof_orders.h"
+#endif
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -3663,6 +3666,9 @@ int DisplayClass::TacticalClass::Command_Object(unsigned flags, KeyNumType& key)
  *=============================================================================================*/
 void DisplayClass::Mouse_Right_Press(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WPOrders::Shared().force(0);
+#endif
     if (PendingObjectPtr && PendingObjectPtr->Is_Techno()) {
         // PendingObjectPtr->Transmit_Message(RADIO_OVER_OUT);
         PendingObjectPtr = 0;
@@ -3950,6 +3956,11 @@ void DisplayClass::Mouse_Left_Up(bool shadow, ObjectClass* object, ActionType ac
  *=============================================================================================*/
 void DisplayClass::Mouse_Left_Release(CELL cell, int x, int y, ObjectClass* object, ActionType action, bool wwsmall)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    // Preserve the modifier through order generation, then disarm even on an
+    // invalid destination or an early return. Hardware modifiers are untouched.
+    struct FinishTouchOrder { ~FinishTouchOrder() { WPOrders::Shared().force(0); } } finishTouchOrder;
+#endif
     if (PendingObjectPtr) {
 
         /*

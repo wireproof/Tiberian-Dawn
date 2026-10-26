@@ -121,8 +121,8 @@ void SettingsClass::Load(INIClass& ini)
     Video.LargeCursor = ini.Get_Bool("Apple", "LargeCursor", Video.LargeCursor);
     Video.HighContrast = ini.Get_Bool("Apple", "HighContrast", Video.HighContrast);
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
-    if (ini.Get_Int("Apple", "WireproofLayoutVersion", 0) < 1) {
-        Video.LargeCursor = true; Video.PresentationMode = 3;
+    if (ini.Get_Int("Apple", "WireproofLayoutVersion", 0) < 2) {
+        Video.LargeCursor = true; Video.PresentationMode = 0;
     }
 #endif
     Video.HardwareCursor = ini.Get_Bool("Video", "HardwareCursor", Video.HardwareCursor);
@@ -191,7 +191,7 @@ void SettingsClass::Save(INIClass& ini)
     ini.Put_Int("Video", "Height", Video.Height);
     ini.Put_Int("Video", "FrameLimit", Video.FrameLimit);
     ini.Put_Bool("Video", "BatterySaving", Video.BatterySaving);
-    ini.Put_Int("Apple", "WireproofLayoutVersion", 1);
+    ini.Put_Int("Apple", "WireproofLayoutVersion", 2);
     ini.Put_Int("Apple", "PresentationMode", Video.PresentationMode);
     ini.Put_Int("Apple", "ArtworkMode", Video.ArtworkMode);
     ini.Put_Int("Apple", "UIScale", Video.TouchUIScale);

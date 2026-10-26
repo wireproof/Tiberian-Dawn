@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <utility>
 
 namespace
 {
@@ -42,6 +43,25 @@ void Assert_Center_Maps_To_Game_Center(const IPadLayout& layout)
 
 int main()
 {
+    // Portrait/landscape use more map pixels, not nonuniform image stretching.
+    for (const auto size : {std::pair<int,int>{900,1280}, {1280,900}, {2400,1080}, {1668,2388}}) {
+        int w=640,h=400;
+        Calculate_Adaptive_Game_Size(size.first,size.second,w,h);
+        const auto fit=Calculate_IPad_Layout(size.first,size.second,size.first,size.second,w,h,{0,0,0,0},false);
+        assert(std::abs(fit.viewport.width-size.first)<=2);
+        assert(std::abs(fit.viewport.height-size.second)<=2);
+        assert(w>=640 && h>=400 && w<=2048 && h<=2048);
+    }
+    int x=300,y=216;
+    Unzoom_IPad_Battlefield_Point(x,y,480,16,2.0f);
+    assert(x==150 && y==116);
+    x=500;y=216;
+    Unzoom_IPad_Battlefield_Point(x,y,480,16,3.0f);
+    assert(x==500 && y==216); // sidebar remains fixed
+    x=300;y=8;
+    Unzoom_IPad_Battlefield_Point(x,y,480,16,3.0f);
+    assert(x==300 && y==8); // top bar remains fixed
+
     IPadLayout landscape = Calculate_IPad_Layout(2420, 1668, 1210, 834, 640, 400, {0, 0, 0, 0}, false);
     assert(landscape.viewport.width == 2420);
     assert(landscape.viewport.height == 1513);
@@ -72,10 +92,10 @@ int main()
 
     IPadLayout stage_manager =
         Calculate_IPad_Layout(1000, 1400, 500, 700, 640, 400, {20, 50, 10, 30}, false);
-    assert(stage_manager.viewport.width == 970);
-    assert(stage_manager.viewport.height == 606);
+    assert(stage_manager.viewport.width == 960);
+    assert(stage_manager.viewport.height == 600);
     assert(stage_manager.viewport.x == 20);
-    assert(stage_manager.viewport.y == 407);
+    assert(stage_manager.viewport.y == 410);
     assert(stage_manager.compact);
     Assert_Contained(stage_manager);
     Assert_Classic_Aspect(stage_manager);
@@ -120,10 +140,29 @@ int main()
     for (auto dimensions : {IPadViewport{0,0,900,2100}, IPadViewport{0,0,2100,1800}, IPadViewport{0,0,1800,2100}}) {
         auto fill=Calculate_IPad_Layout(dimensions.width,dimensions.height,dimensions.width/2,dimensions.height/2,640,400,{20,40,60,30},false,true);
         Assert_Contained(fill); Assert_Center_Maps_To_Game_Center(fill);
-        assert(fill.viewport.width==dimensions.width-80);
-        assert(fill.viewport.height==dimensions.height-70);
+        assert(fill.viewport.x==(dimensions.width-fill.viewport.width)/2);
+        if (dimensions.width>=dimensions.height) {
+            assert(fill.viewport.width==dimensions.width-120);
+            assert(fill.viewport.height==dimensions.height-70);
+        } else Assert_Classic_Aspect(fill);
         int x,y; Map_IPad_Output_Point(fill,fill.viewport.x+fill.viewport.width-1,fill.viewport.y+fill.viewport.height-1,x,y);
-        assert(x==639 && y==399);
+        assert(x>=638 && y>=398);
+    }
+    // Recompute from each current surface: inner -> cover -> rotated cover ->
+    // inner. Never carry an offset or scale from the previous display forward.
+    for (const auto dims : {IPadViewport{0,0,2854,2008}, IPadViewport{0,0,2400,1080},
+                            IPadViewport{0,0,1080,2400}, IPadViewport{0,0,2854,2008}}) {
+        for (bool fill : {false, true}) {
+            auto current = Calculate_IPad_Layout(dims.width,dims.height,dims.width/2,dims.height/2,
+                                                 640,400,{96,0,30,24},false,fill);
+            Assert_Contained(current);
+            Assert_Center_Maps_To_Game_Center(current);
+            int x,y;
+            Map_IPad_Normalized_Point(current,
+                (current.viewport.x+current.viewport.width*0.5f)/dims.width,
+                (current.viewport.y+current.viewport.height*0.5f)/dims.height,x,y);
+            assert(std::abs(x-320)<=1 && std::abs(y-200)<=1);
+        }
     }
     std::cout << "iPad layout hardening matrix passed\n";
     return 0;

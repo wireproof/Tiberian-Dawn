@@ -52,4 +52,6 @@ void Map_IPad_Normalized_Point(const IPadLayout& layout,
 // across Retina scale, rotation, and Stage Manager window sizes.
 int IPad_Game_Pixels_For_Window_Points(const IPadLayout& layout, float points);
 
+void Calculate_Adaptive_Game_Size(int available_width, int available_height, int& width, int& height);
+void Unzoom_IPad_Battlefield_Point(int& x, int& y, int right, int top, float zoom);
 #endif

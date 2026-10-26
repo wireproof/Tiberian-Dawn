@@ -124,3 +124,8 @@ target_include_directories(test_drawbuff PUBLIC .. ../common)
 target_compile_definitions(test_drawbuff PUBLIC TRUE_FALSE_DEFINED ENGLISH $<$<CONFIG:DEBUG>:_DEBUG> _WINDOWS _CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE WINSOCK_IPX)
 target_link_libraries(test_drawbuff PUBLIC commonv ${STATIC_LIBS})
 add_test(NAME drawbuff COMMAND ${TARGET_SYSTEM_EMULATOR} $<TARGET_FILE:test_drawbuff>)
+
+add_executable(test_wireproof_orders wireproof_orders.cpp ../common/wireproof_orders.cpp)
+target_include_directories(test_wireproof_orders PUBLIC ..)
+add_dependencies(tests test_wireproof_orders)
+add_test(NAME wireproof_orders COMMAND $<TARGET_FILE:test_wireproof_orders>)

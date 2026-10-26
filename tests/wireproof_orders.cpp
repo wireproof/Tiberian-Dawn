@@ -84,6 +84,8 @@ int main() {
     s.publish(true,0);s.setMapDrag(true);assert(s.mapDrag() && !s.panHeld());
     s.setMapDrag(false);assert(!s.mapDrag());
     s.setMapDrag(true);s.publish(false,0);assert(!s.mapDrag());
+    s.publish(true,0);assert(s.mapDrag()); // interruptions retain chosen mode
+    s.setMapDrag(false);s.publish(false,0);s.publish(true,0);assert(!s.mapDrag());
     assert(s.zoomQuarters()==6);
     s.setZoomQuarters(-10); assert(s.zoomQuarters()==2);
     for (int q=2;q<=12;++q) { assert(s.zoomQuarters()==q); s.stepZoom(1); }

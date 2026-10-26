@@ -72,6 +72,7 @@ ThemeType OldTheme = THEME_NONE;
 void Focus_Loss(void)
 {
 #ifdef IPADOS_PORT
+    Map.Cancel_Pointer_Gesture();
     Set_Video_Render_Active(false);
 #endif
 #ifdef SDL_BUILD

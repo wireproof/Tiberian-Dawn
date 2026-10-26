@@ -559,10 +559,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.panelHeader.distribution=landscape?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
     self.panelHeader.alignment=landscape?UIStackViewAlignmentCenter:UIStackViewAlignmentFill;
     for(UIStackView *page in @[self.gamePage,self.cheatStack]){page.axis=UILayoutConstraintAxisVertical;page.distribution=UIStackViewDistributionFill;page.alignment=UIStackViewAlignmentFill;}
-    self.optionsPage.axis=landscape?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
-    self.optionsPage.distribution=landscape?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
-    self.optionsPage.alignment=landscape?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
-    const CGFloat uiScale=WPOrders::Shared().uiScale()/100.0;
+    const BOOL wideOptions=landscape && safe.size.width/(WPOrders::Shared().uiScale()/100.0)>=800;
+    self.optionsPage.axis=wideOptions?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
+    self.optionsPage.distribution=wideOptions?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
+    self.optionsPage.alignment=wideOptions?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
+    const CGFloat uiScale=self.expanded?WPOrders::Shared().uiScale()/100.0:1.0;
     CGFloat width=self.expanded?MIN(landscape?(self.tabs.selectedSegmentIndex==2?1000:820):256,MAX(56,safe.size.width/uiScale)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;

@@ -3680,6 +3680,22 @@ int DisplayClass::TacticalClass::Command_Object(unsigned flags, KeyNumType& key)
  * HISTORY:                                                                                    *
  *   02/24/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
+// Drop interrupted pointer capture without issuing an order, deselecting units,
+// or cancelling a building that is waiting for placement.
+void DisplayClass::Cancel_Pointer_Gesture(void)
+{
+    Refresh_Band();
+    IsRubberBand = false;
+    IsTentative = false;
+    GadgetClass::StuckOn = nullptr;
+#ifdef IPADOS_PORT
+    TouchSelectionActive = false;
+    PencilSelectionActive = false;
+    Video_Set_Touch_Selection_Box(false, 0, 0, 0, 0);
+#endif
+    Flag_To_Redraw(true);
+}
+
 void DisplayClass::Mouse_Right_Press(void)
 {
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)

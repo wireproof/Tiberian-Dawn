@@ -32,7 +32,7 @@ public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); state.force=0; pan_held=false; map_drag=false; joystick={}; }
+        if (!active) { pending.clear(); state.force=0; pan_held=false; joystick={}; }
         if (!selected) state.force=0;
     }
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
@@ -42,7 +42,7 @@ public:
     void setJoystickSetting(bool speed,int value) { std::lock_guard<std::mutex> lock(mutex); (speed?joystick_speed:joystick_size)=std::max(speed?1:2,std::min(speed?12:8,value)); }
     void hold_pan(bool held) { std::lock_guard<std::mutex> lock(mutex); pan_held=held && state.active; }
     void setMapDrag(bool value) { std::lock_guard<std::mutex> lock(mutex);map_drag=value && state.active;joystick={}; }
-    bool mapDrag() { std::lock_guard<std::mutex> lock(mutex);return map_drag; }
+    bool mapDrag() { std::lock_guard<std::mutex> lock(mutex);return map_drag && state.active; }
     bool panHeld() { std::lock_guard<std::mutex> lock(mutex); return pan_held; }
     void setStick(float x,float y) {
         std::lock_guard<std::mutex> lock(mutex);

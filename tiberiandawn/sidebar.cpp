@@ -1792,7 +1792,7 @@ void SidebarClass::StripClass::Draw_It(bool complete)
             const int oldHeight = WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT];
             WindowList[WINDOW_SIDEBAR][WINDOWY] = gapTop;
             WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT] = gapHeight;
-            IsTheaterShape = (bool)factor;
+            IsTheaterShape = false; // STRIP.SHP always uses the permanent shape cache.
             CC_Draw_Shape(LogoShapes, SB_BLANK,
                           X - WindowList[WINDOW_SIDEBAR][WINDOWX] + LeftEdgeOffset,
                           0, WINDOW_SIDEBAR, SHAPE_NORMAL | SHAPE_WIN_REL, 0);
@@ -1952,7 +1952,7 @@ void SidebarClass::StripClass::Draw_It(bool complete)
             ** Don't draw blank shapes over the new 640x400 sidebar art - ST 5/1/96 6:01PM
             */
             if (factor == 0 || Map.MaxVisible != MAX_VISIBLE || shapenum != SB_BLANK || shapefile != LogoShapes) {
-                IsTheaterShape = (bool)factor; // This shape is theater specific
+                IsTheaterShape = factor && shapefile != LogoShapes; // STRIP.SHP is not theater-specific
                 CC_Draw_Shape(shapefile,
                               shapenum,
                               x - WindowList[WINDOW_SIDEBAR][WINDOWX] + LeftEdgeOffset,
@@ -2692,6 +2692,7 @@ SidebarClass::~SidebarClass()
 // Reposition existing gadgets; do not rerun One_Time or reset production.
 void SidebarClass::Resize_Apple_Viewport()
 {
+    Cancel_Pointer_Gesture();
     // Saved Map objects and Init_IO can restore classic coordinates independently
     // of the framebuffer. Assign absolute positions, never accumulate deltas.
     bool relink[COLUMNS]={false,false};

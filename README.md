@@ -42,19 +42,35 @@ logo artwork. Physical-device layout confirmation remains pending.
 
 ## Gameplay showcase
 
-[Duo cover-screen gameplay — v0.5.2 (2:03, with audio)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.2/Tiberian-Dawn-v0.5.2-Duo-Cover-Gameplay.mp4)
+Real-device footage and screenshots from the Duo cover and inner displays.
 
-[![Duo cover-screen gameplay](docs/showcase/duo-cover-v0.5.2.jpg)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.2/Tiberian-Dawn-v0.5.2-Duo-Cover-Gameplay.mp4)
+| Video | Length |
+| --- | --- |
+| [Cover-screen gameplay (v0.5.2)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.2/Tiberian-Dawn-v0.5.2-Duo-Cover-Gameplay.mp4) | 2:03 |
+| [Inner-display gameplay](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Inner-Gameplay.mp4) | 2:57 |
+| [Inner-display Workshop demo](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Workshop-Demo.mp4) | 0:50 |
 
-[Duo inner-display gameplay (2:57, with audio)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Inner-Gameplay.mp4)
+All videos include audio. [View the complete screenshot gallery](docs/showcase/README.md).
 
-[![Duo inner-display gameplay](docs/showcase/duo-inner-gameplay.jpg)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Inner-Gameplay.mp4)
+### Cover display
 
-[Duo inner-display Workshop demo (0:50, with audio)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Workshop-Demo.mp4)
+| Main menu | Mod Workshop | Gameplay |
+| --- | --- | --- |
+| ![Cover main menu](docs/showcase/cover-main-menu.jpg) | ![Cover Workshop](docs/showcase/cover-workshop.jpg) | ![Cover gameplay](docs/showcase/cover-gameplay.jpg) |
 
-[![Duo inner-display Workshop demo](docs/showcase/duo-inner-demo.jpg)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Workshop-Demo.mp4)
+### Inner display
 
-Recorded on the physical Duo cover and inner displays. An iPad showcase will be added when available.
+| Gameplay | Orders and groups |
+| --- | --- |
+| ![Inner gameplay](docs/showcase/inner-gameplay.jpg) | ![Inner game controls](docs/showcase/inner-game-controls.jpg) |
+
+| Cheats | Zoom and joystick options |
+| --- | --- |
+| ![Inner cheats](docs/showcase/inner-cheats.jpg) | ![Inner options](docs/showcase/inner-options.jpg) |
+
+![Inner display with production sidebar](docs/showcase/inner-sidebar.jpg)
+
+An iPad showcase will be added when available.
 
 ## Release 0.2.8
 

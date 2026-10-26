@@ -174,6 +174,7 @@ public:
     virtual void Set_Tactical_Position(COORDINATE coord);
     void Refresh_Band(void);
     void Cancel_Pointer_Gesture(void);
+    void Cancel_Player_Action(void);
     void Select_These(COORDINATE coord1, COORDINATE coord2, bool additive = false);
     COORDINATE Pixel_To_Coord(int x, int y);
     bool Coord_To_Pixel(COORDINATE coord, int& x, int& y);

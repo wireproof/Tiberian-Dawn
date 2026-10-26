@@ -113,7 +113,13 @@ static void WP_ProcessOrders() {
             Shared().force(command.kind==Attack?1:2); continue;
         }
         Shared().force(0);
-        if (command.kind==Cancel) continue;
+        if (command.kind==Cancel) {
+            // The floating Cancel button must cancel the engine interaction too.
+            // Clearing only the force modifier leaves repair/sell/placement active
+            // and can make ordinary unit selection appear unresponsive.
+            Map.Cancel_Player_Action();
+            continue;
+        }
         if (command.kind>=Recall) {
             if (command.kind==Recall || command.kind==Center) Unselect_All();
             Handle_Team(command.group,command.kind==Assign?2:1);

@@ -616,6 +616,15 @@ KeyNumType GadgetClass::Input(void)
         }
     }
 
+#ifdef IPADOS_PORT
+    // A fresh direct-touch press starts a new pointer sequence. UIKit can
+    // cancel the previous touch without its mouse release reaching this list.
+    // Do not route the new contact to a gadget captured by that old sequence.
+    if ((key & KN_TOUCH_BIT) && (flags & LEFTPRESS)) {
+        StuckOn = nullptr;
+    }
+#endif
+
     /*
     **	If "sticky" processing is active, then only process the stuck gadget.
     */

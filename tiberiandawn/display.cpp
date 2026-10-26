@@ -3497,6 +3497,7 @@ int DisplayClass::TacticalClass::Action(unsigned flags, KeyNumType& key)
         */
         if (!edge && (flags & LEFTPRESS)) {
 #ifdef IPADOS_PORT
+            if (touch_event) Map.Cancel_Pointer_Gesture();
             TouchSelectionActive = touch_event;
             PencilSelectionActive = pencil_event;
 #endif
@@ -3694,6 +3695,12 @@ void DisplayClass::Cancel_Pointer_Gesture(void)
     Video_Set_Touch_Selection_Box(false, 0, 0, 0, 0);
 #endif
     Flag_To_Redraw(true);
+}
+
+void DisplayClass::Cancel_Player_Action(void)
+{
+    Cancel_Pointer_Gesture();
+    Mouse_Right_Press();
 }
 
 void DisplayClass::Mouse_Right_Press(void)

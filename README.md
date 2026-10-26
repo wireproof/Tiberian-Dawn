@@ -2,9 +2,15 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.3.9
+## Latest release: v0.4.0
 
-[Download v0.3.9](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.3.9).
+[Download v0.4.0](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.0).
+Adds **Instant Build** and **Zero Cost**, fixes battlefield shroud removal,
+enlarges radar terrain within its panel, and reduces the touch cursor to 2x.
+Instant Build charges the remaining cost when affordable; enable Zero Cost
+as well for free instant production. Zero Cost waives remaining construction
+costs, not repair charges; classic tooltip prices remain the stock prices.
+The larger radar follows the battlefield when the whole map does not fit.
 Open the floating controller and tap **Cheats** for money, invincibility,
 shroud on/off, extra power, and separate infantry/vehicle/aircraft speed sliders
 (0.25–3x). On Mac, use **Option-C** and Apply. Cheats affect your side in

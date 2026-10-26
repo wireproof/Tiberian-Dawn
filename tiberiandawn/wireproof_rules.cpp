@@ -156,6 +156,8 @@ template<class Pool> void RestoreSight(Pool& pool) {
 void WP_ResetLiveCheats(void) {
     WPCheats::Shared().reset(); liveCheats={}; savedShroud.clear();mapRevealed=false;
 }
+int WP_InstantBuild(const void* house) { return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.instant; }
+int WP_ZeroCost(const void* house) { return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.free; }
 int WP_PlayerInvincible(const void* house) {
     return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.invincible;
 }
@@ -173,10 +175,10 @@ static void WP_ApplyLiveCheats() {
     if(liveCheats.reveal!=mapRevealed) {
         if(liveCheats.reveal) {
             savedShroud.resize(MAP_CELL_TOTAL);
-            for(int i=0;i<MAP_CELL_TOTAL;++i) savedShroud[i]=(Map[i].IsMapped?1:0)|(Map[i].IsVisible?2:0);
-            for(int i=0;i<MAP_CELL_TOTAL;++i) {Map[i].IsMapped=true;Map[i].IsVisible=true;Map[i].Redraw_Objects();}
+            for(int i=0;i<MAP_CELL_TOTAL;++i) savedShroud[i]=(Map[i].Is_Mapped(PlayerPtr)?1:0)|(Map[i].Is_Visible(PlayerPtr)?2:0);
+            for(int i=0;i<MAP_CELL_TOTAL;++i) {Map[i].Set_Mapped(PlayerPtr,true);Map[i].Set_Visible(PlayerPtr,true);Map[i].Redraw_Objects();}
         } else if(savedShroud.size()==MAP_CELL_TOTAL) {
-            for(int i=0;i<MAP_CELL_TOTAL;++i) {Map[i].IsMapped=savedShroud[i]&1;Map[i].IsVisible=(savedShroud[i]&2)!=0;Map[i].Redraw_Objects();}
+            for(int i=0;i<MAP_CELL_TOTAL;++i) {Map[i].Set_Mapped(PlayerPtr,(savedShroud[i]&1)!=0);Map[i].Set_Visible(PlayerPtr,(savedShroud[i]&2)!=0);Map[i].Redraw_Objects();}
             // Restore the explored snapshot plus the sight of current player objects.
             RestoreSight(Units);RestoreSight(Infantry);RestoreSight(Aircraft);RestoreSight(Buildings);
             savedShroud.clear();

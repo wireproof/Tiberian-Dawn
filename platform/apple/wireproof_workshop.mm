@@ -211,9 +211,11 @@ extern "C" void WP_ShowLiveCheats(void) {
         WPGameWindowRestore restore{NSApp.keyWindow};
         NSAlert* a=[NSAlert new];a.messageText=@"Battlefield Cheats";
         a.informativeText=@"Player only, single-player. Changes apply after closing. Shroud On restores previous exploration plus current unit sight. Toggles and speed reset on load; money and power remain in saves.";
-        NSView* view=[[NSView alloc] initWithFrame:NSMakeRect(0,0,360,260)];
+        NSView* view=[[NSView alloc] initWithFrame:NSMakeRect(0,0,360,300)];
         NSButton* inv=[NSButton checkboxWithTitle:@"Invincibility" target:nil action:nil];inv.frame=NSMakeRect(0,230,180,24);inv.state=state.invincible;[view addSubview:inv];
         NSButton* shroud=[NSButton checkboxWithTitle:@"Shroud On" target:nil action:nil];shroud.frame=NSMakeRect(180,230,180,24);shroud.state=!state.reveal;[view addSubview:shroud];
+        NSButton* instant=[NSButton checkboxWithTitle:@"Instant Build" target:nil action:nil];instant.frame=NSMakeRect(0,270,180,24);instant.state=state.instant;[view addSubview:instant];
+        NSButton* freeBuild=[NSButton checkboxWithTitle:@"Zero Cost" target:nil action:nil];freeBuild.frame=NSMakeRect(180,270,180,24);freeBuild.state=state.free;[view addSubview:freeBuild];
         NSMutableArray<NSSlider*>* speeds=[NSMutableArray array];
         NSArray* names=@[@"Infantry",@"Vehicles",@"Aircraft"];
         int values[]={state.infantry,state.vehicles,state.aircraft};
@@ -226,6 +228,8 @@ extern "C" void WP_ShowLiveCheats(void) {
         NSTextField* status=[NSTextField labelWithString:[NSString stringWithFormat:@"Credits: %d   Power: %d / %d",state.money,state.power,state.drain]];status.frame=NSMakeRect(0,10,360,25);[view addSubview:status];
         a.accessoryView=view;[a addButtonWithTitle:@"Apply"];[a addButtonWithTitle:@"Cancel"];
         if([a runModal]==NSAlertFirstButtonReturn) {
+            WPCheats::Shared().instant(instant.state==NSControlStateValueOn);
+            WPCheats::Shared().free(freeBuild.state==NSControlStateValueOn);
             WPCheats::Shared().invincible(inv.state==NSControlStateValueOn);
             WPCheats::Shared().reveal(shroud.state!=NSControlStateValueOn);
             for(int i=0;i<3;++i)WPCheats::Shared().speed(i,(int)lround(speeds[i].doubleValue));

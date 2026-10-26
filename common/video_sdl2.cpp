@@ -2047,7 +2047,7 @@ public:
             const int center_y = render_dst.y + static_cast<int>(touch_feedback.y * scale_y);
             // Touch feedback is separate from the legacy game cursor.
             // Increase its visible ring without shifting the actual touch position.
-            const int radius = (touch_feedback.pencil ? 30 : 48) * Settings.Video.TouchUIScale / 100;
+            const int radius = (touch_feedback.pencil ? 20 : 32) * Settings.Video.TouchUIScale / 100;
             SDL_Point ring[33];
             for (int i = 0; i <= 32; ++i) {
                 const float angle = static_cast<float>(i) * 6.28318530718f / 32.0f;

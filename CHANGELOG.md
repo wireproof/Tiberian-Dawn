@@ -4,6 +4,18 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.0 — 2026-10-25
+
+- Add separate Instant Build and Zero Cost single-player switches on iOS and
+  macOS. Instant Build pays the remaining price when affordable; Zero Cost
+  waives the remaining construction bill. Cancellation refunds only money paid.
+- Fix Shroud Off updating the minimap but not the battlefield: update the
+  player's visibility masks through the engine API, including restoration.
+- Enlarge radar terrain to use its panel, following the battlefield when the
+  larger scale shows only part of the map. Fix radar height calculation.
+- Reduce the touch feedback cursor from 3x to 2x.
+- Physical-device confirmation remains pending.
+
 ## 0.3.9 — 2026-10-25
 
 - Add a Cheats page to the floating controller: +1,000/+10,000 credits,

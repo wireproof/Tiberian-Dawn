@@ -684,6 +684,14 @@ void RadarClass::Zoom_Mode(CELL cell)
         ZoomFactor = MIN(xfactor, yfactor);
         map_c_width = MapCellWidth;
         map_c_height = MapCellHeight;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        // Use the panel instead of leaving a wide integer-scale border. The
+        // radar follows the tactical view when the larger scale clips an edge.
+        ZoomFactor=MAX(1,MIN((RadIWidth+MapCellWidth-1)/MapCellWidth,
+                             (RadIHeight+MapCellHeight-1)/MapCellHeight));
+        map_c_width=MIN(MapCellWidth,RadIWidth/ZoomFactor);
+        map_c_height=MIN(MapCellHeight,RadIHeight/ZoomFactor);
+#endif
     } else {
         ZoomFactor = 6;
         map_c_width = RadIWidth / ZoomFactor;
@@ -714,7 +722,7 @@ void RadarClass::Zoom_Mode(CELL cell)
     RadarCellWidth = map_c_width;
     RadarCellHeight = map_c_height;
     RadarWidth = RadIWidth - rem_x;
-    RadarHeight = RadIWidth - rem_y;
+    RadarHeight = RadIHeight - rem_y;
 
     /*
     ** Set the radar position to the current cell.

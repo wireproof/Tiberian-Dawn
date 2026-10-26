@@ -52,6 +52,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#endif
 
 /***********************************************************************************************
  * FactoryClass::Validate -- validates factory pointer													  *
@@ -224,6 +227,18 @@ void FactoryClass::AI(void)
 {
     Validate();
     if (!IsSuspended && (Object != NULL || SpecialItem)) {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        if (WP_ZeroCost(House) && Balance>0) {
+            // Preserve only the amount actually paid for cancellation refunds.
+            if(Object)Object->PurchasePrice=MAX(0,Object->PurchasePrice-Balance);
+            Balance=0;
+        }
+        if (WP_InstantBuild(House) && Balance<=House->Available_Money()) {
+            House->Spend_Money(Balance);
+            Force_Complete();
+            return;
+        }
+#endif
         int stages = 1;
 
         /*
@@ -567,7 +582,7 @@ bool FactoryClass::Abandon(void)
             /*
             **	Refund all money expended so far, back to the owner of the object under construction.
             */
-            int money = Object->Class_Of().Cost_Of() * Object->House->CostBias;
+            int money = Object->PurchasePrice;
             House->Refund_Money(money - Balance);
             Balance = 0;
 

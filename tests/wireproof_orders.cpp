@@ -10,7 +10,8 @@ int main() {
     cheats.invincible(true);cheats.reveal(true);cheats.speed(0,-1);cheats.speed(1,99);cheats.speed(2,7);
     auto snapshot=cheats.snapshot();assert(snapshot.invincible && snapshot.reveal && snapshot.infantry==1 && snapshot.vehicles==12 && snapshot.aircraft==7);
     cheats.addMoney(1000);cheats.publish(false,0,0,0);assert(cheats.take().money==0);
-    cheats.reset();snapshot=cheats.snapshot();assert(!snapshot.available && !snapshot.invincible && !snapshot.reveal && snapshot.infantry==4 && snapshot.vehicles==4 && snapshot.aircraft==4);
+    cheats.publish(true,0,0,0);cheats.instant(true);cheats.free(true);assert(cheats.snapshot().instant && cheats.snapshot().free);
+    cheats.reset();assert(!cheats.snapshot().instant && !cheats.snapshot().free);snapshot=cheats.snapshot();assert(!snapshot.available && !snapshot.invincible && !snapshot.reveal && snapshot.infantry==4 && snapshot.vehicles==4 && snapshot.aircraft==4);
     using namespace WPOrders;
     State s; Command c;
     assert(s.zoomQuarters()==6);

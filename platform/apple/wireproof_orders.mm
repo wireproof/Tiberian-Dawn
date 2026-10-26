@@ -24,6 +24,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UIButton *cheatButton;
 @property(nonatomic,strong) UILabel *cheatStatus;
 @property(nonatomic,strong) UISwitch *invincibleSwitch;
+@property(nonatomic,strong) UISwitch *instantSwitch;
+@property(nonatomic,strong) UISwitch *freeSwitch;
 @property(nonatomic,strong) UISwitch *shroudSwitch;
 @property(nonatomic,strong) NSArray<UISlider*> *speedSliders;
 @property(nonatomic,strong) NSArray<UILabel*> *speedLabels;
@@ -144,9 +146,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.shroudSwitch=[UISwitch new];self.shroudSwitch.tag=1;
         NSMutableArray *cheatRows=[NSMutableArray arrayWithObject:self.cheatStatus];
         [cheatRows addObject:[self gridRow:@[[self button:@"+$1,000" tag:510],[self button:@"+$10,000" tag:511]]]];
-        NSArray *switchNames=@[@"Invincibility",@"Shroud"];
-        NSArray *switches=@[self.invincibleSwitch,self.shroudSwitch];
-        for(int i=0;i<2;++i) {
+        self.instantSwitch=[UISwitch new];self.instantSwitch.tag=2;
+        self.freeSwitch=[UISwitch new];self.freeSwitch.tag=3;
+        NSArray *switchNames=@[@"Invincibility",@"Shroud",@"Instant Build",@"Zero Cost"];
+        NSArray *switches=@[self.invincibleSwitch,self.shroudSwitch,self.instantSwitch,self.freeSwitch];
+        for(int i=0;i<4;++i) {
             UILabel *label=[UILabel new];label.text=switchNames[i];label.textColor=UIColor.whiteColor;
             UISwitch *control=switches[i];control.accessibilityLabel=switchNames[i];
             [control addTarget:self action:@selector(cheatSwitchChanged:) forControlEvents:UIControlEventValueChanged];
@@ -236,7 +240,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (void)pageChanged:(id)sender { [self refresh]; }
 - (void)cheatSwitchChanged:(UISwitch*)control {
     if(control.tag==0)WPCheats::Shared().invincible(control.on);
-    else WPCheats::Shared().reveal(!control.on);
+    else if(control.tag==1)WPCheats::Shared().reveal(!control.on);
+    else if(control.tag==2)WPCheats::Shared().instant(control.on);
+    else WPCheats::Shared().free(control.on);
     [self refresh];
 }
 - (void)speedChanged:(UISlider*)slider {
@@ -281,6 +287,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }
     self.cheatStack.userInteractionEnabled=cheats.available;
     self.cheatStatus.text=[NSString stringWithFormat:@"Credits: %d\nPower: %d / %d",cheats.money,cheats.power,cheats.drain];
+    self.instantSwitch.on=cheats.instant;self.freeSwitch.on=cheats.free;
     self.invincibleSwitch.on=cheats.invincible;self.shroudSwitch.on=!cheats.reveal;
     int speeds[]={cheats.infantry,cheats.vehicles,cheats.aircraft};
     for(int i=0;i<3;++i){self.speedSliders[i].value=speeds[i];self.speedLabels[i].text=[NSString stringWithFormat:@"%@: %.2f×",@[@"Infantry",@"Vehicles",@"Aircraft"][i],speeds[i]/4.0];}

@@ -130,7 +130,9 @@ bool Expansion_Dialog(bool campaign)
     struct CampaignEntry { int number; ScenarioPlayerType player; ScenarioDirType direction; std::string name; };
     std::vector<CampaignEntry> campaignEntries;
     if(campaign) {
-        for(auto player : {SCEN_PLAYER_GDI,SCEN_PLAYER_NOD})
+        for(auto player : {SCEN_PLAYER_GDI,SCEN_PLAYER_NOD}) {
+        // GENERAL.MIX is disc-specific; enumerate each installed campaign.
+        if (!Force_CD_Available(player==SCEN_PLAYER_GDI?0:1)) continue;
         for(int number=1;number<=15;++number)
         for(auto direction : {SCEN_DIR_EAST,SCEN_DIR_WEST})
         for(auto variant : {SCEN_VAR_A,SCEN_VAR_B,SCEN_VAR_C,SCEN_VAR_D}) {
@@ -143,6 +145,7 @@ bool Expansion_Dialog(bool campaign)
             char* data=new char[sizeof(int)+strlen(label)+1];
             *((int*)data)=(int)campaignEntries.size();strcpy(data+sizeof(int),label);
             campaignEntries.push_back({number,player,direction,name});list.Add_Item(data);
+        }
         }
     } else {
     for (index = 20; index < 60; index++) {
@@ -230,6 +233,7 @@ bool Expansion_Dialog(bool campaign)
             if (list.Current_Item()) {
                 if(campaign) {
                     const auto& entry=campaignEntries[*(int*)list.Current_Item()];
+                    if (!Force_CD_Available(entry.player==SCEN_PLAYER_GDI?0:1)) break;
                     ScenPlayer=entry.player;ScenDir=entry.direction;Scen.Scenario=entry.number;
                     Whom=entry.player==SCEN_PLAYER_GDI?HOUSE_GOOD:HOUSE_BAD;
                     strcpy(Scen.ScenarioName,entry.name.c_str());

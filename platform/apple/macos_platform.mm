@@ -462,8 +462,10 @@ bool TiberianDawn_PrepareGameData(void)
     }
 }
 
+extern void WP_ApplySavedAppIcon(void);
 void TiberianDawn_ConfigureAudioSession(void)
 {
+    WP_ApplySavedAppIcon();
     IPad_Audio_Resume();
 }
 

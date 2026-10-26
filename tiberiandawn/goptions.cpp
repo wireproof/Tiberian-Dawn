@@ -80,6 +80,8 @@ void GameOptionsClass::Adjust_Variables_For_Resolution(void)
  *=============================================================================================*/
 void GameOptionsClass::Process(void)
 {
+    // Adaptive viewport changes invalidate the coordinates cached at startup.
+    Adjust_Variables_For_Resolution();
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
     // World artwork is composited after the indexed framebuffer. Suppress it
     // while modal UI is drawn so units and buildings cannot cover buttons.
@@ -132,7 +134,7 @@ void GameOptionsClass::Process(void)
         }
 
         if (index < 5) {
-            y = (SeenBuff.Get_Height() - OptionHeight) / 2 + ButtonY + ((OButtonHeight + 2) * index);
+            y = OptionY + ButtonY + ((OButtonHeight + 2) * index);
         } else {
             y = OptionY + ButtonResumeY;
         }

@@ -28,9 +28,8 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu, bool classic)
     if(active){width=(int)std::lround(width/uiScale);height=(int)std::lround(height/uiScale);}
     const int right = width - (Map.IsSidebarActive ? Map.SideBarWidth : 0);
     const int view_height=height;
-    const int slots=WPCamera::PortraitSidebarSlots(width,height);
-    const int visibleSlots=WPCamera::SidebarSlots(height,182,48,24,24);
-    const int bottom=Map.IsSidebarActive && slots?std::min(height,182+std::min(slots,visibleSlots)*48+24):height;
+    // Sidebar drawing and composition must use the same full-height extent.
+    const int bottom=height;
     const int worldRight=bottom<height?width:right;
     const float zoom=active?WPOrders::Shared().zoomQuarters()/4.0f/uiScale:1.0f;
     Video_Set_Battlefield(adaptive, right, Map.Get_Tab_Height(), width, height, zoom,bottom);

@@ -68,7 +68,44 @@ static void ApplyCopies(NSDictionary* fields,NSArray* targets) {
     NSMutableDictionary *values=[Values() mutableCopy];for(NSString *g in targets){NSDictionary *plan=CopyPlan(fields,g);if(plan)[values addEntriesFromDictionary:plan];}
     [[NSUserDefaults standardUserDefaults] setObject:values forKey:StoreKey()];
 }
+static NSArray<NSString*>* IconNames() { return @[@"AppIcon", @"AppIconGDI", @"AppIconNod"]; }
+static NSArray<NSString*>* IconTitles() { return @[@"Command & Conquer (default)", @"GDI", @"Nod"]; }
 #if TARGET_OS_IPHONE
+@interface WPIconPicker : UITableViewController
+@property(nonatomic) BOOL finished;
+@property(nonatomic) BOOL changing;
+@end
+@implementation WPIconPicker
+- (void)viewDidLoad {
+    [super viewDidLoad]; self.title=@"App Icon"; self.tableView.rowHeight=88;
+    self.navigationItem.rightBarButtonItem=[[UIBarButtonItem alloc] initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(done)];
+}
+- (void)done { if(!self.changing) self.finished=YES; }
+- (NSInteger)tableView:(UITableView*)t numberOfRowsInSection:(NSInteger)section { return IconNames().count; }
+- (NSString*)tableView:(UITableView*)t titleForFooterInSection:(NSInteger)section {
+    return UIApplication.sharedApplication.supportsAlternateIcons ? @"Changes the standalone app’s Home Screen icon." : @"This installation does not support changing its Home Screen icon. Install the standalone app to use this feature.";
+}
+- (UITableViewCell*)tableView:(UITableView*)t cellForRowAtIndexPath:(NSIndexPath*)p {
+    UITableViewCell *cell=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+    cell.textLabel.text=IconTitles()[p.row]; cell.textLabel.numberOfLines=0;
+    cell.imageView.image=[UIImage imageNamed:[IconNames()[p.row] stringByAppendingString:@"Preview"]];
+    cell.accessoryType=[(UIApplication.sharedApplication.alternateIconName ?: @"AppIcon") isEqual:IconNames()[p.row]] ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
+    return cell;
+}
+- (void)tableView:(UITableView*)t didSelectRowAtIndexPath:(NSIndexPath*)p {
+    [t deselectRowAtIndexPath:p animated:YES];
+    if(self.changing || !UIApplication.sharedApplication.supportsAlternateIcons)return;
+    NSString *name=p.row ? IconNames()[p.row] : nil;
+    if([(UIApplication.sharedApplication.alternateIconName ?: @"AppIcon") isEqual:IconNames()[p.row]])return;
+    self.changing=YES; self.navigationItem.rightBarButtonItem.enabled=NO;
+    [UIApplication.sharedApplication setAlternateIconName:name completionHandler:^(NSError *error){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.changing=NO;self.navigationItem.rightBarButtonItem.enabled=YES;[self.tableView reloadData];
+            if(error){UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Icon could not be changed" message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];[alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];[self presentViewController:alert animated:YES completion:nil];}
+        });
+    }];
+}
+@end
 @interface WPApplyPicker : UITableViewController
 @property(nonatomic,copy) NSString *source;
 @property(nonatomic,copy) NSArray *items;
@@ -188,6 +225,7 @@ void WP_ShowWorkshop(void) {
             UIAlertController* menu=[UIAlertController alertControllerWithTitle:@"Saves / Mod Workshop" message:@"Custom rules are for single-player. Restart after editing, then start a new mission. Keep stock saves separate from modded saves." preferredStyle:UIAlertControllerStyleAlert];
             [menu addAction:[UIAlertAction actionWithTitle:@"Manage saves" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=0;}]];
             [menu addAction:[UIAlertAction actionWithTitle:@"Mod Workshop" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=1;}]];
+            [menu addAction:[UIAlertAction actionWithTitle:@"App Icon" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=3;}]];
             [menu addAction:[UIAlertAction actionWithTitle:@"Back" style:UIAlertActionStyleCancel handler:^(UIAlertAction* a){choice=2;}]];
             [root presentViewController:menu animated:NO completion:nil];
             while(choice<0) [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.02]];
@@ -196,6 +234,11 @@ void WP_ShowWorkshop(void) {
                 host.rootViewController=[[UINavigationController alloc] initWithRootViewController:editor];
                 while(!editor.finished) [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.02]];
             }
+            if(choice==3) {
+                WPIconPicker *picker=[[WPIconPicker alloc] initWithStyle:UITableViewStyleInsetGrouped];
+                host.rootViewController=[[UINavigationController alloc] initWithRootViewController:picker];
+                while(!picker.finished) [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.02]];
+            }
             host.hidden=YES;[previous makeKeyAndVisible];
             if (choice==0) TiberianDawn_ManageSaveGames();
         };
@@ -203,6 +246,23 @@ void WP_ShowWorkshop(void) {
     }
 }
 #else
+// macOS allows a runtime Dock icon without modifying the signed app bundle.
+void WP_ApplySavedAppIcon(void) {
+    NSString *name=[NSUserDefaults.standardUserDefaults stringForKey:@"Wireproof.AppIcon"] ?: @"AppIcon";
+    if(![IconNames() containsObject:name])name=@"AppIcon";
+    NSImage *image=[NSImage imageNamed:[name stringByAppendingString:@"Preview"]];
+    if(image)NSApp.applicationIconImage=image;
+}
+static void PickAppIcon() {
+    NSAlert *a=[NSAlert new];a.messageText=@"App Icon";a.informativeText=@"Choose the Dock icon. Finder uses the default icon. Your choice is restored when the app starts.";
+    NSPopUpButton *picker=[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0,0,340,32) pullsDown:NO];
+    [picker addItemsWithTitles:IconTitles()];
+    NSString *current=[NSUserDefaults.standardUserDefaults stringForKey:@"Wireproof.AppIcon"] ?: @"AppIcon";
+    NSUInteger index=[IconNames() indexOfObject:current];if(index!=NSNotFound)[picker selectItemAtIndex:index];
+    for(NSUInteger i=0;i<IconNames().count;i++){NSImage *preview=[[NSImage imageNamed:[IconNames()[i] stringByAppendingString:@"Preview"]] copy];preview.size=NSMakeSize(48,48);[picker itemAtIndex:i].image=preview;}
+    a.accessoryView=picker;[a addButtonWithTitle:@"Apply"];[a addButtonWithTitle:@"Cancel"];
+    if([a runModal]==NSAlertFirstButtonReturn){[NSUserDefaults.standardUserDefaults setObject:IconNames()[picker.indexOfSelectedItem] forKey:@"Wireproof.AppIcon"];WP_ApplySavedAppIcon();}
+}
 static NSArray* PickCopies(NSArray* titles,NSString* heading) {
     NSAlert *a=[NSAlert new];a.messageText=heading;
     NSScrollView *scroll=[[NSScrollView alloc] initWithFrame:NSMakeRect(0,0,440,320)];scroll.hasVerticalScroller=YES;
@@ -230,8 +290,8 @@ void WP_ShowWorkshop(void) {
     @autoreleasepool {
         WPGameWindowRestore restore{NSApp.keyWindow};
         NSAlert* menu=[NSAlert new];menu.messageText=@"Saves / Mod Workshop";
-        [menu addButtonWithTitle:@"Mod Workshop"];[menu addButtonWithTitle:@"Manage saves"];[menu addButtonWithTitle:@"Back"];
-        NSInteger choice=[menu runModal];if(choice==NSAlertSecondButtonReturn){TiberianDawn_ManageSaveGames();return;}if(choice!=NSAlertFirstButtonReturn)return;
+        [menu addButtonWithTitle:@"Mod Workshop"];[menu addButtonWithTitle:@"Manage saves"];[menu addButtonWithTitle:@"Back"];[menu addButtonWithTitle:@"App Icon"];
+        NSInteger choice=[menu runModal];if(choice==NSAlertFirstButtonReturn+3){PickAppIcon();return;}if(choice==NSAlertSecondButtonReturn){TiberianDawn_ManageSaveGames();return;}if(choice!=NSAlertFirstButtonReturn)return;
         BOOL finished=NO;
         while(!finished) {
             NSAlert* a=[NSAlert new];a.messageText=@"Mod Workshop";a.informativeText=@"Choose a preset and rule. Edits apply after restarting; use new single-player missions. Stock is read-only. Modified rules disable multiplayer.";

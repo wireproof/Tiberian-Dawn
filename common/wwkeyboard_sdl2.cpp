@@ -23,6 +23,7 @@
 #include "settings.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #include "wireproof_orders.h"
+#include "wireproof_camera.h"
 #ifdef MACOS_PORT
 extern "C" void WP_ShowLiveCheats(void);
 #endif
@@ -157,6 +158,9 @@ struct TouchGestureState
     bool two_finger_tap_sent = false;
     bool primary_pencil = false;
     bool modifier_pan = false;
+    float pinch_start = 0;
+    int pinch_zoom = 6;
+    bool pinched = false;
 };
 
 TouchGestureState TouchGesture;
@@ -313,12 +317,22 @@ void Begin_Primary_Touch(const SDL_TouchFingerEvent& event)
     TouchGesture.current_y = TouchGesture.start_y;
 }
 
+float Touch_Separation() {
+    int w=1,h=1;SDL_Window *window=SDL_GetKeyboardFocus();if(window)SDL_GetWindowSize(window,&w,&h);
+    const float x=(TouchGesture.fingers[0].normalized_x-TouchGesture.fingers[1].normalized_x)*w;
+    const float y=(TouchGesture.fingers[0].normalized_y-TouchGesture.fingers[1].normalized_y)*h;
+    return std::sqrt(x*x+y*y);
+}
 void Begin_Two_Finger_Pan(WWKeyboardClassSDL2& keyboard)
 {
     Release_Touch_Left_Button(keyboard);
     TouchGesture.long_press_sent = true;
     TouchGesture.panning = true;
     TouchGesture.pan_travel = 0.0f;
+    TouchGesture.modifier_pan=false;
+    TouchGesture.pinch_start=Touch_Separation();
+    TouchGesture.pinch_zoom=WPOrders::Shared().zoomQuarters();
+    TouchGesture.pinched=false;
     TouchGesture.two_finger_started_at = SDL_GetTicks();
     TouchGesture.two_finger_tap_sent = false;
     TouchGesture.pan_centroid_x =
@@ -393,6 +407,11 @@ void Handle_Touch_Motion(WWKeyboardClassSDL2& keyboard, const SDL_TouchFingerEve
     }
 
     if (TouchGesture.panning && Active_Finger_Count() == 2) {
+        if(WPOrders::Shared().snapshot().active && TouchGesture.pinch_start>20) {
+            const float ratio=Touch_Separation()/TouchGesture.pinch_start;
+            if(std::fabs(ratio-1)>0.08f)TouchGesture.pinched=true;
+            if(TouchGesture.pinched)WPOrders::Shared().setZoomQuarters(WPCamera::PinchZoomQuarters(TouchGesture.pinch_zoom,ratio));
+        }
         const float centroid_x =
             (TouchGesture.fingers[0].normalized_x + TouchGesture.fingers[1].normalized_x) * 0.5f;
         const float centroid_y =
@@ -435,7 +454,7 @@ void Handle_Touch_Up(WWKeyboardClassSDL2& keyboard, const SDL_TouchFingerEvent& 
     }
 
     if (!cancelled && !TouchGesture.modifier_pan && TouchGesture.panning && !TouchGesture.two_finger_tap_sent
-        && TouchGesture.pan_travel < 0.012f
+        && !TouchGesture.pinched && TouchGesture.pan_travel < 0.012f
         && SDL_GetTicks() - TouchGesture.two_finger_started_at <= TwoFingerTapMilliseconds) {
         int x = 0;
         int y = 0;

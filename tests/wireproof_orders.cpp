@@ -32,6 +32,12 @@ int main() {
     assert(WPCamera::PortraitSidebarSlots(640,910)==5);
     assert(WPCamera::PortraitSidebarSlots(400,910)==5);
     assert(WPCamera::PortraitSidebarSlots(910,640)==0);
+    assert(WPCamera::PinchZoomQuarters(6,1.02)==6);
+    assert(WPCamera::PinchZoomQuarters(6,2.0)==8);
+    assert(WPCamera::PinchZoomQuarters(6,0.5)==5);
+    assert(WPCamera::PinchZoomQuarters(12,4)==12);
+    assert(WPCamera::PinchZoomQuarters(2,0.1)==2);
+    assert(WPCamera::PinchZoomQuarters(6,NAN)==6);
     using WPCamera::ClampAxis;
     // Large drags across every edge, nonzero map origins, and oversized views.
     assert(ClampAxis(256,-4096,256,8192,2048)==256);

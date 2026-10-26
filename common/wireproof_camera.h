@@ -1,6 +1,7 @@
 #ifndef WIREPROOF_CAMERA_H
 #define WIREPROOF_CAMERA_H
 #include <algorithm>
+#include <cmath>
 namespace WPCamera {
 // Clamp signed world coordinates before packing into the legacy unsigned format.
 // A viewport larger than the map stays pinned to the map origin.
@@ -16,6 +17,11 @@ inline bool CoverDisplay(double width,double height,double left,double top,doubl
     return std::max(usableW,usableH)/std::min(usableW,usableH)>=1.65
         || std::max(left,right)/std::max(1.0,width)>=0.10
         || std::max(top,bottom)/std::max(1.0,height)>=0.10;
+}
+// Deliberately damped pinch: doubling finger separation changes zoom ~26%.
+inline int PinchZoomQuarters(int initial, double ratio) {
+    if(!std::isfinite(ratio) || ratio<=0)return initial;
+    return std::max(2,std::min(12,(int)std::lround(initial*std::pow(ratio,1.0/3.0))));
 }
 inline int PortraitSidebarSlots(int width,int height) { return height>width ? 5 : 0; }
 inline int SidebarSlots(int height,int top,int row,int arrows,int capacity) {

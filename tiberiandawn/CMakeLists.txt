@@ -150,6 +150,7 @@ elseif(VISIONOS_PORT)
     )
 elseif(MACOS_PORT)
     list(APPEND TIBDAWN_SRC
+        ipados_save_bridge.cpp
         ${CMAKE_SOURCE_DIR}/common/ipados_localization.cpp
         ${CMAKE_SOURCE_DIR}/common/relay_protocol.cpp
         ${CMAKE_SOURCE_DIR}/platform/apple/apple_relay_transport.mm

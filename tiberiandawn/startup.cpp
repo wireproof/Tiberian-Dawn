@@ -233,6 +233,10 @@ int main(int argc, char** argv)
     **	Remember the current working directory and drive.
     */
     Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", args.ArgV[0]);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    extern void WP_ApplyPendingBackupSettings(void);
+    WP_ApplyPendingBackupSettings();
+#endif
     CDFileClass::Refresh_Search_Drives();
 
     if (Parse_Command_Line(args.ArgC, args.ArgV)) {

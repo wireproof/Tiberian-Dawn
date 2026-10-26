@@ -152,6 +152,9 @@ void HelpClass::AI(KeyNumType& key, int x, int y)
 {
 #ifdef IPADOS_PORT
     if(Video_Touch_Help_Expired())Help_Text(TXT_NONE);
+    // Tactical dirty rectangles can erase only part of an overlaid touch label.
+    // Refresh its underlying map while the short-lived label is visible.
+    if(Text!=TXT_NONE && !CountDownTimer.Time())Flag_To_Redraw(true);
 #endif
     /*
     **	If there is any keyboard input, then the help text goes away.

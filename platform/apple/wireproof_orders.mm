@@ -493,6 +493,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             self.zoomProfile=profile;
         }
     }
+    // Pinch updates the shared zoom on the SDL thread; persist the settled profile.
+    if(self.zoomProfile && [self.zoomProfile isEqual:self.pendingZoomProfile])
+        [NSUserDefaults.standardUserDefaults setInteger:WPOrders::Shared().zoomQuarters() forKey:self.zoomProfile];
     auto s=WPOrders::Shared().snapshot();
     auto cheats=WPCheats::Shared().snapshot();
     self.gamePage.hidden=self.tabs.selectedSegmentIndex!=0;

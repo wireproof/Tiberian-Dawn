@@ -41,6 +41,7 @@
 
 #include "function.h"
 #include "loaddlg.h"
+#include "common/wireproof_viewport.h"
 #include "common/file.h"
 #include "common/framelimit.h"
 #include "common/paths.h"
@@ -109,11 +110,28 @@ LoadOptionsClass::~LoadOptionsClass()
  *=============================================================================================*/
 int LoadOptionsClass::Process(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    // Keep front-end load/save dialogs in the responsive menu viewport. Restore
+    // the classic front-end contract on every exit, including empty save lists.
+    struct MenuViewportScope {
+        bool enabled;
+        MenuViewportScope() : enabled(!InMainLoop) {
+            if (enabled) WP_Update_Battlefield_Viewport(false,true);
+        }
+        ~MenuViewportScope() {
+            if (enabled) WP_Update_Battlefield_Viewport(false);
+        }
+    } menuViewport;
+#endif
+
     /*
     ** Dialog & button dimensions
     */
     int factor = (SeenBuff.Get_Width() == 320) ? 1 : 2;
     int d_dialog_w = 250 * factor;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    d_dialog_w = MIN(d_dialog_w, SeenBuff.Get_Width()-32);
+#endif
     int d_dialog_h = 156 * factor;
     int d_dialog_x = (SeenBuff.Get_Width() - d_dialog_w) >> 1;
     int d_dialog_y = (SeenBuff.Get_Height() - d_dialog_h) >> 1;
@@ -322,7 +340,11 @@ int LoadOptionsClass::Process(void)
                 Map.Render();
             } else {
                 HiddenPage.Clear();
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+                WP_Draw_Menu_Background();
+#else
                 Load_Title_Screen(TitlePicture, &HidPage, Palette);
+#endif
                 Blit_Hid_Page_To_Seen_Buff();
             }
 

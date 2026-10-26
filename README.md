@@ -2,9 +2,9 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.5.3
+## Latest release: v0.5.4
 
-[Download v0.5.3](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.3).
+[Download v0.5.4](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.4).
 
 The joystick is now independent: drag its center to scroll and its outer ring
 to reposition. **Double-tap** to shrink it into a hand button and switch from

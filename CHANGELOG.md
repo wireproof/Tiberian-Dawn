@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.4
+
+- Keep front-end Load Mission in the adaptive menu viewport, with a centered dialog and the same proportional flame background and logo as the main menu. Clamp dialog width on narrow screens.
+
+
 ## 0.5.3
 
 - Center campaign scores, maps, and videos across the full display width, including Duo cover windows with a reserved side strip. Preserve aspect ratio and vertical letterboxing.

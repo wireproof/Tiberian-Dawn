@@ -911,18 +911,7 @@ int Main_Menu(unsigned int timeout)
             **	Load the background picture.
             */
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
-            // Use the original flame art as an aspect-preserving backdrop and
-            // keep the logo/footer proportional beneath the responsive menu.
-            GraphicBufferClass title(640,400,nullptr,0);
-            Load_Title_Screen(TitlePicture,&title,Palette);
-            const double aspect=double(ScreenWidth)/ScreenHeight;
-            int cropW=160,cropH=270;
-            if(double(cropW)/cropH>aspect)cropW=MAX(1,int(cropH*aspect));
-            else cropH=MAX(1,int(cropW/aspect));
-            title.Scale(HidPage,(160-cropW)/2,(270-cropH)/2,0,0,cropW,cropH,ScreenWidth,ScreenHeight);
-            const int logoW=menuLayout.footerHeight*640/130;
-            title.Scale(HidPage,0,270,(ScreenWidth-logoW)/2,ScreenHeight-menuLayout.footerHeight,
-                        640,130,logoW,menuLayout.footerHeight);
+            WP_Draw_Menu_Background();
 #else
             Load_Title_Screen(TitlePicture, &HidPage, Palette);
 #endif

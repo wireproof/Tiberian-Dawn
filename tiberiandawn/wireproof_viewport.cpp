@@ -3,6 +3,7 @@
 #include "common/wireproof_viewport.h"
 #include "common/wireproof_orders.h"
 #include "common/wireproof_camera.h"
+#include "common/wireproof_menu_layout.h"
 #include <algorithm>
 #include <cmath>
 
@@ -93,4 +94,20 @@ void WP_Begin_Campaign_Presentation()
     WP_Update_Battlefield_Viewport(false,false,true);
     Video_Clear_HD_Artwork();
     Video_Set_Touch_Selection_Box(false,0,0,0,0);
+}
+
+// Main menu and its load dialog share the same responsive background.
+void WP_Draw_Menu_Background()
+{
+    GraphicBufferClass title(640,400,nullptr,0);
+    Load_Title_Screen(TitlePicture,&title,Palette);
+    const double aspect=double(ScreenWidth)/ScreenHeight;
+    int cropW=160,cropH=270;
+    if(double(cropW)/cropH>aspect)cropW=MAX(1,int(cropH*aspect));
+    else cropH=MAX(1,int(cropW/aspect));
+    title.Scale(HidPage,(160-cropW)/2,(270-cropH)/2,0,0,cropW,cropH,ScreenWidth,ScreenHeight);
+    const int footerHeight=WPMenu::Calculate(ScreenWidth,ScreenHeight,6).footerHeight;
+    const int logoW=footerHeight*640/130;
+    title.Scale(HidPage,0,270,(ScreenWidth-logoW)/2,ScreenHeight-footerHeight,
+                640,130,logoW,footerHeight);
 }

@@ -2,9 +2,9 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.4.6
+## Latest release: v0.4.7
 
-[Download v0.4.6](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.6).
+[Download v0.4.7](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.7).
 
 The joystick is now independent: drag its center to scroll and its outer ring
 to reposition. **Double-tap** to shrink it into a hand button and switch from
@@ -20,6 +20,8 @@ packing them, preventing large drags past an edge from wrapping across the map.
 Adaptive gameplay fills the available safe area without integer-scale borders
 or stretching. Taller displays gain additional build slots with scroll arrows
 below the expanded list. Mac retains keyboard/controller camera controls and Option-C for cheats.
+Joystick size (0.5–2×) and speed (0.25–3×) now have saved sliders with −/+
+buttons in 0.25 steps. The portrait menu uses compact button spacing.
 The power gauge follows the extended sidebar. Opening Options keeps the adaptive
 battlefield size, and the main menu reflows to the available screen with proportional
 logo artwork. Physical-device layout confirmation remains pending.

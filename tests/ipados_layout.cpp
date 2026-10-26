@@ -117,10 +117,10 @@ int main()
 
     IPadLayout stage_manager =
         Calculate_IPad_Layout(1000, 1400, 500, 700, 640, 400, {20, 50, 10, 30}, false);
-    assert(stage_manager.viewport.width == 960);
-    assert(stage_manager.viewport.height == 600);
+    assert(stage_manager.viewport.width == 970);
+    assert(stage_manager.viewport.height == 606);
     assert(stage_manager.viewport.x == 20);
-    assert(stage_manager.viewport.y == 410);
+    assert(stage_manager.viewport.y == 407);
     assert(stage_manager.compact);
     Assert_Contained(stage_manager);
     Assert_Classic_Aspect(stage_manager);
@@ -165,9 +165,9 @@ int main()
     for (auto dimensions : {IPadViewport{0,0,900,2100}, IPadViewport{0,0,2100,1800}, IPadViewport{0,0,1800,2100}}) {
         auto fill=Calculate_IPad_Layout(dimensions.width,dimensions.height,dimensions.width/2,dimensions.height/2,640,400,{20,40,60,30},false,true);
         Assert_Contained(fill); Assert_Center_Maps_To_Game_Center(fill);
-        assert(fill.viewport.x==(dimensions.width-fill.viewport.width)/2);
+        assert(fill.viewport.x==20+(dimensions.width-80-fill.viewport.width)/2);
         if (dimensions.width>=dimensions.height) {
-            assert(fill.viewport.width==dimensions.width-120);
+            assert(fill.viewport.width==dimensions.width-80);
             assert(fill.viewport.height==dimensions.height-70);
         } else Assert_Classic_Aspect(fill);
         int x,y; Map_IPad_Output_Point(fill,fill.viewport.x+fill.viewport.width-1,fill.viewport.y+fill.viewport.height-1,x,y);

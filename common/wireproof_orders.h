@@ -1,3 +1,4 @@
+#include <algorithm>
 #ifndef WIREPROOF_ORDERS_H
 #define WIREPROOF_ORDERS_H
 #include <mutex>
@@ -17,6 +18,7 @@ class State {
     bool map_drag = false;
     Stick joystick;
     int zoom_quarters = 6;
+    int joystick_size = 4, joystick_speed = 4;
 public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
@@ -27,6 +29,8 @@ public:
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
     int zoomQuarters() { std::lock_guard<std::mutex> lock(mutex); return zoom_quarters; }
     void stepZoom(int delta) { std::lock_guard<std::mutex> lock(mutex); int value=zoom_quarters+delta; zoom_quarters=value<2?2:value>12?12:value; }
+    int joystickSetting(bool speed) { std::lock_guard<std::mutex> lock(mutex); return speed?joystick_speed:joystick_size; }
+    void setJoystickSetting(bool speed,int value) { std::lock_guard<std::mutex> lock(mutex); (speed?joystick_speed:joystick_size)=std::max(speed?1:2,std::min(speed?12:8,value)); }
     void hold_pan(bool held) { std::lock_guard<std::mutex> lock(mutex); pan_held=held && state.active; }
     void setMapDrag(bool value) { std::lock_guard<std::mutex> lock(mutex);map_drag=value && state.active;joystick={}; }
     bool mapDrag() { std::lock_guard<std::mutex> lock(mutex);return map_drag; }

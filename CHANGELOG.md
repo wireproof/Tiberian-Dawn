@@ -4,6 +4,15 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.7 — 2026-10-25
+
+- Add saved joystick size (0.5–2×) and speed (0.25–3×) sliders with minus/plus
+  buttons and 0.25 increments. Defaults preserve the existing size and speed.
+- Keep portrait main-menu buttons together in a centered panel.
+- Respect actual left and right safe-area insets without adding a duplicate
+  margin on the opposite side. Device orientation confirmation remains pending.
+- Both Apple builds and all 26 host tests validated.
+
 ## 0.4.6 — 2026-10-25
 
 - Extend the power gauge artwork, fill and hit area to match the tall sidebar.

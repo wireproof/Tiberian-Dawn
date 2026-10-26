@@ -60,11 +60,7 @@ IPadLayout Calculate_IPad_Layout(int output_width,
     layout.safe_area.right = Clamp(safe_area.right, 0, layout.output_width - layout.safe_area.left - 1);
     layout.safe_area.bottom = Clamp(safe_area.bottom, 0, layout.output_height - layout.safe_area.top - 1);
 
-    // Keep the image centered even when only one edge has a camera cutout.
-    const int horizontal = std::min(std::max(layout.safe_area.left, layout.safe_area.right),
-                                    (layout.output_width - 1) / 2);
-    layout.safe_area.left = layout.safe_area.right = horizontal;
-
+    // Respect each actual inset; do not duplicate a cutout on the opposite edge.
     const int available_width = layout.output_width - layout.safe_area.left - layout.safe_area.right;
     const int available_height = layout.output_height - layout.safe_area.top - layout.safe_area.bottom;
     layout.viewport = Fit_Viewport(available_width,

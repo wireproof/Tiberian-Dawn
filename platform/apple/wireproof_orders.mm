@@ -51,7 +51,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if(self.hidden){WPOrders::Shared().setStick(0,0);return;}
     BOOL compact=WPOrders::Shared().mapDrag();
     CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
-    CGFloat size=MIN(compact?56:144,MIN(safe.size.width,safe.size.height));
+    CGFloat size=MIN(compact?56:144*WPOrders::Shared().joystickSetting(false)/4.0,MIN(safe.size.width,safe.size.height));
     self.frame=CGRectMake(safe.origin.x+self.position.x*MAX(0,safe.size.width-size),safe.origin.y+self.position.y*MAX(0,safe.size.height-size),size,size);
     self.layer.cornerRadius=size/2;self.thumb.hidden=compact;self.hand.hidden=!compact;
     self.hand.frame=CGRectInset(self.bounds,14,14);self.thumb.bounds=CGRectMake(0,0,44,44);
@@ -94,6 +94,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) NSArray<UISlider*> *speedSliders;
 @property(nonatomic,strong) NSArray<UILabel*> *speedLabels;
 @property(nonatomic) BOOL cheatsOpen;
+@property(nonatomic,strong) NSArray<UISlider*> *joystickSliders;
+@property(nonatomic,strong) NSArray<UILabel*> *joystickLabels;
 @property(nonatomic,strong) UISlider *zoomSlider;
 @property(nonatomic,strong) UILabel *zoomLabel;
 @property(nonatomic,strong) UIButton *zoomMinus;
@@ -234,8 +236,24 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         [cheatRows addObject:help];
         self.cheatStack=[[UIStackView alloc] initWithArrangedSubviews:cheatRows];
         self.cheatStack.axis=UILayoutConstraintAxisVertical;self.cheatStack.spacing=6;
+        NSMutableArray *stickRows=[NSMutableArray new], *stickSliders=[NSMutableArray new], *stickLabels=[NSMutableArray new];
+        for(int i=0;i<2;i++) {
+            NSString *key=i?@"Wireproof.JoystickSpeed":@"Wireproof.JoystickSize";
+            NSNumber *saved=[[NSUserDefaults standardUserDefaults] objectForKey:key];
+            if(saved)WPOrders::Shared().setJoystickSetting(i,saved.intValue);
+            UILabel *label=[UILabel new];label.textColor=UIColor.whiteColor;label.font=[UIFont systemFontOfSize:14];label.textAlignment=NSTextAlignmentCenter;
+            UISlider *slider=[UISlider new];slider.minimumValue=i?1:2;slider.maximumValue=i?12:8;slider.tag=i;
+            slider.accessibilityLabel=i?@"Joystick speed":@"Joystick size";
+            [slider addTarget:self action:@selector(joystickChanged:) forControlEvents:UIControlEventValueChanged];
+            UIButton *minus=[self button:@"−" tag:600+i*2], *plus=[self button:@"+" tag:601+i*2];
+            [minus.widthAnchor constraintEqualToConstant:44].active=YES;[plus.widthAnchor constraintEqualToConstant:44].active=YES;
+            UIStackView *row=[[UIStackView alloc] initWithArrangedSubviews:@[minus,slider,plus]];row.spacing=8;
+            [stickRows addObject:label];[stickRows addObject:row];[stickSliders addObject:slider];[stickLabels addObject:label];
+        }
+        self.joystickSliders=stickSliders;self.joystickLabels=stickLabels;
+        UIStackView *stickControls=[[UIStackView alloc] initWithArrangedSubviews:stickRows];stickControls.axis=UILayoutConstraintAxisVertical;stickControls.spacing=6;
         self.stack=[[UIStackView alloc] initWithArrangedSubviews:@[
-            self.toggle,self.cheatButton,self.cheatStack,self.zoomLabel,zoomRow,
+            self.toggle,self.cheatButton,self.cheatStack,self.zoomLabel,zoomRow,stickControls,
             [self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],
             [self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]],
             [self gridRow:@[modes[0],modes[1]]], [self gridRow:@[modes[2],modes[3]]],
@@ -299,6 +317,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (void)speedChanged:(UISlider*)slider {
     WPCheats::Shared().speed((int)slider.tag,(int)lroundf(slider.value));[self refresh];
 }
+- (void)joystickChanged:(UISlider*)slider {
+    WPOrders::Shared().setJoystickSetting(slider.tag,(int)lroundf(slider.value));
+    [[NSUserDefaults standardUserDefaults] setInteger:WPOrders::Shared().joystickSetting(slider.tag) forKey:slider.tag?@"Wireproof.JoystickSpeed":@"Wireproof.JoystickSize"];
+    [self refresh];
+}
 - (void)saveZoom {
     int quarters=WPOrders::Shared().zoomQuarters();
     [[NSUserDefaults standardUserDefaults] setInteger:quarters forKey:@"Wireproof.ZoomQuarters"];
@@ -310,6 +333,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self saveZoom];
 }
 - (void)pressed:(UIButton*)button {
+    if(button.tag>=600 && button.tag<=603) {
+        UISlider *slider=self.joystickSliders[(button.tag-600)/2];slider.value=WPOrders::Shared().joystickSetting(slider.tag)+(button.tag%2?1:-1);[self joystickChanged:slider];return;
+    }
     if(button.tag==500){self.cheatsOpen=!self.cheatsOpen;[self refresh];return;}
     if(button.tag>=510&&button.tag<=513){
         if(button.tag<512)WPCheats::Shared().addMoney(button.tag==510?1000:10000);
@@ -344,6 +370,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     for(int i=0;i<3;++i){self.speedSliders[i].value=speeds[i];self.speedLabels[i].text=[NSString stringWithFormat:@"%@: %.2f×",@[@"Infantry",@"Vehicles",@"Aircraft"][i],speeds[i]/4.0];}
 
     int quarters=WPOrders::Shared().zoomQuarters();
+    for(int i=0;i<2;i++){int value=WPOrders::Shared().joystickSetting(i);self.joystickSliders[i].value=value;self.joystickLabels[i].text=[NSString stringWithFormat:@"Joystick %@ %.2f×",i?@"speed":@"size",value/4.0];}
     self.zoomLabel.text=[NSString stringWithFormat:@"Zoom %.2f×",quarters/4.0];
     self.zoomSlider.value=quarters; self.zoomSlider.accessibilityValue=self.zoomLabel.text;
     self.zoomMinus.enabled=quarters>2; self.zoomPlus.enabled=quarters<12;

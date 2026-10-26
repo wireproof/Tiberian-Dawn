@@ -11,6 +11,11 @@ int main() {
         assert(menu.y+menu.height<=size.second-menu.footerHeight);
         assert(menu.y+20+5*menu.step+menu.buttonHeight<menu.y+menu.height);
     }
+    WPOrders::State settings;
+    assert(settings.joystickSetting(false)==4 && settings.joystickSetting(true)==4);
+    settings.setJoystickSetting(false,99);assert(settings.joystickSetting(false)==8);
+    settings.setJoystickSetting(true,-1);assert(settings.joystickSetting(true)==1);
+    assert(WPMenu::Calculate(640,1400,6).step<=52);
     assert(WPCamera::SidebarSlots(400,182,48,24,24)==4);
     assert(WPCamera::SidebarSlots(910,182,48,24,24)==14);
     assert(WPCamera::SidebarSlots(200,182,48,24,24)==1);

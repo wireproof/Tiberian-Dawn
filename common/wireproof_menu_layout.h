@@ -7,7 +7,8 @@ inline Layout Calculate(int width,int height,int count) {
     Layout r{};
     r.footerHeight=std::min(height/3,width*130/640);
     r.width=std::min(520,width-32);r.x=(width-r.width)/2;r.y=12;
-    r.height=height-r.footerHeight-24;
+    r.height=std::min(height-r.footerHeight-24,40+std::max(1,count)*52);
+    r.y=std::max(12,(height-r.footerHeight-r.height)/2);
     r.step=std::max(1,(r.height-40)/std::max(1,count));
     r.buttonHeight=std::min(32,std::max(18,r.step-10));
     return r;

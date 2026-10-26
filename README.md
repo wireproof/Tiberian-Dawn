@@ -2,9 +2,11 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.4.2
+## Latest release: v0.4.3
 
-[Download v0.4.2](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.2).
+[Download v0.4.3](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.3).
+Repairs sidebar button and build-icon clipping coordinates after mission loads
+and resizing, preserving production and build lists. Device confirmation pending.
 Camera scrolling now rebuilds the frame to address black patches and sidebar
 smearing. Device confirmation and scrolling-performance feedback are pending.
 **Double-tap the floating controller** to open a larger circular map joystick.

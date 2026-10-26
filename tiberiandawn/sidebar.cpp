@@ -410,6 +410,9 @@ void SidebarClass::Init_IO(void)
 
         Column[0].Init_IO(0);
         Column[1].Init_IO(1);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        Resize_Apple_Viewport();
+#endif
 
         /*
         ** If a game was loaded & the sidebar was enabled, pop it up now
@@ -2668,23 +2671,35 @@ SidebarClass::~SidebarClass()
 // Reposition existing gadgets; do not rerun One_Time or reset production.
 void SidebarClass::Resize_Apple_Viewport()
 {
-    const int dx = SeenBuff.Get_Width() - SideBarWidth - SideX;
-    SideX += dx; RadX += dx; PowX += dx;
-    RadarButton.X += dx; PowerButton.X += dx;
-    Background.X += dx;
-    if (Repair) Repair->X += dx;
-    if (Upgrade) Upgrade->X += dx;
-    if (Zoom) Zoom->X += dx;
-    WindowList[WINDOW_SIDEBAR][WINDOWX] += dx;
-    for (int i = 0; i < COLUMNS; ++i) {
-        Column[i].X += dx;
-        Column[i].Init_IO(i);
-        Column[i].Flag_To_Redraw();
+    // Saved Map objects and Init_IO can restore classic coordinates independently
+    // of the framebuffer. Assign absolute positions, never accumulate deltas.
+    const int scale=Get_Resolution_Factor()?2:1;
+    SideBarWidth=SIDEBARWIDTH*scale;
+    SideX=SeenBuff.Get_Width()-SideBarWidth;
+    RadX=SeenBuff.Get_Width()-RadWidth;
+    PowX=RadX;
+    RadarButton.X=RadX+RadOffX;RadarButton.Y=RadY+RadOffY;
+    PowerButton.X=PowX;
+    SideY=RadY+RadHeight+1;
+    SideWidth=SideBarWidth;SideHeight=SeenBuff.Get_Height()-SideY;
+    Background.X=SideX+8*scale;Background.Y=SideY;
+    Background.Width=SideWidth-1;Background.Height=SideHeight-1;
+    const int buttonY=scale==2?160:80;
+    if(Repair){Repair->X=SideX+2*scale;Repair->Y=buttonY;}
+    if(Upgrade){Upgrade->X=SideX+(scale==2?57:36);Upgrade->Y=buttonY;}
+    if(Zoom){Zoom->X=SideX+(scale==2?110:70);Zoom->Y=buttonY;}
+    WindowList[WINDOW_SIDEBAR][WINDOWX]=SideX+PowWidth;
+    WindowList[WINDOW_SIDEBAR][WINDOWY]=SideY+TopHeight+(scale==1?1:0);
+    WindowList[WINDOW_SIDEBAR][WINDOWWIDTH]=SideWidth-PowWidth;
+    WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT]=MaxVisible*StripClass::OBJECT_HEIGHT*scale-(scale==1?1:0);
+    const int spacing=(SideWidth-PowWidth-2*StripClass::STRIP_WIDTH*scale)/3;
+    for(int i=0;i<COLUMNS;++i){
+        Column[i].X=SideX+PowWidth+spacing+i*(StripClass::STRIP_WIDTH*scale+spacing-1);
+        Column[i].Y=SideY+TopHeight+1;
+        Column[i].Init_IO(i);Column[i].Flag_To_Redraw();
     }
-    Set_View_Dimensions(0, Map.Get_Tab_Height(),
-        SeenBuff.Get_Width() - (IsSidebarActive ? SideBarWidth : 0),
-        SeenBuff.Get_Height() - Map.Get_Tab_Height());
-    IsToRedraw = true;
-    RadarClass::IsToRedraw = true;
-    PowerClass::IsToRedraw = true;
+    Set_View_Dimensions(0,Map.Get_Tab_Height(),
+        SeenBuff.Get_Width()-(IsSidebarActive?SideBarWidth:0),SeenBuff.Get_Height()-Map.Get_Tab_Height());
+    IsToRedraw=true;RadarClass::IsToRedraw=true;PowerClass::IsToRedraw=true;
+    Flag_To_Redraw(true);
 }

@@ -4,6 +4,15 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.3 — 2026-10-25
+
+- Reconstruct sidebar button, build-column and clipping coordinates from the
+  current framebuffer after mission input initialization and resizing. Avoid
+  stale classic/saved coordinates and accumulated position offsets.
+- Preserve buildable entries, factories and production while repairing layout.
+- Retain the scrolling redraw fix. Device confirmation of missing build icons
+  and remaining visual artifacts is pending.
+
 ## 0.4.2 — 2026-10-25
 
 - Rebuild the full Apple game frame during camera scrolling instead of reusing

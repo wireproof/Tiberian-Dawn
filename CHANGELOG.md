@@ -4,6 +4,13 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.3.6 — 2026-10-25
+
+- Start gameplay at a fixed 2x battlefield magnification so units and terrain
+  are larger. Keep menus, the top bar, sidebar and Orders panel at normal size.
+- Preserve v0.3.5 gestures; pinch and Control+wheel zoom remain disabled.
+- Physical-device confirmation of the larger battlefield remains pending.
+
 ## 0.3.5 — 2026-10-25
 
 - Revert the 0.3.4 pinch and Control+wheel zoom gestures. Restore the previous

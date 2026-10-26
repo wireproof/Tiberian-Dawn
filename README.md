@@ -25,8 +25,10 @@ Watch in your browser with sound, seeking, and fullscreen controls—no MOV down
 | Duo cover display | 2:03 | [Play cover gameplay](https://wireproof.github.io/Tiberian-Dawn/#cover-gameplay) |
 | Duo inner display | 2:57 | [Play inner gameplay](https://wireproof.github.io/Tiberian-Dawn/#inner-gameplay) |
 | Mod Workshop on the inner display | 0:50 | [Play Workshop demo](https://wireproof.github.io/Tiberian-Dawn/#workshop) |
+| iPad Pro 11 gameplay and controls | 2:54 | [Play iPad gameplay](https://wireproof.github.io/Tiberian-Dawn/#ipad-gameplay) |
+| iPad Pro 11 campaign and gameplay | 1:05 | [Play iPad campaign footage](https://wireproof.github.io/Tiberian-Dawn/#ipad-campaign) |
 
-These are owner-supplied recordings from the v0.5.2-era showcase, not proof of later fixes. Browser copies use H.264 video and AAC audio in fast-start MP4 containers. Original recordings are preserved separately.
+The Duo recordings are from the v0.5.2-era showcase. The iPad Pro 11 recordings and 11 screenshots were supplied on October 26, 2026. They show real-device use, not comprehensive verification of every feature or later fix. Browser copies use H.264 video and AAC audio in fast-start MP4 containers. Original recordings are preserved separately.
 
 ### Cover display
 
@@ -46,7 +48,19 @@ These are owner-supplied recordings from the v0.5.2-era showcase, not proof of l
 
 [See all screenshots, including the production sidebar →](docs/showcase/README.md)
 
-**iPad photos and gameplay are coming when available.**
+### iPad Pro 11
+
+Landscape and portrait gameplay, menus, floating controls, and the Mod Workshop.
+
+| Landscape gameplay | Cheats and controls |
+| --- | --- |
+| ![iPad landscape gameplay](docs/showcase/ipad-gameplay-landscape.jpg) | ![iPad cheats](docs/showcase/ipad-cheats.jpg) |
+
+| Portrait gameplay | Portrait main menu | Workshop |
+| --- | --- | --- |
+| ![iPad portrait gameplay](docs/showcase/ipad-gameplay-portrait.jpg) | ![iPad portrait menu](docs/showcase/ipad-main-menu-portrait.jpg) | ![iPad Workshop](docs/showcase/ipad-workshop-portrait.jpg) |
+
+[View all 11 iPad screenshots →](docs/showcase/README.md#ipad-pro-11)
 
 ## Full features
 
@@ -123,7 +137,7 @@ Keep SDL at its recorded submodule commit and apply the supplied patch through t
 | Duo gameplay | Owner-provided gameplay and screenshots are available above |
 | Latest layout changes | Fold/rotation switching and relaunch persistence still need physical-device confirmation |
 | Display presentation | Cover/inner zoom separation and campaign/menu/movie alignment need continued real-device regression testing |
-| iPad | Dedicated showcase and broader device validation pending |
+| iPad Pro 11 | Two recordings and 11 screenshots available; broader device and lifecycle validation remains pending |
 | macOS distribution | Ad-hoc signed local build; not notarized |
 | Multiplayer | Custom Workshop rules disable it; cross-device compatibility is not certified here |
 | Other configurations | Arbitrary Workshop combinations and Vision Pro are not certified |
@@ -134,7 +148,7 @@ Build and host-test success do not replace on-device gameplay testing. Historica
 
 These are planned or exploratory directions, **not shipped features or promises of a release date**.
 
-- **More real-device coverage:** add iPad screenshots/video, broaden portrait and landscape testing, and keep improving cover/inner display transitions, saved layouts, and presentation alignment.
+- **More real-device coverage:** expand the iPad showcase and device coverage, broaden portrait and landscape testing, and keep improving cover/inner display transitions, saved layouts, and presentation alignment.
 - **Original-game reference research:** continue comparing the original C&C95 behavior with the mobile port to guide compatibility fixes and optimization. Current research is partial; it is not a complete reconstruction of the game.
 - **Optional modern graphics:** investigate user-supplied Remastered assets and a classic/modern graphics toggle. Asset mapping, rendering, memory use, team colors, and licensing still need work; Remastered graphics are not currently supported.
 - **A broader Command & Conquer library:** explore C&C DOS and Red Alert references and, eventually, a shared launcher for selecting games. Collecting/reference analysis of those files does not mean native ports are available.

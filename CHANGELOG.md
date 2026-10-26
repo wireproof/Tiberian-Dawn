@@ -6,6 +6,8 @@ baseline wherever the operating systems permit it.
 
 ## 0.5.1 — 2026-10-26
 
+- Corrected IPA metadata: restore the missing Tiberian Dawn display name.
+
 - Include Airstrike in Instant Weapons.
 - Tap group numbers to recall; hold to assign or clear with no selection.
   Remove the four group-mode buttons from the touch panel.

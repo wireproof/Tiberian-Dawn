@@ -1,7 +1,27 @@
+#include "common/wireproof_camera.h"
+#include <climits>
 #include "common/wireproof_orders.h"
 #include <cassert>
 #include "common/wireproof_cheats.h"
 int main() {
+    assert(WPCamera::SidebarSlots(400,182,48,24,24)==4);
+    assert(WPCamera::SidebarSlots(910,182,48,24,24)==14);
+    assert(WPCamera::SidebarSlots(200,182,48,24,24)==1);
+    assert(WPCamera::SidebarSlots(4096,182,48,24,24)==24);
+    using WPCamera::ClampAxis;
+    // Large drags across every edge, nonzero map origins, and oversized views.
+    assert(ClampAxis(256,-4096,256,8192,2048)==256);
+    assert(ClampAxis(6300,4096,256,8192,2048)==6400);
+    assert(ClampAxis(1000,128,256,8192,2048)==1128);
+    assert(ClampAxis(1000,-128,256,8192,2048)==872);
+    assert(ClampAxis(256,INT_MIN,256,8192,2048)==256);
+    assert(ClampAxis(256,INT_MAX,256,8192,2048)==6400);
+    assert(ClampAxis(512,200,256,1024,2048)==256);
+    int edge=256;
+    for(int i=0;i<1000;++i)edge=ClampAxis(edge,-1000,256,8192,2048);
+    assert(edge==256);
+    assert(ClampAxis(edge,100,256,8192,2048)==356); // immediate reverse away from edge
+
     WPCheats::State cheats;
     cheats.addMoney(1000);cheats.invincible(true);cheats.speed(0,12);
     assert(!cheats.snapshot().invincible && cheats.snapshot().infantry==4 && cheats.take().money==0);

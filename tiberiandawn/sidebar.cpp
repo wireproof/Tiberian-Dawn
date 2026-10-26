@@ -1,3 +1,5 @@
+#include "common/wireproof_camera.h"
+#include "common/video.h"
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -115,7 +117,7 @@ ToggleClass* SidebarClass::Upgrade = NULL;
 ToggleClass* SidebarClass::Zoom = NULL;
 ShapeButtonClass SidebarClass::StripClass::UpButton[COLUMNS];
 ShapeButtonClass SidebarClass::StripClass::DownButton[COLUMNS];
-SidebarClass::StripClass::SelectClass SidebarClass::StripClass::SelectButton[COLUMNS][MAX_VISIBLE];
+SidebarClass::StripClass::SelectClass SidebarClass::StripClass::SelectButton[COLUMNS][MAX_VISIBLE_CAPACITY];
 
 /*
 ** Shape data pointers
@@ -1245,22 +1247,24 @@ void SidebarClass::StripClass::Init_Clear(void)
 void SidebarClass::StripClass::Init_IO(int id)
 {
     ID = id;
+    TopIndex=MAX(0,MIN(TopIndex,BuildableCount-Map.MaxVisible));
+    Scroller=0;Slid=0;IsScrolling=false;
 
     UpButton[ID].IsSticky = true;
     UpButton[ID].ID = BUTTON_UP + id;
     UpButton[ID].X = X + ButtonSpacingOffset + 1;
-    UpButton[ID].Y = Y + MAX_VISIBLE * ObjectHeight - 1;
+    UpButton[ID].Y = Y + Map.MaxVisible * ObjectHeight - 1;
 
     UpButton[ID].Set_Shape(Hires_Retrieve("STRIPUP.SHP"));
 
     DownButton[ID].IsSticky = true;
     DownButton[ID].ID = BUTTON_DOWN + id;
     DownButton[ID].X = UpButton[ID].X + UpButton[ID].Width + ButtonSpacingOffset - 2;
-    DownButton[ID].Y = Y + MAX_VISIBLE * ObjectHeight - 1;
+    DownButton[ID].Y = Y + Map.MaxVisible * ObjectHeight - 1;
 
     DownButton[ID].Set_Shape(Hires_Retrieve("STRIPDN.SHP"));
 
-    for (int index = 0; index < MAX_VISIBLE; index++) {
+    for (int index = 0; index < Map.MaxVisible; index++) {
         SelectClass& g = SelectButton[ID][index];
         g.ID = BUTTON_SELECT;
         g.X = X;
@@ -1352,7 +1356,7 @@ void SidebarClass::StripClass::Activate(void)
     DownButton[ID].Zap();
     Map.Add_A_Button(DownButton[ID]);
 
-    for (int index = 0; index < MAX_VISIBLE; index++) {
+    for (int index = 0; index < Map.MaxVisible; index++) {
         SelectButton[ID][index].Zap();
         Map.Add_A_Button(SelectButton[ID][index]);
     }
@@ -1377,7 +1381,7 @@ void SidebarClass::StripClass::Deactivate(void)
 {
     Map.Remove_A_Button(UpButton[ID]);
     Map.Remove_A_Button(DownButton[ID]);
-    for (int index = 0; index < MAX_VISIBLE; index++) {
+    for (int index = 0; index < Map.MaxVisible; index++) {
         Map.Remove_A_Button(SelectButton[ID][index]);
     }
 }
@@ -1521,7 +1525,7 @@ bool SidebarClass::StripClass::Scroll(bool up)
         Scroller++;
     }
 #ifdef NEVER
-    if (BuildableCount <= MAX_VISIBLE)
+    if (BuildableCount <= Map.MaxVisible)
         return (false);
 
     /*
@@ -1536,7 +1540,7 @@ bool SidebarClass::StripClass::Scroll(bool up)
         TopIndex--;
         Slid = 0;
     } else {
-        if (TopIndex + MAX_VISIBLE >= BuildableCount)
+        if (TopIndex + Map.MaxVisible >= BuildableCount)
             return (false);
 
         Slid = ObjectHeight;
@@ -1612,7 +1616,7 @@ bool SidebarClass::StripClass::AI(KeyNumType& input, int, int)
     **	logic handler. This might result in up or down scrolling.
     */
     if (!IsScrolling && Scroller) {
-        if (BuildableCount <= MAX_VISIBLE) {
+        if (BuildableCount <= Map.MaxVisible) {
             Scroller = 0;
         } else {
 
@@ -1633,7 +1637,7 @@ bool SidebarClass::StripClass::AI(KeyNumType& input, int, int)
                 }
 
             } else {
-                if (TopIndex + MAX_VISIBLE >= BuildableCount) {
+                if (TopIndex + Map.MaxVisible >= BuildableCount) {
                     Scroller = 0;
                 } else {
                     Scroller--;
@@ -1773,7 +1777,7 @@ void SidebarClass::StripClass::Draw_It(bool complete)
         /*
         ** New sidebar needs to be drawn not filled
         */
-        if (factor > 0 && BuildableCount < MAX_VISIBLE) {
+        if (factor > 0 && Map.MaxVisible == MAX_VISIBLE && BuildableCount < Map.MaxVisible) {
             CC_Draw_Shape(LogoShapes, ID, X + 3, Y - 1, WINDOW_MAIN, SHAPE_WIN_REL | SHAPE_NORMAL, 0);
         }
 
@@ -1787,7 +1791,7 @@ void SidebarClass::StripClass::Draw_It(bool complete)
         **	Loop through all the buildable objects that are visible in the strip and render
         **	them. Their Y offset may be adjusted if the strip is in the process of scrolling.
         */
-        for (int i = 0; i < MAX_VISIBLE + (IsScrolling ? 1 : 0); i++) {
+        for (int i = 0; i < Map.MaxVisible + (IsScrolling ? 1 : 0); i++) {
             bool production;
             bool completed;
             int stage;
@@ -1930,7 +1934,7 @@ void SidebarClass::StripClass::Draw_It(bool complete)
             **
             ** Don't draw blank shapes over the new 640x400 sidebar art - ST 5/1/96 6:01PM
             */
-            if (factor == 0 || shapenum != SB_BLANK || shapefile != LogoShapes) {
+            if (factor == 0 || Map.MaxVisible != MAX_VISIBLE || shapenum != SB_BLANK || shapefile != LogoShapes) {
                 IsTheaterShape = (bool)factor; // This shape is theater specific
                 CC_Draw_Shape(shapefile,
                               shapenum,
@@ -2175,7 +2179,7 @@ SidebarClass::StripClass::SelectClass::SelectClass(void)
  *                                                                                             *
  * INPUT:   strip    -- Reference to the strip that owns this buildable button.                *
  *                                                                                             *
- *          index    -- The index (0 .. MAX_VISIBLE-1) of this button. This is used to let     *
+ *          index    -- The index (0 .. Map.MaxVisible-1) of this button. This is used to let     *
  *                      the owning strip know what index this button refers to.                *
  *                                                                                             *
  * OUTPUT:  none                                                                               *
@@ -2673,6 +2677,19 @@ void SidebarClass::Resize_Apple_Viewport()
 {
     // Saved Map objects and Init_IO can restore classic coordinates independently
     // of the framebuffer. Assign absolute positions, never accumulate deltas.
+    bool relink[COLUMNS]={false,false};
+    auto unlink=[&](GadgetClass& button) {
+        for(GadgetClass* current=Buttons;current;current=current->Get_Next()) {
+            if(current==&button){Remove_A_Button(button);return true;}
+        }
+        return false;
+    };
+    for(int c=0;c<COLUMNS;++c) {
+        relink[c]=unlink(StripClass::UpButton[c]);
+        relink[c]=unlink(StripClass::DownButton[c]) || relink[c];
+        for(int i=0;i<StripClass::MAX_VISIBLE_CAPACITY;++i)
+            relink[c]=unlink(StripClass::SelectButton[c][i]) || relink[c];
+    }
     const int scale=Get_Resolution_Factor()?2:1;
     SideBarWidth=SIDEBARWIDTH*scale;
     SideX=SeenBuff.Get_Width()-SideBarWidth;
@@ -2688,6 +2705,13 @@ void SidebarClass::Resize_Apple_Viewport()
     if(Repair){Repair->X=SideX+2*scale;Repair->Y=buttonY;}
     if(Upgrade){Upgrade->X=SideX+(scale==2?57:36);Upgrade->Y=buttonY;}
     if(Zoom){Zoom->X=SideX+(scale==2?110:70);Zoom->Y=buttonY;}
+    int sidebarHeight=SeenBuff.Get_Height();
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    int presentationWidth;
+    Video_Presentation_Size(presentationWidth,sidebarHeight);
+#endif
+    MaxVisible=WPCamera::SidebarSlots(sidebarHeight,SideY+TopHeight+1,
+        StripClass::OBJECT_HEIGHT*scale,StripClass::BUTTON_HEIGHT*scale,StripClass::MAX_VISIBLE_CAPACITY);
     WindowList[WINDOW_SIDEBAR][WINDOWX]=SideX+PowWidth;
     WindowList[WINDOW_SIDEBAR][WINDOWY]=SideY+TopHeight+(scale==1?1:0);
     WindowList[WINDOW_SIDEBAR][WINDOWWIDTH]=SideWidth-PowWidth;
@@ -2697,6 +2721,7 @@ void SidebarClass::Resize_Apple_Viewport()
         Column[i].X=SideX+PowWidth+spacing+i*(StripClass::STRIP_WIDTH*scale+spacing-1);
         Column[i].Y=SideY+TopHeight+1;
         Column[i].Init_IO(i);Column[i].Flag_To_Redraw();
+        if(relink[i] && IsSidebarActive)Column[i].Activate();
     }
     Set_View_Dimensions(0,Map.Get_Tab_Height(),
         SeenBuff.Get_Width()-(IsSidebarActive?SideBarWidth:0),SeenBuff.Get_Height()-Map.Get_Tab_Height());

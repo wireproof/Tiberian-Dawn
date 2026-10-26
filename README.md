@@ -2,9 +2,9 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.4.4
+## Latest release: v0.4.5
 
-[Download v0.4.4](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.4).
+[Download v0.4.5](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.5).
 
 The joystick is now independent: drag its center to scroll and its outer ring
 to reposition. **Double-tap** to shrink it into a hand button and switch from
@@ -12,10 +12,15 @@ one-finger drag selection to map dragging. Ordinary taps still click.
 Double-tap again to return to normal selection and the full joystick.
 Map-drag mode resets when leaving gameplay.
 
-The **gamepad tab on the left edge** opens the Orders, Groups, Zoom and Cheats
-drawer. Tap its header or swipe left to close it. Group buttons, the 0.5–3×
-zoom slider and single-player cheats are retained. Mac uses keyboard/controller
-camera controls and Option-C for cheats. Device gesture confirmation pending.
+The **gamepad is a second floating icon**. Tap it for Orders, Groups, Zoom and
+Cheats; drag the icon or open panel header to reposition it. Tap the header to
+collapse it. The joystick remains independent, with a slower proportional speed
+and half the previous maximum. Map scrolling now clamps signed coordinates before
+packing them, preventing large drags past an edge from wrapping across the map.
+Adaptive gameplay fills the available safe area without integer-scale borders
+or stretching. Taller displays gain additional build slots with scroll arrows
+below the expanded list. Mac retains keyboard/controller camera controls and Option-C for cheats.
+Physical-device gesture confirmation remains pending.
 
 ## Release 0.2.8
 

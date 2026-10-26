@@ -1164,7 +1164,7 @@ static bool WP_JoystickScroll(ScrollDirType& direction,float& intensity) {
     // The engine uses eight compass directions; preserve radial stick speed.
     const int octant=(static_cast<int>(std::lround(std::atan2(stick.y,stick.x)*4.0/3.141592653589793))+8)%8;
     static const ScrollDirType directions[]={SDIR_E,SDIR_SE,SDIR_S,SDIR_SW,SDIR_W,SDIR_NW,SDIR_N,SDIR_NE};
-    direction=directions[octant];intensity=0.15f+1.35f*stick.intensity;
+    direction=directions[octant];intensity=0.15f+0.60f*stick.intensity;
     return true;
 }
 #endif

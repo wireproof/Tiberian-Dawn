@@ -508,6 +508,7 @@ Uint32 SettingsPixelFormat()
 static void Update_HWCursor();
 
 #ifdef TIBERIAN_DAWN_APPLE_PORT
+static bool battlefield_active = false;
 static int battlefield_view_w = 0, battlefield_view_h = 0;
 static int Presentation_Width() { return battlefield_view_w>0?battlefield_view_w:hwcursor.GameW; }
 static int Presentation_Height() { return battlefield_view_h>0?battlefield_view_h:hwcursor.GameH; }
@@ -562,7 +563,8 @@ static void Update_HWCursor_Settings(bool geometry_only = false)
                                         Presentation_Width(),
                                         Presentation_Height(),
                                         {safe_left, safe_top, safe_right, safe_bottom},
-                                        Settings.Video.PresentationMode == 1, Settings.Video.PresentationMode == 3);
+                                        !battlefield_active && Settings.Video.PresentationMode == 1,
+                                        !battlefield_active && Settings.Video.PresentationMode == 3);
     render_dst.x = ipad_layout.viewport.x;
     render_dst.y = ipad_layout.viewport.y;
     render_dst.w = ipad_layout.viewport.width;
@@ -1028,7 +1030,6 @@ void Get_Video_Mouse(int& x, int& y)
 }
 
 #ifdef TIBERIAN_DAWN_APPLE_PORT
-static bool battlefield_active = false;
 // Updated only by the game thread between frames.
 static float battlefield_zoom = 1.5f;
 static int battlefield_right = 480, battlefield_top = 16;

@@ -4,6 +4,25 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.5 — 2026-10-25
+
+- Restore the draggable floating gamepad icon and expandable Orders & Groups
+  panel, separate from the independent joystick. Drag the open panel by its
+  header; tap the header to collapse it.
+- Preserve joystick repositioning and double-tap compact map-drag mode.
+- Reduce joystick scrolling to half its previous maximum speed, retaining the
+  center dead zone and gradual speed increase.
+- Clamp signed camera coordinates before packing them into the legacy unsigned
+  representation. Large drags beyond an edge stop there instead of wrapping to
+  the other side. Shared camera handling also covers desktop scrolling.
+- Add regression checks for overshoots, sustained edge input, reverse movement,
+  nonzero map origins and viewports larger than the map.
+- Adaptive gameplay uses aspect-preserving fractional fit, avoiding unused
+  integer-scale margins on cover and opened portrait displays.
+- Extend the build sidebar with additional clickable slots on taller displays.
+  Reflow slots and scroll arrows on rotation without resetting production.
+- Physical-device interaction confirmation remains pending.
+
 ## 0.4.4 — 2026-10-25
 
 - Separate the map joystick from the Orders & Groups gamepad control.

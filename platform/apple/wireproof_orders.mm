@@ -150,11 +150,16 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.bubble=[UIButton buttonWithType:UIButtonTypeSystem];
         [self.bubble setImage:[UIImage systemImageNamed:@"gamecontroller.fill"] forState:UIControlStateNormal];
         self.bubble.tintColor=UIColor.whiteColor;
-        self.bubble.accessibilityLabel=@"Open the left Orders and Groups drawer";
+        self.bubble.accessibilityLabel=@"Tap for Orders and Groups. Drag to reposition.";
         self.bubble.tag=100;
         [self.bubble addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];
-        UISwipeGestureRecognizer* open=[[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(openOrders:)];open.direction=UISwipeGestureRecognizerDirectionRight;[self.bubble addGestureRecognizer:open];
-        UISwipeGestureRecognizer* close=[[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(closeOrders:)];close.direction=UISwipeGestureRecognizerDirectionLeft;[self.toggle addGestureRecognizer:close];
+        for (UIView *handle in @[self.toggle,self.bubble]) {
+            UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)];
+            pan.maximumNumberOfTouches=1;[handle addGestureRecognizer:pan];
+        }
+        self.position=CGPointMake(0,1);
+        NSArray *saved=[[NSUserDefaults standardUserDefaults] arrayForKey:@"Wireproof.OrdersPosition"];
+        if(saved.count==2)self.position=CGPointMake([saved[0] doubleValue],[saved[1] doubleValue]);
         NSMutableArray *orders=[NSMutableArray array];
         NSArray *names=@[@"Stop",@"Guard",@"Scatter",@"Force Attack",@"Force Move",@"Cancel"];
         for (NSInteger i=0;i<names.count;i++) [orders addObject:[self button:names[i] tag:i]];
@@ -244,13 +249,17 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         [self addSubview:self.bubble];
     } return self;
 }
-- (void)animateDrawer {
-    CATransition* animation=[CATransition animation];animation.duration=.2;animation.type=kCATransitionPush;
-    animation.subtype=self.expanded?kCATransitionFromLeft:kCATransitionFromRight;
-    [self.layer addAnimation:animation forKey:@"drawer"];[self refresh];
+- (void)drag:(UIPanGestureRecognizer*)pan {
+    CGRect safe=[self availableRect];
+    CGPoint delta=[pan translationInView:self.superview];
+    CGFloat dx=MAX(0,safe.size.width-self.bounds.size.width);
+    CGFloat dy=MAX(0,safe.size.height-self.bounds.size.height);
+    self.position=CGPointMake(dx?MIN(1,MAX(0,(self.frame.origin.x+delta.x-safe.origin.x)/dx)):0,
+                              dy?MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)):0);
+    [pan setTranslation:CGPointZero inView:self.superview];[self refresh];
+    if(pan.state==UIGestureRecognizerStateEnded)
+        [[NSUserDefaults standardUserDefaults] setObject:@[@(self.position.x),@(self.position.y)] forKey:@"Wireproof.OrdersPosition"];
 }
-- (void)openOrders:(UIGestureRecognizer*)gesture { self.expanded=YES;[self animateDrawer]; }
-- (void)closeOrders:(UIGestureRecognizer*)gesture { self.expanded=NO;[self animateDrawer]; }
 - (void)didMoveToWindow {
     [super didMoveToWindow];
     if (!self.window) {WPOrders::Shared().hold_pan(false);WPOrders::Shared().setStick(0,0);}
@@ -310,7 +319,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if (button.tag==400 || button.tag==401) {
         WPOrders::Shared().stepZoom(button.tag==400?-1:1); [self saveZoom]; return;
     }
-    if (button.tag==100) { self.expanded=!self.expanded; [self animateDrawer]; return; }
+    if (button.tag==100) { self.expanded=!self.expanded; [self refresh]; return; }
     if (button.tag>=300) { self.groupMode.selectedSegmentIndex=button.tag-300; [self refresh]; return; }
     if (button.tag>=200) {
         const WPOrders::Kind kinds[]={WPOrders::Recall,WPOrders::Assign,WPOrders::Add,WPOrders::Center};
@@ -347,9 +356,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     BOOL panHeld=WPOrders::Shared().panHeld();
     self.bubble.tintColor=panHeld?UIColor.systemBlueColor:(s.force?UIColor.systemOrangeColor:UIColor.whiteColor);
     [self.bubble setImage:[UIImage systemImageNamed:panHeld?@"hand.draw.fill":@"gamecontroller.fill"] forState:UIControlStateNormal];
-    self.layer.cornerRadius=12;
+    self.layer.cornerRadius=self.expanded?12:28;
     CGRect safe=[self availableRect];
-    CGFloat width=self.expanded?MIN(256,MAX(56,safe.size.width)):44;
+    CGFloat width=self.expanded?MIN(256,MAX(56,safe.size.width)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {
@@ -358,8 +367,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         contentHeight=fit.height;
         height=MIN(safe.size.height,fit.height+12);
     }
-    CGFloat x=safe.origin.x;
-    CGFloat y=safe.origin.y+MAX(0,safe.size.height-height)/2;
+    CGFloat x=safe.origin.x+self.position.x*MAX(0,safe.size.width-width);
+    CGFloat y=safe.origin.y+self.position.y*MAX(0,safe.size.height-height);
     [UIView performWithoutAnimation:^{
         self.frame=CGRectMake(x,y,width,height);
         self.bubble.frame=self.bounds;

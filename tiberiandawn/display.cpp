@@ -1,3 +1,4 @@
+#include "common/wireproof_camera.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 #include "common/wireproof_orders.h"
 #endif
@@ -661,6 +662,8 @@ void DisplayClass::Set_View_Dimensions(int x, int y, int width, int height)
     Confine_Rect(
         &xx, &yy, TacLeptonWidth, TacLeptonHeight, MapCellWidth * CELL_LEPTON_W, MapCellHeight * CELL_LEPTON_H);
 
+    // Confine_Rect can return negative origins when the viewport exceeds the map.
+    xx=MAX(0,xx); yy=MAX(0,yy);
     Set_Tactical_Position(XY_Coord(xx + (MapCellX * CELL_LEPTON_W), yy + (MapCellY * CELL_LEPTON_H)));
 
     TacPixelX = x;
@@ -702,6 +705,8 @@ void DisplayClass::Set_View_Dimensions(int x, int y, int width, int height)
     Confine_Rect(
         &xx, &yy, TacLeptonWidth, TacLeptonHeight, MapCellWidth * CELL_LEPTON_W, MapCellHeight * CELL_LEPTON_H);
 
+    // Confine_Rect can return negative origins when the viewport exceeds the map.
+    xx=MAX(0,xx); yy=MAX(0,yy);
     Set_Tactical_Position(XY_Coord(xx + (MapCellX * CELL_LEPTON_W), yy + (MapCellY * CELL_LEPTON_H)));
 
     TacPixelX = x;
@@ -1551,24 +1556,17 @@ bool DisplayClass::Scroll_Map(DirType facing, int& distance, bool really)
     /*
     **	Determine the coordinate that it wants to scroll to.
     */
-    COORDINATE coord = Coord_Move(TacticalCoord, facing, distance);
-
-    /*
-    **	Clip the new coordinate to the edges of the game world.
-    */
-    int xx = Coord_X(coord) - Cell_To_Lepton(MapCellX);
-    int yy = Coord_Y(coord) - Cell_To_Lepton(MapCellY);
-    bool shifted = Confine_Rect(
-        &xx, &yy, TacLeptonWidth, TacLeptonHeight, Cell_To_Lepton(MapCellWidth), Cell_To_Lepton(MapCellHeight));
-    if (xx < 0) {
-        xx = 0;
-        shifted = true;
-    }
-    if (yy < 0) {
-        yy = 0;
-        shifted = true;
-    }
-    coord = XY_Coord(xx + Cell_To_Lepton(MapCellX), yy + Cell_To_Lepton(MapCellY));
+    // Coord_Move packs signed movement into unsigned axes. Large direct drags
+    // could cross zero before clipping and wrap to the opposite map boundary.
+    short delta_x=0, delta_y=0;
+    Move_Point(delta_x, delta_y, facing, MIN(distance, 32767));
+    const int old_x=Coord_X(TacticalCoord), old_y=Coord_Y(TacticalCoord);
+    const int x=WPCamera::ClampAxis(old_x, delta_x, Cell_To_Lepton(MapCellX),
+                                  Cell_To_Lepton(MapCellWidth), TacLeptonWidth);
+    const int y=WPCamera::ClampAxis(old_y, delta_y, Cell_To_Lepton(MapCellY),
+                                  Cell_To_Lepton(MapCellHeight), TacLeptonHeight);
+    const bool shifted=x!=old_x+delta_x || y!=old_y+delta_y;
+    COORDINATE coord=XY_Coord(x,y);
 
     /*
     **	If the desired scroll was bound by the edge of the map, then adjust the distance to more accurately
@@ -4263,6 +4261,7 @@ void DisplayClass::Set_Tactical_Position(COORDINATE coord)
     Confine_Rect(
         &xx, &yy, TacLeptonWidth, TacLeptonHeight, Cell_To_Lepton(MapCellWidth), Cell_To_Lepton(MapCellHeight));
 #endif
+    xx=MAX(0,xx); yy=MAX(0,yy);
     coord = XY_Coord(xx + Cell_To_Lepton(MapCellX), yy + Cell_To_Lepton(MapCellY));
 
     if (ScenarioInit) {

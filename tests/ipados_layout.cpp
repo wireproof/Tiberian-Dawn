@@ -36,8 +36,8 @@ void Assert_Center_Maps_To_Game_Center(const IPadLayout& layout)
                           layout.viewport.y + layout.viewport.height * 0.5f,
                           game_x,
                           game_y);
-    assert(std::abs(game_x - 320) <= 1);
-    assert(std::abs(game_y - 200) <= 1);
+    assert(std::abs(game_x - layout.game_width/2) <= 1);
+    assert(std::abs(game_y - layout.game_height/2) <= 1);
 }
 }
 
@@ -188,6 +188,18 @@ int main()
                 (current.viewport.y+current.viewport.height*0.5f)/dims.height,x,y);
             assert(std::abs(x-320)<=1 && std::abs(y-200)<=1);
         }
+    }
+    // Adaptive gameplay fits fractionally even when menu pixel-perfect mode
+    // is selected: no integer-scale borders on cover or opened portrait.
+    for(const auto dims : {IPadViewport{0,0,2560,1800},IPadViewport{0,0,1800,2560}}) {
+        int w=640,h=400;
+        Calculate_Adaptive_Game_Size(dims.width,dims.height,w,h);
+        auto fitted=Calculate_IPad_Layout(dims.width,dims.height,dims.width/2,dims.height/2,
+                                          w,h,{0,0,0,0},false,false);
+        Assert_Contained(fitted);
+        assert(dims.width-fitted.viewport.width<=2);
+        assert(dims.height-fitted.viewport.height<=2);
+        Assert_Center_Maps_To_Game_Center(fitted);
     }
     std::cout << "iPad layout hardening matrix passed\n";
     return 0;

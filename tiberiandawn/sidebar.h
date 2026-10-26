@@ -217,7 +217,8 @@ public:
             OBJECT_HEIGHT = 24,        // Pixel height of each buildable object.
             OBJECT_WIDTH = 32,         // Pixel width of each buildable object.
             STRIP_WIDTH = 35,          // Width of strip (not counting border lines).
-            MAX_VISIBLE = 4,           // Number of object slots visible at any one time.
+            MAX_VISIBLE = 4,
+            MAX_VISIBLE_CAPACITY = 24,           // Number of object slots visible at any one time.
             SCROLL_RATE = 8,           // The pixel jump while scrolling (larger is faster).
             BUTTON_SPACING_OFFSET = 4, // spacing info for buttons
             UP_X_OFFSET = 2,           // Scroll up arrow coordinates.
@@ -360,7 +361,7 @@ public:
 
         static ShapeButtonClass UpButton[COLUMNS];
         static ShapeButtonClass DownButton[COLUMNS];
-        static SelectClass SelectButton[COLUMNS][MAX_VISIBLE];
+        static SelectClass SelectButton[COLUMNS][MAX_VISIBLE_CAPACITY];
 
         /*
         **	This points to the shapes that are used for the clock overlay. This displays

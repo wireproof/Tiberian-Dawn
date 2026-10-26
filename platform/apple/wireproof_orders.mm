@@ -115,9 +115,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UIButton *zoomPlus;
 @property(nonatomic,strong) UIStackView *stack;
 @property(nonatomic,strong) UIScrollView *body;
-@property(nonatomic,strong) NSArray<UIButton*> *modeButtons;
 @property(nonatomic,strong) UIButton *toggle;
-@property(nonatomic,strong) UISegmentedControl *groupMode;
+@property(nonatomic,copy) NSString *zoomProfile;
 @property(nonatomic,strong) UISegmentedControl *page;
 @property(nonatomic,strong) NSArray<UIButton*> *orderButtons;
 @property(nonatomic,strong) NSArray<UIButton*> *groupButtons;
@@ -179,14 +178,13 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         NSArray *names=@[@"Stop",@"Guard",@"Scatter",@"Force Attack",@"Force Move",@"Cancel"];
         for (NSInteger i=0;i<names.count;i++) [orders addObject:[self button:names[i] tag:i]];
         self.orderButtons=orders;
-        self.groupMode=[[UISegmentedControl alloc] initWithItems:@[@"Recall",@"Assign",@"Add",@"Center"]];
-        self.groupMode.selectedSegmentIndex=0;
-        self.groupMode.accessibilityLabel=@"Control group action";
-        [self.groupMode.heightAnchor constraintEqualToConstant:36].active=YES;
         NSMutableArray *groups=[NSMutableArray array];
         for (NSInteger i=0;i<9;i++) {
             UIButton *b=[self button:[NSString stringWithFormat:@"%ld",(long)((i+1)%10)] tag:200+i];
             b.accessibilityLabel=[NSString stringWithFormat:@"Control group %ld",(long)((i+1)%10)];
+            b.accessibilityHint=@"Tap to select. Hold to replace with current selection, or clear when nothing is selected.";
+            UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(groupHeld:)];
+            hold.minimumPressDuration=0.5;hold.cancelsTouchesInView=YES;[b addGestureRecognizer:hold];
             [groups addObject:b];
         }
         self.groupButtons=groups;
@@ -194,10 +192,6 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.page.selectedSegmentIndex=0;
         [self.page addTarget:self action:@selector(pageChanged:) forControlEvents:UIControlEventValueChanged];
         [self.page.heightAnchor constraintEqualToConstant:32].active=YES;
-        NSMutableArray *modes=[NSMutableArray array];
-        NSArray *modeNames=@[@"Recall",@"Assign",@"Add",@"Center"];
-        for (NSInteger i=0;i<4;i++) [modes addObject:[self button:modeNames[i] tag:300+i]];
-        self.modeButtons=modes;
         NSNumber *savedZoom=[[NSUserDefaults standardUserDefaults] objectForKey:@"Wireproof.ZoomQuarters"];
         if (savedZoom) WPOrders::Shared().setZoomQuarters(savedZoom.intValue);
         self.zoomLabel=[UILabel new]; self.zoomLabel.textColor=UIColor.whiteColor;
@@ -280,10 +274,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.groupControls=groups;
         self.numberGrid=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],[self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]]]];
         self.numberGrid.spacing=6;self.numberGrid.distribution=UIStackViewDistributionFillEqually;
-        self.modeGrid=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:@[modes[0],modes[1]]],[self gridRow:@[modes[2],modes[3]]]]];self.modeGrid.spacing=6;self.modeGrid.distribution=UIStackViewDistributionFillEqually;
         UIStackView *groupColumn=[[UIStackView alloc] initWithArrangedSubviews:@[
-            self.numberGrid,
-            self.modeGrid]];
+            self.numberGrid]];
         groupColumn.axis=UILayoutConstraintAxisVertical;groupColumn.spacing=6;
         UIStackView *orderColumn=[[UIStackView alloc] initWithArrangedSubviews:@[
             [self gridRow:@[orders[0],orders[1]]],[self gridRow:@[orders[2],orders[5]]],[self gridRow:@[orders[3],orders[4]]]]];
@@ -360,9 +352,15 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [[NSUserDefaults standardUserDefaults] setInteger:WPOrders::Shared().joystickSetting(slider.tag) forKey:slider.tag?@"Wireproof.JoystickSpeed":@"Wireproof.JoystickSize"];
     [self refresh];
 }
+- (void)groupHeld:(UILongPressGestureRecognizer*)gesture {
+    if(gesture.state!=UIGestureRecognizerStateBegan)return;
+    if(WPOrders::Shared().enqueue(WPOrders::Assign,(int)gesture.view.tag-200)) {
+        UISelectionFeedbackGenerator *feedback=[UISelectionFeedbackGenerator new];[feedback selectionChanged];
+    }
+}
 - (void)saveZoom {
     int quarters=WPOrders::Shared().zoomQuarters();
-    [[NSUserDefaults standardUserDefaults] setInteger:quarters forKey:@"Wireproof.ZoomQuarters"];
+    [[NSUserDefaults standardUserDefaults] setInteger:quarters forKey:self.zoomProfile?:@"Wireproof.ZoomQuarters"];
     self.zoomSlider.value=quarters;
     [self refresh];
 }
@@ -384,14 +382,23 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         WPOrders::Shared().stepZoom(button.tag==400?-1:1); [self saveZoom]; return;
     }
     if (button.tag==100) { self.expanded=!self.expanded; [self refresh]; return; }
-    if (button.tag>=300) { self.groupMode.selectedSegmentIndex=button.tag-300; [self refresh]; return; }
     if (button.tag>=200) {
-        const WPOrders::Kind kinds[]={WPOrders::Recall,WPOrders::Assign,WPOrders::Add,WPOrders::Center};
-        WPOrders::Shared().enqueue(kinds[self.groupMode.selectedSegmentIndex],(int)button.tag-200);
-        self.groupMode.selectedSegmentIndex=0;
+        WPOrders::Shared().enqueue(WPOrders::Recall,(int)button.tag-200);
     } else WPOrders::Shared().enqueue((WPOrders::Kind)button.tag);
 }
 - (void)refresh {
+    if(self.window) {
+        CGSize size=self.window.bounds.size;
+        // Aspect class is orientation-independent: narrow cover vs wide inner display.
+        NSString *profile=MAX(size.width,size.height)/MAX(1,MIN(size.width,size.height))>=1.65?@"Wireproof.Zoom.Cover":@"Wireproof.Zoom.Inner";
+        if(![profile isEqualToString:self.zoomProfile]) {
+            NSUserDefaults *defaults=NSUserDefaults.standardUserDefaults;
+            if(self.zoomProfile)[defaults setInteger:WPOrders::Shared().zoomQuarters() forKey:self.zoomProfile];
+            NSNumber *saved=[defaults objectForKey:profile]?:[defaults objectForKey:@"Wireproof.ZoomQuarters"];
+            WPOrders::Shared().setZoomQuarters(saved?saved.intValue:6);
+            self.zoomProfile=profile;
+        }
+    }
     auto s=WPOrders::Shared().snapshot();
     auto cheats=WPCheats::Shared().snapshot();
     self.gamePage.hidden=self.tabs.selectedSegmentIndex!=0;
@@ -434,10 +441,10 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if(self.arrangement!=(landscape?2:1)) {
         self.arrangement=landscape?2:1;
         for(UIStackView *page in @[self.gamePage,self.cheatStack])for(UIView *v in [page.arrangedSubviews copy]){[page removeArrangedSubview:v];[v removeFromSuperview];}
-        NSArray *m=self.modeButtons,*o=self.orderButtons;
+        NSArray *o=self.orderButtons;
         if(landscape) {
             [self.gamePage addArrangedSubview:[self gridRow:self.groupControls]];
-            [self.gamePage addArrangedSubview:[self gridRow:@[m[0],m[1],m[2],m[3],o[0],o[1],o[2],o[5],o[3],o[4]]]];
+            [self.gamePage addArrangedSubview:[self gridRow:@[o[0],o[1],o[2],o[5],o[3],o[4]]]];
             UIStackView *switchGrid=[[UIStackView alloc] initWithArrangedSubviews:@[
                 [self gridRow:@[self.cheatRows[3],self.cheatRows[4]]],
                 [self gridRow:@[self.cheatRows[5],self.cheatRows[6]]],
@@ -455,7 +462,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         } else {
             UIStackView *left=[[UIStackView alloc] initWithArrangedSubviews:[self.groupControls subarrayWithRange:NSMakeRange(0,5)]],*right=[[UIStackView alloc] initWithArrangedSubviews:[self.groupControls subarrayWithRange:NSMakeRange(5,4)]];left.axis=right.axis=UILayoutConstraintAxisVertical;left.spacing=right.spacing=6;
             UIStackView *numbers=(UIStackView*)[self gridRow:@[left,right]];numbers.alignment=UIStackViewAlignmentTop;[self.gamePage addArrangedSubview:numbers];
-            for(NSArray *row in @[@[m[0],m[1]],@[m[2],m[3]],@[o[0],o[1]],@[o[2],o[5]],@[o[3],o[4]]])[self.gamePage addArrangedSubview:[self gridRow:row]];
+            for(NSArray *row in @[@[o[0],o[1]],@[o[2],o[5]],@[o[3],o[4]]])[self.gamePage addArrangedSubview:[self gridRow:row]];
             for(UIView *v in self.cheatRows)[self.cheatStack addArrangedSubview:v];
         }
     }
@@ -487,10 +494,6 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         }
         [self layoutIfNeeded];
     }];
-    for (UIButton *b in self.modeButtons) {
-        b.enabled=b.tag!=301 || s.selected>0;
-        b.backgroundColor=(b.tag-300==self.groupMode.selectedSegmentIndex)?UIColor.systemBlueColor:[UIColor colorWithWhite:0.18 alpha:0.96];
-    }
     for (UIButton *b in self.orderButtons) {
         UIImage *icon=b.tag==WPOrders::Attack?WPAttackIcon:b.tag==WPOrders::Move?WPMoveIcon:nil;
         if (icon && b.currentImage!=icon) {
@@ -502,7 +505,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         b.alpha=b.enabled?1:0.4;
         b.backgroundColor=((b.tag==WPOrders::Attack && s.force==1)||(b.tag==WPOrders::Move && s.force==2))?UIColor.systemBlueColor:[UIColor colorWithWhite:0.18 alpha:0.96];
     }
-    [self.groupMode setEnabled:s.selected>0 forSegmentAtIndex:1];
+
 }
 @end
 

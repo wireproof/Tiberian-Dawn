@@ -77,7 +77,7 @@ int main() {
     s.hold_pan(true); s.publish(false,0); assert(!s.panHeld()); // leaving gameplay cancels hold
     assert(!s.enqueue(Stop)); // menus cannot queue delayed battlefield commands
     s.publish(true,0);
-    assert(!s.enqueue(Assign,2)); // cannot erase a group accidentally with no selection
+    assert(s.enqueue(Assign,2)); assert(s.take(c) && c.kind==Assign && c.group==2); // long hold clears an empty selection
     assert(!s.enqueue(Attack));
     assert(s.enqueue(Recall,9)); assert(s.take(c) && c.kind==Recall && c.group==9);
     assert(!s.enqueue(Recall,10));

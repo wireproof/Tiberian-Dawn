@@ -168,7 +168,11 @@ fragment float4 TiberianDawnPaletteFragment(PaletteVertexOutput input [[stage_in
     const float2 source_size = float2(parameters.source_size);
     const int2 integer_source_size = int2(source_size);
     float2 point = input.uv * view_size;
-    if (scene.y > 0 && (point.x < scene.y || point.y >= scene.w) && point.y >= scene.z) {
+    if(scene.y>0 && point.y<scene.z && view_size.x<480) {
+        point.x*=480.0/view_size.x;
+        if(point.x>=160)point.x+=source_size.x-480;
+    }
+    else if (scene.y > 0 && (point.x < scene.y || point.y >= scene.w) && point.y >= scene.z) {
         point.x /= scene.x;
         point.y = scene.z + (point.y - scene.z) / scene.x;
     }

@@ -49,7 +49,7 @@ public:
     bool enqueue(Kind kind, int group=0) {
         std::lock_guard<std::mutex> lock(mutex);
         if (!state.active || pending.size()>=32 || group<0 || group>9) return false;
-        if ((kind==Assign || kind==Attack || kind==Move) && !state.selected) return false;
+        if ((kind==Attack || kind==Move) && !state.selected) return false;
         pending.push_back({kind,group}); return true;
     }
     bool take(Command& cmd) {

@@ -139,6 +139,11 @@ void Unzoom_IPad_Battlefield_Point(int& x, int& y, int right, int top, float zoo
 
 void Map_Battlefield_Point(int& x, int& y, int right, int top, int view_width, int backing_width, float zoom, int sidebar_bottom)
 {
+    if(y<top && view_width<480) {
+        x=(int)(x*480.0/view_width);
+        if(x>=160)x+=backing_width-480;
+        return;
+    }
     if(y>=sidebar_bottom){x=(int)(x/zoom);y=top+(int)((y-top)/zoom);return;}
     if ((y<top && x>=view_width-320) || (y>=top && x>=right))
         x+=backing_width-view_width;

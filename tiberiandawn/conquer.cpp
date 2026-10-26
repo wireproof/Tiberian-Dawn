@@ -112,7 +112,6 @@ static void WP_ProcessOrders() {
         Shared().force(0);
         if (command.kind==Cancel) continue;
         if (command.kind>=Recall) {
-            if (command.kind==Assign && CurrentObject.Count()==0) continue;
             if (command.kind==Recall || command.kind==Center) Unselect_All();
             Handle_Team(command.group,command.kind==Assign?2:1);
             if (command.kind==Center && CurrentObject.Count()) { Map.Center_Map(); Map.Flag_To_Redraw(true); }

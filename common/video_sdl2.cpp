@@ -562,7 +562,7 @@ static void Update_HWCursor_Settings(bool geometry_only = false)
                                         window_points_h,
                                         Presentation_Width(),
                                         Presentation_Height(),
-                                        {safe_left, safe_top, safe_right, safe_bottom},
+                                        battlefield_active ? IPadLayoutInsets{0,0,0,0} : IPadLayoutInsets{safe_left, safe_top, safe_right, safe_bottom},
                                         false, // Fractional fit avoids menu shrinkage after returning from gameplay.
                                         !battlefield_active && Settings.Video.PresentationMode == 3);
     render_dst.x = ipad_layout.viewport.x;
@@ -1072,8 +1072,8 @@ void Video_Presentation_Size(int& width, int& height) { width=Presentation_Width
 void Video_Adaptive_Size(int& width, int& height)
 {
     Update_HWCursor_Settings(true);
-    const int available_w = renderer_output_w - ipad_layout.safe_area.left - ipad_layout.safe_area.right;
-    const int available_h = renderer_output_h - ipad_layout.safe_area.top - ipad_layout.safe_area.bottom;
+    const int available_w = renderer_output_w;
+    const int available_h = renderer_output_h;
     Calculate_Adaptive_Game_Size(available_w, available_h, width, height);
 }
 
@@ -1850,7 +1850,10 @@ public:
             metal_cursor.hotspot_x = hwcursor.HotX;
             metal_cursor.hotspot_y = hwcursor.HotY;
             metal_cursor.kind = cursor_kind;
-            metal_cursor.destination.x = render_dst.x + static_cast<int>((game_x-cursor_padding) * render_dst.w / float(Presentation_Width()));
+            float header_x=game_x-cursor_padding;
+            if(battlefield_active && cursor_y<battlefield_top && Presentation_Width()<480)
+                header_x=(game_x-(cursor_x>=hwcursor.GameW-320?hwcursor.GameW-480:0))*Presentation_Width()/480.0f;
+            metal_cursor.destination.x = render_dst.x + static_cast<int>(header_x * render_dst.w / float(Presentation_Width()));
             metal_cursor.destination.y = render_dst.y + static_cast<int>(game_y * render_dst.h / float(Presentation_Height()));
             metal_cursor.destination.width = std::max(1, static_cast<int>(hwcursor.Surface->w * cursor_scale * render_dst.w / float(Presentation_Width())));
             metal_cursor.destination.height = std::max(1, static_cast<int>(hwcursor.Surface->h * cursor_scale * render_dst.h / float(Presentation_Height())));
@@ -1997,8 +2000,14 @@ public:
                 if(sidebar && battlefield_bottom<Presentation_Height())copyPiece({(int)std::floor(battlefield_right/battlefield_zoom),battlefield_top+(int)std::floor((battlefield_bottom-battlefield_top)/battlefield_zoom),
                     (int)std::ceil(sidebar/battlefield_zoom),(int)std::ceil((Presentation_Height()-battlefield_bottom)/battlefield_zoom)},
                     battlefield_right,battlefield_bottom,sidebar,Presentation_Height()-battlefield_bottom);
-                copyPiece({0,0,Presentation_Width()-320,battlefield_top},0,0,Presentation_Width()-320,battlefield_top);
-                copyPiece({surface->w-320,0,320,battlefield_top},Presentation_Width()-320,0,320,battlefield_top);
+                if(Presentation_Width()<480) {
+                    const int third=Presentation_Width()/3;
+                    copyPiece({0,0,160,battlefield_top},0,0,third,battlefield_top);
+                    copyPiece({surface->w-320,0,320,battlefield_top},third,0,Presentation_Width()-third,battlefield_top);
+                } else {
+                    copyPiece({0,0,Presentation_Width()-320,battlefield_top},0,0,Presentation_Width()-320,battlefield_top);
+                    copyPiece({surface->w-320,0,320,battlefield_top},Presentation_Width()-320,0,320,battlefield_top);
+                }
             }
 #endif
         }
@@ -2048,7 +2057,10 @@ public:
             const float scale_x = render_dst.w / float(on_world?hwcursor.GameW:Presentation_Width());
             const float scale_y = render_dst.h / float(on_world?hwcursor.GameH:Presentation_Height());
             const int padding=battlefield_active && !on_world && touch_feedback.x>=hwcursor.GameW-320 ? hwcursor.GameW-Presentation_Width():0;
-            const int center_x = render_dst.x + static_cast<int>((touch_feedback.x-padding) * scale_x);
+            float feedback_x=touch_feedback.x-padding;
+            if(battlefield_active && touch_feedback.y<battlefield_top && Presentation_Width()<480)
+                feedback_x=(touch_feedback.x-(touch_feedback.x>=hwcursor.GameW-320?hwcursor.GameW-480:0))*Presentation_Width()/480.0f;
+            const int center_x = render_dst.x + static_cast<int>(feedback_x * scale_x);
             const int center_y = render_dst.y + static_cast<int>(touch_feedback.y * scale_y);
             // Touch feedback is separate from the legacy game cursor.
             // Increase its visible ring without shifting the actual touch position.

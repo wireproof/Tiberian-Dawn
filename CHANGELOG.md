@@ -4,6 +4,19 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.5.1 — 2026-10-26
+
+- Include Airstrike in Instant Weapons.
+- Tap group numbers to recall; hold to assign or clear with no selection.
+  Remove the four group-mode buttons from the touch panel.
+- Remember separate zoom settings for narrow cover and wider inner displays,
+  independent of rotation, and increase portrait presentation to 1.625×.
+- Compact the three top-bar sections on constrained screens, preserving their
+  touch mapping. Render the battlefield edge-to-edge while keeping touch
+  controls inside the safe area.
+- Replace the shared Apple app icon with the supplied GDI emblem on a
+  transparent background.
+
 ## 0.5.0 — 2026-10-26
 
 - Add Instant Weapons (Ion Cannon and repeatable nuke with required buildings)

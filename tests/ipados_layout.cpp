@@ -43,6 +43,19 @@ void Assert_Center_Maps_To_Game_Center(const IPadLayout& layout)
 
 int main()
 {
+    // Compact tabs preserve Options, Credits and Sidebar hit positions, including
+    // a larger backing surface used to draw the map beneath a short sidebar.
+    for(int backing : {480,640,800}) {
+        for(int view : {360,394,426}) {
+            int x=view/6,y=8;Map_Battlefield_Point(x,y,view-160,16,view,backing,1.5f);
+            assert(std::abs(x-80)<=1);
+            x=view/2;y=8;Map_Battlefield_Point(x,y,view-160,16,view,backing,1.5f);
+            assert(std::abs(x-(backing-240))<=1);
+            x=view*5/6;y=8;Map_Battlefield_Point(x,y,view-160,16,view,backing,1.5f);
+            assert(std::abs(x-(backing-80))<=2);
+        }
+    }
+
     // Portrait/landscape use more map pixels, not nonuniform image stretching.
     for (const auto size : {std::pair<int,int>{900,1280}, {1280,900}, {2400,1080}, {1668,2388}}) {
         int w=640,h=400;

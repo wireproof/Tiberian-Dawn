@@ -173,6 +173,9 @@ static void WP_ApplyLiveCheats() {
     if(liveCheats.weapons) {
         // Let the normal house logic grant weapons and add sidebar cameos.
         if(PlayerPtr->ActiveBScan & STRUCTF_TEMPLE) PlayerPtr->NukePieces=7;
+        if(PlayerPtr->AirStrike.Is_Present() && !PlayerPtr->AirStrike.Is_Ready()) {
+            PlayerPtr->AirStrike.Forced_Charge(); Map.Flag_To_Redraw(true);
+        }
         if(PlayerPtr->IonCannon.Is_Present() && !PlayerPtr->IonCannon.Is_Ready()) {
             PlayerPtr->IonCannon.Forced_Charge(); Map.Flag_To_Redraw(true);
         }

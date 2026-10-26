@@ -22,7 +22,7 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu)
     int width = 640, height = 400;
     const bool adaptive=active || menu || (InMainLoop && GameActive);
     if (adaptive) Video_Adaptive_Size(width, height);
-    if(active && height>width){width=(int)std::lround(width/1.5);height=(int)std::lround(height/1.5);}
+    if(active && height>width){width=(int)std::lround(width/1.625);height=(int)std::lround(height/1.625);}
     const int right = width - (Map.IsSidebarActive ? Map.SideBarWidth : 0);
     const int view_height=height;
     const int slots=WPCamera::PortraitSidebarSlots(width,height);
@@ -38,6 +38,8 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu)
         width=(int)std::max(width,(int)std::ceil(worldRight/zoom)+(width-right));
         height=std::max(height,Map.Get_Tab_Height()+(int)std::ceil((height-Map.Get_Tab_Height())/zoom));
     }
+    // Keep three legacy 160px top tabs distinct before compact presentation.
+    if(active)width=std::max(width,480);
     if (ScreenWidth == width && ScreenHeight == height) {
         const int target_w = (int)std::ceil(worldRight / zoom);
         const int target_h = (int)std::ceil((view_height - Map.Get_Tab_Height()) / zoom);

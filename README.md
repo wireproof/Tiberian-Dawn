@@ -2,9 +2,9 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.5.0
+## Latest release: v0.5.1
 
-[Download v0.5.0](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.0).
+[Download v0.5.1](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.1).
 
 The joystick is now independent: drag its center to scroll and its outer ring
 to reposition. **Double-tap** to shrink it into a hand button and switch from
@@ -13,11 +13,15 @@ Double-tap again to return to normal selection and the full joystick.
 Map-drag mode resets when leaving gameplay.
 
 Workshop **Apply to…** copies chosen settings to selected compatible units.
-Portrait sidebars use five rows on all screens, with a larger 1.5× presentation
-and map space beneath the arrows. Instant Weapons recharges the Ion Cannon and
-nuke with their required buildings. Build Anywhere removes base proximity limits
+Portrait sidebars use five rows on all screens, with a larger 1.625× presentation
+and map space beneath the arrows. Instant Weapons recharges Airstrike, the Ion Cannon and
+nuke when available. Build Anywhere removes base proximity limits
 while preserving terrain and occupancy checks. Both cheats are player-only and
 single-player, and reset on mission load.
+
+Tap a group number to select it; hold to replace it with the current selection.
+Holding with nothing selected clears that group. Cover and inner displays
+remember separate zoom levels.
 
 The controller has **Game, Cheats and Options** tabs. It opens vertically in
 portrait and with side-by-side columns in landscape.

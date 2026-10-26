@@ -49,7 +49,7 @@
 void const* UnitTypeClass::WakeShapes = 0;
 
 // Visceroid
-static UnitTypeClass const UnitVisceroid(UNIT_VICE,
+static UnitTypeClass UnitVisceroid(UNIT_VICE,
                                          TXT_VISCEROID, // NAME:			Text name of this unit type.
                                          "VICE",        // NAME:			Text name of this unit type.
                                          ANIM_NAPALM2,  // EXPLOSION:	Type of explosion when destroyed.
@@ -102,7 +102,7 @@ static UnitTypeClass const UnitVisceroid(UNIT_VICE,
 );
 
 // Flame tank
-static UnitTypeClass const UnitFTank(UNIT_FTANK,
+static UnitTypeClass UnitFTank(UNIT_FTANK,
                                      TXT_FTANK,     // NAME:			Text name of this unit type.
                                      "FTNK",        // NAME:			Text name of this unit type.
                                      ANIM_NAPALM3,  // EXPLOSION:	Type of explosion when destroyed.
@@ -155,7 +155,7 @@ static UnitTypeClass const UnitFTank(UNIT_FTANK,
 );
 
 // Stealth tank
-static UnitTypeClass const UnitSTank(UNIT_STANK,
+static UnitTypeClass UnitSTank(UNIT_STANK,
                                      TXT_STANK,     // NAME:			Text name of this unit type.
                                      "STNK",        // NAME:			Text name of this unit type.
                                      ANIM_FRAG2,    // EXPLOSION:	Type of explosion when destroyed.
@@ -208,7 +208,7 @@ static UnitTypeClass const UnitSTank(UNIT_STANK,
 );
 
 // Light tank
-static UnitTypeClass const UnitLTank(UNIT_LTANK,
+static UnitTypeClass UnitLTank(UNIT_LTANK,
                                      TXT_LTANK,    // NAME:			Text name of this unit type.
                                      "LTNK",       // NAME:			Text name of this unit type.
                                      ANIM_FRAG1,   // EXPLOSION:	Type of explosion when destroyed.
@@ -261,7 +261,7 @@ static UnitTypeClass const UnitLTank(UNIT_LTANK,
 );
 
 // Medium tank
-static UnitTypeClass const UnitMTank(UNIT_MTANK,
+static UnitTypeClass UnitMTank(UNIT_MTANK,
                                      TXT_MTANK,    // NAME:			Text name of this unit type.
                                      "MTNK",       // NAME:			Text name of this unit type.
                                      ANIM_FRAG2,   // EXPLOSION:	Type of explosion when destroyed.
@@ -314,7 +314,7 @@ static UnitTypeClass const UnitMTank(UNIT_MTANK,
 );
 
 // Mastadon tank
-static UnitTypeClass const UnitHTank(UNIT_HTANK,
+static UnitTypeClass UnitHTank(UNIT_HTANK,
                                      TXT_HTANK,      // NAME:			Text name of this unit type.
                                      "HTNK",         // NAME:			Text name of this unit type.
                                      ANIM_ART_EXP1,  // EXPLOSION:	Type of explosion when destroyed.
@@ -367,7 +367,7 @@ static UnitTypeClass const UnitHTank(UNIT_HTANK,
 );
 
 // Mobile HQ
-static UnitTypeClass const UnitMHQ(UNIT_MHQ,
+static UnitTypeClass UnitMHQ(UNIT_MHQ,
                                    TXT_MHQ,      // NAME:			Text name of this unit type.
                                    "MHQ",        // NAME:			Text name of this unit type.
                                    ANIM_FRAG2,   // EXPLOSION:	Type of explosion when destroyed.
@@ -420,7 +420,7 @@ static UnitTypeClass const UnitMHQ(UNIT_MHQ,
 );
 
 // Landing craft
-static UnitTypeClass const UnitHover(UNIT_HOVER,
+static UnitTypeClass UnitHover(UNIT_HOVER,
                                      TXT_HOVER,    // NAME:			Text name of this unit type.
                                      "LST",        // NAME:			Text name of this unit type.
                                      ANIM_FBALL1,  // EXPLOSION:	Type of explosion when destroyed.
@@ -474,7 +474,7 @@ static UnitTypeClass const UnitHover(UNIT_HOVER,
 );
 
 // Mobile sam launcher
-static UnitTypeClass const UnitSAM(UNIT_MSAM,
+static UnitTypeClass UnitSAM(UNIT_MSAM,
                                    TXT_MSAM,       // NAME:			Text name of this unit type.
                                    "MLRS",         // NAME:			Text name of this unit type.
                                    ANIM_FRAG2,     // EXPLOSION:	Type of explosion when destroyed.
@@ -528,7 +528,7 @@ static UnitTypeClass const UnitSAM(UNIT_MSAM,
 );
 
 // Artillery
-static UnitTypeClass const UnitArty(UNIT_ARTY,
+static UnitTypeClass UnitArty(UNIT_ARTY,
                                     TXT_ARTY,      // NAME:			Text name of this unit type.
                                     "ARTY",        // NAME:			Text name of this unit type.
                                     ANIM_ART_EXP1, // EXPLOSION:	Type of explosion when destroyed.
@@ -581,7 +581,7 @@ static UnitTypeClass const UnitArty(UNIT_ARTY,
 );
 
 // Harvester
-static UnitTypeClass const
+static UnitTypeClass
     UnitHarvester(UNIT_HARVESTER,
                   TXT_HARVESTER,    // NAME:			Text name of this unit type.
                   "HARV",           // NAME:			Text name of this unit type.
@@ -635,7 +635,7 @@ static UnitTypeClass const
     );
 
 // Mobile construction vehicle
-static UnitTypeClass const UnitMCV(UNIT_MCV,
+static UnitTypeClass UnitMCV(UNIT_MCV,
                                    TXT_MCV,     // NAME:			Text name of this unit type.
                                    "MCV",       // NAME:			Text name of this unit type.
                                    ANIM_FBALL1, // EXPLOSION:	Type of explosion when destroyed.
@@ -688,7 +688,7 @@ static UnitTypeClass const UnitMCV(UNIT_MCV,
 );
 
 // Jeep (hummer)
-static UnitTypeClass const UnitJeep(UNIT_JEEP,
+static UnitTypeClass UnitJeep(UNIT_JEEP,
                                     TXT_JEEP,     // NAME:			Text name of this unit type.
                                     "JEEP",       // NAME:			Text name of this unit type.
                                     ANIM_FRAG1,   // EXPLOSION:	Type of explosion when destroyed.
@@ -741,7 +741,7 @@ static UnitTypeClass const UnitJeep(UNIT_JEEP,
 );
 
 // Buggy
-static UnitTypeClass const UnitBuggy(UNIT_BUGGY,
+static UnitTypeClass UnitBuggy(UNIT_BUGGY,
                                      TXT_DUNE_BUGGY, // NAME:			Text name of this unit type.
                                      "BGGY",         // NAME:			Text name of this unit type.
                                      ANIM_FRAG1,     // EXPLOSION:	Type of explosion when destroyed.
@@ -794,7 +794,7 @@ static UnitTypeClass const UnitBuggy(UNIT_BUGGY,
 );
 
 // Attack cycle
-static UnitTypeClass const UnitBike(UNIT_BIKE,
+static UnitTypeClass UnitBike(UNIT_BIKE,
                                     TXT_BIKE,       // NAME:			Text name of this unit type.
                                     "BIKE",         // NAME:			Text name of this unit type.
                                     ANIM_FRAG1,     // EXPLOSION:	Type of explosion when destroyed.
@@ -851,7 +851,7 @@ static UnitTypeClass const UnitBike(UNIT_BIKE,
 );
 
 // Rocket launcher
-static UnitTypeClass const UnitMLRS(UNIT_MLRS,
+static UnitTypeClass UnitMLRS(UNIT_MLRS,
                                     TXT_MLRS,      // NAME:			Text name of this unit type.
                                     "MSAM",        // NAME:			Text name of this unit type.
                                     ANIM_ART_EXP1, // EXPLOSION:	Type of explosion when destroyed.
@@ -904,7 +904,7 @@ static UnitTypeClass const UnitMLRS(UNIT_MLRS,
 );
 
 // Armored personnel carrier
-static UnitTypeClass const UnitAPC(UNIT_APC,
+static UnitTypeClass UnitAPC(UNIT_APC,
                                    TXT_APC,          // NAME:			Text name of this unit type.
                                    "APC",            // NAME:			Text name of this unit type.
                                    ANIM_FRAG2,       // EXPLOSION:	Type of explosion when destroyed.
@@ -957,7 +957,7 @@ static UnitTypeClass const UnitAPC(UNIT_APC,
 );
 
 // Gunboat
-static UnitTypeClass const UnitGunBoat(UNIT_GUNBOAT,
+static UnitTypeClass UnitGunBoat(UNIT_GUNBOAT,
                                        TXT_GUNBOAT,  // NAME:			Text name of this unit type.
                                        "BOAT",       // NAME:			Text name of this unit type.
                                        ANIM_FBALL1,  // EXPLOSION:	Type of explosion when destroyed.
@@ -1010,7 +1010,7 @@ static UnitTypeClass const UnitGunBoat(UNIT_GUNBOAT,
 );
 
 // Triceratops
-static UnitTypeClass const UnitTric(UNIT_TRIC,
+static UnitTypeClass UnitTric(UNIT_TRIC,
                                     TXT_TRIC,      // NAME:			Text name of this unit type.
                                     "TRIC",        // NAME:			Text name of this unit type.
                                     ANIM_TRIC_DIE, // EXPLOSION:	Type of explosion when destroyed.
@@ -1061,7 +1061,7 @@ static UnitTypeClass const UnitTric(UNIT_TRIC,
 );
 
 // Tyrannosaurus Rex
-static UnitTypeClass const UnitTrex(UNIT_TREX,
+static UnitTypeClass UnitTrex(UNIT_TREX,
                                     TXT_TREX,      // NAME:			Text name of this unit type.
                                     "TREX",        // NAME:			Text name of this unit type.
                                     ANIM_TREX_DIE, // EXPLOSION:	Type of explosion when destroyed.
@@ -1112,7 +1112,7 @@ static UnitTypeClass const UnitTrex(UNIT_TREX,
 );
 
 // Velociraptor
-static UnitTypeClass const UnitRapt(UNIT_RAPT,
+static UnitTypeClass UnitRapt(UNIT_RAPT,
                                     TXT_RAPT,       // NAME:			Text name of this unit type.
                                     "RAPT",         // NAME:			Text name of this unit type.
                                     ANIM_RAPT_DIE,  // EXPLOSION:	Type of explosion when destroyed.
@@ -1163,7 +1163,7 @@ static UnitTypeClass const UnitRapt(UNIT_RAPT,
 );
 
 // Stegosaurus
-static UnitTypeClass const UnitSteg(UNIT_STEG,
+static UnitTypeClass UnitSteg(UNIT_STEG,
                                     TXT_STEG,      // NAME:			Text name of this unit type.
                                     "STEG",        // NAME:			Text name of this unit type.
                                     ANIM_STEG_DIE, // EXPLOSION:	Type of explosion when destroyed.

@@ -44,7 +44,7 @@ IPadLayout Calculate_IPad_Layout(int output_width,
                                  int game_width,
                                  int game_height,
                                  IPadLayoutInsets safe_area,
-                                 bool integer_scaling)
+                                 bool integer_scaling, bool fill_display)
 {
     IPadLayout layout = {};
     layout.output_width = std::max(1, output_width);
@@ -67,6 +67,7 @@ IPadLayout Calculate_IPad_Layout(int output_width,
                                    layout.game_width,
                                    layout.game_height,
                                    integer_scaling);
+    if (fill_display) { layout.viewport.width = available_width; layout.viewport.height = available_height; }
     layout.viewport.x = layout.safe_area.left + (available_width - layout.viewport.width) / 2;
     layout.viewport.y = layout.safe_area.top + (available_height - layout.viewport.height) / 2;
     return layout;

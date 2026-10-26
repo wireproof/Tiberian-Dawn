@@ -56,6 +56,7 @@ namespace
 {
 const char* Presentation_Mode_Text(int mode)
 {
+    if (mode == 3) return "Fill display";
     switch (mode) {
     case 1:
         return TiberianDawn_LocalizedText("visual_mode_pixel");
@@ -488,7 +489,7 @@ void VisualControlsClass::Process(void)
 
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
         case (BUTTON_IPAD_PRESENTATION | KN_BUTTON):
-            Settings.Video.PresentationMode = (Settings.Video.PresentationMode + 1) % 3;
+            Settings.Video.PresentationMode = (Settings.Video.PresentationMode + 1) % 4;
             std::snprintf(presentation_text,
                           sizeof(presentation_text),
                           TiberianDawn_LocalizedText("visual_image_format"),

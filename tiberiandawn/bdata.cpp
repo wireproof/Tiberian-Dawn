@@ -159,7 +159,7 @@ static short const OListTmpl[] = {0, 1, 2, REFRESH_EOL};
 
 /***************************************************************************
  */
-static BuildingTypeClass const ClassTemple(STRUCT_TEMPLE,
+static BuildingTypeClass ClassTemple(STRUCT_TEMPLE,
                                            TXT_TEMPLE,      // NAME:			Short name of the structure.
                                            "TMPL",          // NAME:			Short name of the structure.
                                            XYP_COORD(0, 0), // Exit point for produced units.
@@ -210,7 +210,7 @@ static BuildingTypeClass const ClassTemple(STRUCT_TEMPLE,
                                            (short const*)OListTmpl // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassEye(STRUCT_EYE,
+static BuildingTypeClass ClassEye(STRUCT_EYE,
                                         TXT_EYE,         // NAME:			Short name of the structure.
                                         "EYE",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -261,7 +261,7 @@ static BuildingTypeClass const ClassEye(STRUCT_EYE,
                                         (short const*)OComList // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const
+static BuildingTypeClass
     ClassWeapon(STRUCT_WEAP,
                 TXT_WEAPON_FACTORY, // NAME:			Short name of the structure.
                 "WEAP",             // NAME:			Short name of the structure.
@@ -317,7 +317,7 @@ static BuildingTypeClass const
                 (short const*)OListWeap // OVERLAPLIST:List of overlap cell offset.
     );
 
-static BuildingTypeClass const ClassGTower(STRUCT_GTOWER,
+static BuildingTypeClass ClassGTower(STRUCT_GTOWER,
                                            TXT_GUARD_TOWER,  // NAME:			Short name of the structure.
                                            "GTWR",           // NAME:			Short name of the structure.
                                            XYP_COORD(0, 0),  // Exit point for produced units.
@@ -369,7 +369,7 @@ static BuildingTypeClass const ClassGTower(STRUCT_GTOWER,
                                            (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassATower(STRUCT_ATOWER,
+static BuildingTypeClass ClassATower(STRUCT_ATOWER,
                                            TXT_AGUARD_TOWER, // NAME:			Short name of the structure.
                                            "ATWR",           // NAME:			Short name of the structure.
                                            XYP_COORD(0, 0),  // Exit point for produced units.
@@ -421,7 +421,7 @@ static BuildingTypeClass const ClassATower(STRUCT_ATOWER,
                                            (short const*)OList12 // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassObelisk(STRUCT_OBELISK,
+static BuildingTypeClass ClassObelisk(STRUCT_OBELISK,
                                             TXT_OBELISK,     // NAME:			Short name of the structure.
                                             "OBLI",          // NAME:			Short name of the structure.
                                             XYP_COORD(0, 0), // Exit point for produced units.
@@ -472,7 +472,7 @@ static BuildingTypeClass const ClassObelisk(STRUCT_OBELISK,
                                             (short const*)OList12 // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassTurret(STRUCT_TURRET,
+static BuildingTypeClass ClassTurret(STRUCT_TURRET,
                                            TXT_TURRET,       // NAME:			Short name of the structure.
                                            "GUN",            // NAME:			Short name of the structure.
                                            XYP_COORD(0, 0),  // Exit point for produced units.
@@ -531,7 +531,7 @@ static BuildingTypeClass const ClassTurret(STRUCT_TURRET,
                                            (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassConst(STRUCT_CONST,
+static BuildingTypeClass ClassConst(STRUCT_CONST,
                                           TXT_CONST_YARD,    // NAME:			Short name of the structure.
                                           "FACT",            // NAME:			Short name of the structure.
                                           XYP_COORD(0, 0),   // Exit point for produced units.
@@ -582,7 +582,7 @@ static BuildingTypeClass const ClassConst(STRUCT_CONST,
                                           (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const
+static BuildingTypeClass
     ClassRefinery(STRUCT_REFINERY,
                   TXT_REFINERY,    // NAME:			Short name of the structure.
                   "PROC",          // NAME:			Short name of the structure.
@@ -633,7 +633,7 @@ static BuildingTypeClass const
                   (short const*)List101000111  // OVERLAPLIST:List of overlap cell offset.
     );
 
-static BuildingTypeClass const
+static BuildingTypeClass
     ClassStorage(STRUCT_STORAGE,
                  TXT_STORAGE,      // NAME:			Short name of the structure.
                  "SILO",           // NAME:			Short name of the structure.
@@ -685,7 +685,7 @@ static BuildingTypeClass const
                  (short const*)NULL       // OVERLAPLIST:List of overlap cell offset.
     );
 
-static BuildingTypeClass const ClassHelipad(STRUCT_HELIPAD,
+static BuildingTypeClass ClassHelipad(STRUCT_HELIPAD,
                                             TXT_HELIPAD,       // NAME:			Short name of the structure.
                                             "HPAD",            // NAME:			Short name of the structure.
                                             XYP_COORD(0, 0),   // Exit point for produced units.
@@ -736,7 +736,7 @@ static BuildingTypeClass const ClassHelipad(STRUCT_HELIPAD,
                                             (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassCommand(STRUCT_RADAR,
+static BuildingTypeClass ClassCommand(STRUCT_RADAR,
                                             TXT_COMMAND,      // NAME:			Short name of the structure.
                                             "HQ",             // NAME:			Short name of the structure.
                                             XYP_COORD(0, 0),  // Exit point for produced units.
@@ -787,7 +787,7 @@ static BuildingTypeClass const ClassCommand(STRUCT_RADAR,
                                             (short const*)OComList // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassSAM(STRUCT_SAM,
+static BuildingTypeClass ClassSAM(STRUCT_SAM,
                                         TXT_SAM,          // NAME:			Short name of the structure.
                                         "SAM",            // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0),  // Exit point for produced units.
@@ -838,7 +838,7 @@ static BuildingTypeClass const ClassSAM(STRUCT_SAM,
                                         (short const*)OListSAM // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassAirStrip(STRUCT_AIRSTRIP,
+static BuildingTypeClass ClassAirStrip(STRUCT_AIRSTRIP,
                                              TXT_AIRSTRIP,     // NAME:			Short name of the structure.
                                              "AFLD",           // NAME:			Short name of the structure.
                                              XYP_COORD(0, 0),  // Exit point for produced units.
@@ -889,7 +889,7 @@ static BuildingTypeClass const ClassAirStrip(STRUCT_AIRSTRIP,
                                              (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassPower(STRUCT_POWER,
+static BuildingTypeClass ClassPower(STRUCT_POWER,
                                           TXT_POWER,       // NAME:			Short name of the structure.
                                           "NUKE",          // NAME:			Short name of the structure.
                                           XYP_COORD(0, 0), // Exit point for produced units.
@@ -940,7 +940,7 @@ static BuildingTypeClass const ClassPower(STRUCT_POWER,
                                           (short const*)List0100  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const
+static BuildingTypeClass
     ClassAdvancedPower(STRUCT_ADVANCED_POWER,
                        TXT_ADVANCED_POWER, // NAME:			Short name of the structure.
                        "NUK2",             // NAME:			Short name of the structure.
@@ -991,7 +991,7 @@ static BuildingTypeClass const
                        (short const*)List0100  // OVERLAPLIST:List of overlap cell offset.
     );
 
-static BuildingTypeClass const ClassHospital(STRUCT_HOSPITAL,
+static BuildingTypeClass ClassHospital(STRUCT_HOSPITAL,
                                              TXT_HOSPITAL,     // NAME:			Short name of the structure.
                                              "HOSP",           // NAME:			Short name of the structure.
                                              XYP_COORD(0, 0),  // Exit point for produced units.
@@ -1043,7 +1043,7 @@ static BuildingTypeClass const ClassHospital(STRUCT_HOSPITAL,
                                              true                 // Is this building un-sellable?
 );
 
-static BuildingTypeClass const ClassBioLab(STRUCT_BIO_LAB,
+static BuildingTypeClass ClassBioLab(STRUCT_BIO_LAB,
                                            TXT_BIO_LAB,      // NAME:			Short name of the structure.
                                            "BIO",            // NAME:			Short name of the structure.
                                            XYP_COORD(0, 0),  // Exit point for produced units.
@@ -1094,7 +1094,7 @@ static BuildingTypeClass const ClassBioLab(STRUCT_BIO_LAB,
                                            (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const
+static BuildingTypeClass
     ClassBarracks(STRUCT_BARRACKS,
                   TXT_BARRACKS,      // NAME:			Short name of the structure.
                   "PYLE",            // NAME:			Short name of the structure.
@@ -1145,7 +1145,7 @@ static BuildingTypeClass const
                   (short const*)List22_0011  // OVERLAPLIST:List of overlap cell offset.
     );
 
-static BuildingTypeClass const ClassHand(STRUCT_HAND,
+static BuildingTypeClass ClassHand(STRUCT_HAND,
                                          TXT_HAND,          // NAME:			Short name of the structure.
                                          "HAND",            // NAME:			Short name of the structure.
                                          XYP_COORD(36, 63), // Exit point for produced units.
@@ -1196,7 +1196,7 @@ static BuildingTypeClass const ClassHand(STRUCT_HAND,
                                          (short const*)OListHand // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassTanker(STRUCT_TANKER,
+static BuildingTypeClass ClassTanker(STRUCT_TANKER,
                                            TXT_TANKER,      // NAME:			Short name of the structure.
                                            "ARCO",          // NAME:			Short name of the structure.
                                            XYP_COORD(0, 0), // Exit point for produced units.
@@ -1247,7 +1247,7 @@ static BuildingTypeClass const ClassTanker(STRUCT_TANKER,
                                            (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassRepair(STRUCT_REPAIR,
+static BuildingTypeClass ClassRepair(STRUCT_REPAIR,
                                            TXT_FIX_IT,      // NAME:			Short name of the structure.
                                            "FIX",           // NAME:			Short name of the structure.
                                            XYP_COORD(0, 0), // Exit point for produced units.
@@ -1299,7 +1299,7 @@ static BuildingTypeClass const ClassRepair(STRUCT_REPAIR,
 );
 
 #ifdef OBSOLETE
-static BuildingTypeClass const ClassRoad(STRUCT_ROAD,
+static BuildingTypeClass ClassRoad(STRUCT_ROAD,
                                          TXT_ROAD,        // NAME:			Short name of the structure.
                                          "ROAD",          // NAME:			Short name of the structure.
                                          STRUCTF_NONE,    // PREREQ:		Buildings that must exist first.
@@ -1352,7 +1352,7 @@ static BuildingTypeClass const ClassRoad(STRUCT_ROAD,
 );
 #endif
 
-static BuildingTypeClass const ClassV01(STRUCT_V01,
+static BuildingTypeClass ClassV01(STRUCT_V01,
                                         TXT_CIV1,        // NAME:			Short name of the structure.
                                         "V01",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1403,7 +1403,7 @@ static BuildingTypeClass const ClassV01(STRUCT_V01,
                                         (short const*)List1100  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV02(STRUCT_V02,
+static BuildingTypeClass ClassV02(STRUCT_V02,
                                         TXT_CIV2,        // NAME:			Short name of the structure.
                                         "V02",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1454,7 +1454,7 @@ static BuildingTypeClass const ClassV02(STRUCT_V02,
                                         (short const*)List1100  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV03(STRUCT_V03,
+static BuildingTypeClass ClassV03(STRUCT_V03,
                                         TXT_CIV3,        // NAME:			Short name of the structure.
                                         "V03",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1505,7 +1505,7 @@ static BuildingTypeClass const ClassV03(STRUCT_V03,
                                         (short const*)List1000  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV04(STRUCT_V04,
+static BuildingTypeClass ClassV04(STRUCT_V04,
                                         TXT_CIV4,        // NAME:			Short name of the structure.
                                         "V04",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1556,7 +1556,7 @@ static BuildingTypeClass const ClassV04(STRUCT_V04,
                                         (short const*)List1100  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV05(STRUCT_V05,
+static BuildingTypeClass ClassV05(STRUCT_V05,
                                         TXT_CIV5,        // NAME:			Short name of the structure.
                                         "V05",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1607,7 +1607,7 @@ static BuildingTypeClass const ClassV05(STRUCT_V05,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV06(STRUCT_V06,
+static BuildingTypeClass ClassV06(STRUCT_V06,
                                         TXT_CIV6,        // NAME:			Short name of the structure.
                                         "V06",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1658,7 +1658,7 @@ static BuildingTypeClass const ClassV06(STRUCT_V06,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV07(STRUCT_V07,
+static BuildingTypeClass ClassV07(STRUCT_V07,
                                         TXT_CIV7,        // NAME:			Short name of the structure.
                                         "V07",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1709,7 +1709,7 @@ static BuildingTypeClass const ClassV07(STRUCT_V07,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV08(STRUCT_V08,
+static BuildingTypeClass ClassV08(STRUCT_V08,
                                         TXT_CIV8,        // NAME:			Short name of the structure.
                                         "V08",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1760,7 +1760,7 @@ static BuildingTypeClass const ClassV08(STRUCT_V08,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV09(STRUCT_V09,
+static BuildingTypeClass ClassV09(STRUCT_V09,
                                         TXT_CIV9,        // NAME:			Short name of the structure.
                                         "V09",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1811,7 +1811,7 @@ static BuildingTypeClass const ClassV09(STRUCT_V09,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV10(STRUCT_V10,
+static BuildingTypeClass ClassV10(STRUCT_V10,
                                         TXT_CIV10,       // NAME:			Short name of the structure.
                                         "V10",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1862,7 +1862,7 @@ static BuildingTypeClass const ClassV10(STRUCT_V10,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV11(STRUCT_V11,
+static BuildingTypeClass ClassV11(STRUCT_V11,
                                         TXT_CIV11,       // NAME:			Short name of the structure.
                                         "V11",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1913,7 +1913,7 @@ static BuildingTypeClass const ClassV11(STRUCT_V11,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV12(STRUCT_V12,
+static BuildingTypeClass ClassV12(STRUCT_V12,
                                         TXT_CIV12,       // NAME:			Short name of the structure.
                                         "V12",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -1964,7 +1964,7 @@ static BuildingTypeClass const ClassV12(STRUCT_V12,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV13(STRUCT_V13,
+static BuildingTypeClass ClassV13(STRUCT_V13,
                                         TXT_CIV13,       // NAME:			Short name of the structure.
                                         "V13",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2015,7 +2015,7 @@ static BuildingTypeClass const ClassV13(STRUCT_V13,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV14(STRUCT_V14,
+static BuildingTypeClass ClassV14(STRUCT_V14,
                                         TXT_CIV14,       // NAME:			Short name of the structure.
                                         "V14",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2066,7 +2066,7 @@ static BuildingTypeClass const ClassV14(STRUCT_V14,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV15(STRUCT_V15,
+static BuildingTypeClass ClassV15(STRUCT_V15,
                                         TXT_CIV15,       // NAME:			Short name of the structure.
                                         "V15",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2117,7 +2117,7 @@ static BuildingTypeClass const ClassV15(STRUCT_V15,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV16(STRUCT_V16,
+static BuildingTypeClass ClassV16(STRUCT_V16,
                                         TXT_CIV16,       // NAME:			Short name of the structure.
                                         "V16",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2168,7 +2168,7 @@ static BuildingTypeClass const ClassV16(STRUCT_V16,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV17(STRUCT_V17,
+static BuildingTypeClass ClassV17(STRUCT_V17,
                                         TXT_CIV17,       // NAME:			Short name of the structure.
                                         "V17",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2219,7 +2219,7 @@ static BuildingTypeClass const ClassV17(STRUCT_V17,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV18(STRUCT_V18,
+static BuildingTypeClass ClassV18(STRUCT_V18,
                                         TXT_CIV18,       // NAME:			Short name of the structure.
                                         "V18",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2270,7 +2270,7 @@ static BuildingTypeClass const ClassV18(STRUCT_V18,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV19(STRUCT_PUMP,
+static BuildingTypeClass ClassV19(STRUCT_PUMP,
                                         TXT_PUMP,        // NAME:			Short name of the structure.
                                         "V19",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2321,7 +2321,7 @@ static BuildingTypeClass const ClassV19(STRUCT_PUMP,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV20(STRUCT_V20,
+static BuildingTypeClass ClassV20(STRUCT_V20,
                                         TXT_CIV20,       // NAME:			Short name of the structure.
                                         "V20",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2372,7 +2372,7 @@ static BuildingTypeClass const ClassV20(STRUCT_V20,
                                         (short const*)List1100  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV21(STRUCT_V21,
+static BuildingTypeClass ClassV21(STRUCT_V21,
                                         TXT_CIV21,       // NAME:			Short name of the structure.
                                         "V21",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2423,7 +2423,7 @@ static BuildingTypeClass const ClassV21(STRUCT_V21,
                                         (short const*)List0010  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV22(STRUCT_V22,
+static BuildingTypeClass ClassV22(STRUCT_V22,
                                         TXT_CIV22,       // NAME:			Short name of the structure.
                                         "V22",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2474,7 +2474,7 @@ static BuildingTypeClass const ClassV22(STRUCT_V22,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV23(STRUCT_V23,
+static BuildingTypeClass ClassV23(STRUCT_V23,
                                         TXT_CIV23,       // NAME:			Short name of the structure.
                                         "V23",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2525,7 +2525,7 @@ static BuildingTypeClass const ClassV23(STRUCT_V23,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV24(STRUCT_V24,
+static BuildingTypeClass ClassV24(STRUCT_V24,
                                         TXT_CIV24,       // NAME:			Short name of the structure.
                                         "V24",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2576,7 +2576,7 @@ static BuildingTypeClass const ClassV24(STRUCT_V24,
                                         (short const*)List1100  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV25(STRUCT_V25,
+static BuildingTypeClass ClassV25(STRUCT_V25,
                                         TXT_CIV25,       // NAME:			Short name of the structure.
                                         "V25",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2627,7 +2627,7 @@ static BuildingTypeClass const ClassV25(STRUCT_V25,
                                         (short const*)List1000  // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV26(STRUCT_V26,
+static BuildingTypeClass ClassV26(STRUCT_V26,
                                         TXT_CIV26,       // NAME:			Short name of the structure.
                                         "V26",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2678,7 +2678,7 @@ static BuildingTypeClass const ClassV26(STRUCT_V26,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV27(STRUCT_V27,
+static BuildingTypeClass ClassV27(STRUCT_V27,
                                         TXT_CIV27,       // NAME:			Short name of the structure.
                                         "V27",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2729,7 +2729,7 @@ static BuildingTypeClass const ClassV27(STRUCT_V27,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV28(STRUCT_V28,
+static BuildingTypeClass ClassV28(STRUCT_V28,
                                         TXT_CIV28,       // NAME:			Short name of the structure.
                                         "V28",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2780,7 +2780,7 @@ static BuildingTypeClass const ClassV28(STRUCT_V28,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV29(STRUCT_V29,
+static BuildingTypeClass ClassV29(STRUCT_V29,
                                         TXT_CIV29,       // NAME:			Short name of the structure.
                                         "V29",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2831,7 +2831,7 @@ static BuildingTypeClass const ClassV29(STRUCT_V29,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV30(STRUCT_V30,
+static BuildingTypeClass ClassV30(STRUCT_V30,
                                         TXT_CIV30,       // NAME:			Short name of the structure.
                                         "V30",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2882,7 +2882,7 @@ static BuildingTypeClass const ClassV30(STRUCT_V30,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV31(STRUCT_V31,
+static BuildingTypeClass ClassV31(STRUCT_V31,
                                         TXT_CIV31,       // NAME:			Short name of the structure.
                                         "V31",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2933,7 +2933,7 @@ static BuildingTypeClass const ClassV31(STRUCT_V31,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV32(STRUCT_V32,
+static BuildingTypeClass ClassV32(STRUCT_V32,
                                         TXT_CIV32,       // NAME:			Short name of the structure.
                                         "V32",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -2984,7 +2984,7 @@ static BuildingTypeClass const ClassV32(STRUCT_V32,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV33(STRUCT_V33,
+static BuildingTypeClass ClassV33(STRUCT_V33,
                                         TXT_CIV33,       // NAME:			Short name of the structure.
                                         "V33",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -3035,7 +3035,7 @@ static BuildingTypeClass const ClassV33(STRUCT_V33,
                                         (short const*)NULL    // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV34(STRUCT_V34,
+static BuildingTypeClass ClassV34(STRUCT_V34,
                                         TXT_CIV34,       // NAME:			Short name of the structure.
                                         "V34",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -3086,7 +3086,7 @@ static BuildingTypeClass const ClassV34(STRUCT_V34,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV35(STRUCT_V35,
+static BuildingTypeClass ClassV35(STRUCT_V35,
                                         TXT_CIV35,       // NAME:			Short name of the structure.
                                         "V35",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -3137,7 +3137,7 @@ static BuildingTypeClass const ClassV35(STRUCT_V35,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 
-static BuildingTypeClass const ClassV36(STRUCT_V36,
+static BuildingTypeClass ClassV36(STRUCT_V36,
                                         TXT_CIV36,       // NAME:			Short name of the structure.
                                         "V36",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -3187,7 +3187,7 @@ static BuildingTypeClass const ClassV36(STRUCT_V36,
                                         (short const*)List1, // OCCUPYLIST:	List of active foundation squares.
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
-static BuildingTypeClass const ClassV37(STRUCT_V37,
+static BuildingTypeClass ClassV37(STRUCT_V37,
                                         TXT_CIV37,       // NAME:			Short name of the structure.
                                         "V37",           // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0), // Exit point for produced units.
@@ -3237,7 +3237,7 @@ static BuildingTypeClass const ClassV37(STRUCT_V37,
                                         (short const*)ListWestwood, // OCCUPYLIST:	List of active foundation squares.
                                         (short const*)OListWestwood // OVERLAPLIST:List of overlap cell offset.
 );
-static BuildingTypeClass const ClassMission(STRUCT_MISSION,
+static BuildingTypeClass ClassMission(STRUCT_MISSION,
                                             TXT_CIVMISS,     // NAME:			Short name of the structure.
                                             "MISS",          // NAME:			Short name of the structure.
                                             XYP_COORD(0, 0), // Exit point for produced units.
@@ -3290,7 +3290,7 @@ static BuildingTypeClass const ClassMission(STRUCT_MISSION,
 );
 
 // Sandbag wall
-static BuildingTypeClass const Sandbag(STRUCT_SANDBAG_WALL,
+static BuildingTypeClass Sandbag(STRUCT_SANDBAG_WALL,
                                        TXT_SANDBAG_WALL, // NAME:			Short name of the structure.
                                        "SBAG",           // NAME:			Short name of the structure.
                                        XYP_COORD(0, 0),  // Exit point for produced units.
@@ -3341,7 +3341,7 @@ static BuildingTypeClass const Sandbag(STRUCT_SANDBAG_WALL,
                                        (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 // Cyclone fence
-static BuildingTypeClass const Cyclone(STRUCT_CYCLONE_WALL,
+static BuildingTypeClass Cyclone(STRUCT_CYCLONE_WALL,
                                        TXT_CYCLONE_WALL, // NAME:			Short name of the structure.
                                        "CYCL",           // NAME:			Short name of the structure.
                                        XYP_COORD(0, 0),  // Exit point for produced units.
@@ -3392,7 +3392,7 @@ static BuildingTypeClass const Cyclone(STRUCT_CYCLONE_WALL,
                                        (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 // Brick wall
-static BuildingTypeClass const Brick(STRUCT_BRICK_WALL,
+static BuildingTypeClass Brick(STRUCT_BRICK_WALL,
                                      TXT_BRICK_WALL,  // NAME:			Short name of the structure.
                                      "BRIK",          // NAME:			Short name of the structure.
                                      XYP_COORD(0, 0), // Exit point for produced units.
@@ -3443,7 +3443,7 @@ static BuildingTypeClass const Brick(STRUCT_BRICK_WALL,
                                      (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 // Barbwire wall
-static BuildingTypeClass const Barbwire(STRUCT_BARBWIRE_WALL,
+static BuildingTypeClass Barbwire(STRUCT_BARBWIRE_WALL,
                                         TXT_BARBWIRE_WALL, // NAME:			Short name of the structure.
                                         "BARB",            // NAME:			Short name of the structure.
                                         XYP_COORD(0, 0),   // Exit point for produced units.
@@ -3494,7 +3494,7 @@ static BuildingTypeClass const Barbwire(STRUCT_BARBWIRE_WALL,
                                         (short const*)NULL   // OVERLAPLIST:List of overlap cell offset.
 );
 // Wood wall
-static BuildingTypeClass const Wood(STRUCT_WOOD_WALL,
+static BuildingTypeClass Wood(STRUCT_WOOD_WALL,
                                     TXT_WOOD_WALL,   // NAME:			Short name of the structure.
                                     "WOOD",          // NAME:			Short name of the structure.
                                     XYP_COORD(0, 0), // Exit point for produced units.

@@ -1247,6 +1247,25 @@ bool TiberianDawn_PrepareGameData(void)
         NSURL* staging = [parent URLByAppendingPathComponent:@"vanillatd.importing" isDirectory:YES];
         [manager removeItemAtURL:staging error:nil];
 
+        // Private packages may include user-supplied game data. Install only
+        // when no complete installation exists; use the same staged importer.
+        NSURL* bundled = [NSBundle.mainBundle.resourceURL URLByAppendingPathComponent:@"GameData"];
+        if (ValidData(bundled)) {
+            try {
+                RunImportTask(L("migration_status"), [&] {
+                    EnsureImportCapacity(parent);
+                    CopyPreparedDirectory(bundled, staging);
+                    if (!ValidData(staging)) throw std::runtime_error("Bundled game data is incomplete");
+                    AtomicInstall(staging, destination);
+                });
+                ExcludeFromBackup(destination);
+                return true;
+            } catch (const std::exception&) {
+                [manager removeItemAtURL:staging error:nil];
+                // Fall through to the normal user-selectable import workflow.
+            }
+        }
+
         NSURL* legacy = LegacyDataURL();
         while (ValidData(legacy)) {
             try {

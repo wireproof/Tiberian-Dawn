@@ -35,6 +35,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#endif
 #include "logic.h"
 
 static unsigned FramesPerSecond = 0;
@@ -177,6 +180,9 @@ void LogicClass::Debug_Dump(MonoClass* mono) const
  *=============================================================================================*/
 void LogicClass::AI(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    WP_TickCheats();
+#endif
     int index;
 
     FramesPerSecond++;

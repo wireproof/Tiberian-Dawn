@@ -1,0 +1,204 @@
+#import <Foundation/Foundation.h>
+#include <cmath>
+#import <TargetConditionals.h>
+#include "tiberiandawn/wireproof_rules.h"
+#if TARGET_OS_IPHONE
+#import <UIKit/UIKit.h>
+#include "ipados_platform.h"
+#else
+#import <AppKit/AppKit.h>
+#include "macos_platform.h"
+#endif
+static NSString* Profile(void) { return [[NSUserDefaults standardUserDefaults] stringForKey:@"WPActiveRules"] ?: @"Stock"; }
+static NSString* StoreKey(void) { return [@"WPRules." stringByAppendingString:Profile()]; }
+static NSDictionary* Values(void) { return [[NSUserDefaults standardUserDefaults] dictionaryForKey:StoreKey()] ?: @{}; }
+int WP_LoadRule(const char* key,int fallback,int low,int high) {
+    if ([Profile() isEqualToString:@"Stock"]) return fallback;
+    id value=Values()[@(key)];
+    if (![value isKindOfClass:NSNumber.class]) return fallback;
+    double n=[value doubleValue];
+    if (!isfinite(n) || n!=floor(n) || n<low || n>high) return fallback;
+    return (int)n;
+}
+static NSString* DisplayValue(int index,int value) {
+    for(int c=0;c<WP_RuleChoiceCount(index);++c)
+        if(WP_RuleChoiceValue(index,c)==value) return @(WP_RuleChoiceLabel(index,c));
+    return [NSString stringWithFormat:@"%d",value];
+}
+static BOOL SaveValue(int index,NSString* text) {
+    if(index<0 || index>=WP_RuleCount() || [Profile() isEqualToString:@"Stock"]) return NO;
+    NSScanner* scanner=[NSScanner scannerWithString:text]; long long value;
+    if (![scanner scanLongLong:&value] || !scanner.isAtEnd || value<WP_RuleMin(index) || value>WP_RuleMax(index) || !WP_RuleValueValid(index,(int)value)) return NO;
+    NSMutableDictionary* values=[Values() mutableCopy];
+    values[@(WP_RuleKey(index))]=@(value);
+    [[NSUserDefaults standardUserDefaults] setObject:values forKey:StoreKey()]; return YES;
+}
+#if TARGET_OS_IPHONE
+@interface WPWorkshop : UITableViewController
+@property BOOL finished;
+@property NSString* group;
+@property NSArray<NSString*>* groups;
+@property NSArray<NSNumber*>* indices;
+@end
+@implementation WPWorkshop
+- (void)viewDidLoad {
+    [super viewDidLoad]; self.title=self.group ?: @"Mod Workshop";
+    self.tableView.backgroundColor=UIColor.systemBackgroundColor;
+    if (!self.group) {
+        NSMutableOrderedSet* groups=[NSMutableOrderedSet new];
+        for(int i=0;i<WP_RuleCount();++i) {
+            NSString* name=@(WP_RuleName(i)); NSRange split=[name rangeOfString:@" / " options:NSBackwardsSearch];
+            [groups addObject:[name substringToIndex:split.location]];
+        }
+        self.groups=groups.array;
+        self.navigationItem.leftBarButtonItem=[[UIBarButtonItem alloc] initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(done)];
+        self.navigationItem.rightBarButtonItem=[[UIBarButtonItem alloc] initWithTitle:@"Preset" style:UIBarButtonItemStylePlain target:self action:@selector(preset)];
+    } else {
+        NSMutableArray* indices=[NSMutableArray new];
+        for(int i=0;i<WP_RuleCount();++i) if ([@(WP_RuleName(i)) hasPrefix:[self.group stringByAppendingString:@" / "]]) [indices addObject:@(i)];
+        self.indices=indices;
+    }
+}
+- (void)done { self.finished=YES; }
+- (void)viewWillAppear:(BOOL)animated { [super viewWillAppear:animated]; [self.tableView reloadData]; }
+- (NSString*)tableView:(UITableView*)t titleForHeaderInSection:(NSInteger)s {
+    return [NSString stringWithFormat:@"Preset: %@ • Changes apply after restart. Modified rules disable multiplayer. Type edits affect every owner, including enemies. Prerequisites and ownership are advanced bitmasks.",Profile()];
+}
+- (NSInteger)tableView:(UITableView*)t numberOfRowsInSection:(NSInteger)s { return self.group ? self.indices.count : self.groups.count; }
+- (UITableViewCell*)tableView:(UITableView*)t cellForRowAtIndexPath:(NSIndexPath*)p {
+    UITableViewCell* cell=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
+    if (!self.group) { cell.textLabel.text=self.groups[p.row]; cell.accessoryType=UITableViewCellAccessoryDisclosureIndicator; }
+    else { int i=self.indices[p.row].intValue;
+        NSString* name=@(WP_RuleName(i));cell.textLabel.text=[name substringFromIndex:self.group.length+3];
+        cell.detailTextLabel.text=[NSString stringWithFormat:@"%@ (stock %@)",DisplayValue(i,WP_LoadRule(WP_RuleKey(i),WP_RuleDefault(i),WP_RuleMin(i),WP_RuleMax(i))),DisplayValue(i,WP_RuleDefault(i))];
+        cell.textLabel.numberOfLines=0; cell.detailTextLabel.numberOfLines=0;
+    } return cell;
+}
+- (void)preset {
+    UIAlertController* a=[UIAlertController alertControllerWithTitle:@"Rules preset" message:@"Choose Stock to restore original gameplay after restarting. Your custom presets remain saved." preferredStyle:UIAlertControllerStyleAlert];
+    for(NSString* name in @[@"Stock",@"Custom 1",@"Custom 2",@"Custom 3"])
+        [a addAction:[UIAlertAction actionWithTitle:name style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){[[NSUserDefaults standardUserDefaults] setObject:name forKey:@"WPActiveRules"];[self.tableView reloadData];}]];
+    if (![Profile() isEqualToString:@"Stock"]) [a addAction:[UIAlertAction actionWithTitle:@"Reset this preset…" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+        UIAlertController* confirm=[UIAlertController alertControllerWithTitle:@"Reset preset?" message:@"This clears only the selected custom rules. Saves and game data are kept." preferredStyle:UIAlertControllerStyleAlert];
+        [confirm addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [confirm addAction:[UIAlertAction actionWithTitle:@"Reset" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){[[NSUserDefaults standardUserDefaults] removeObjectForKey:StoreKey()];[self.tableView reloadData];}]];
+        [self presentViewController:confirm animated:YES completion:nil];
+    }]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]]; [self presentViewController:a animated:YES completion:nil];
+}
+- (void)tableView:(UITableView*)t didSelectRowAtIndexPath:(NSIndexPath*)p {
+    if (!self.group) { WPWorkshop* detail=[[WPWorkshop alloc] initWithStyle:UITableViewStyleInsetGrouped];detail.group=self.groups[p.row];[self.navigationController pushViewController:detail animated:YES];return; }
+    if ([Profile() isEqualToString:@"Stock"]) { UIAlertController* a=[UIAlertController alertControllerWithTitle:@"Stock is read-only" message:@"Go back and choose a Custom preset first." preferredStyle:UIAlertControllerStyleAlert];[a addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];[self presentViewController:a animated:YES completion:nil];return; }
+    int i=self.indices[p.row].intValue;
+    if(WP_RuleChoiceCount(i)) {
+        UIAlertController* choices=[UIAlertController alertControllerWithTitle:@(WP_RuleName(i)) message:[NSString stringWithFormat:@"%s\nApplies after restart and a new mission.",WP_RuleHelp(i)] preferredStyle:UIAlertControllerStyleAlert];
+        for(int c=0;c<WP_RuleChoiceCount(i);++c) {
+            int selected=WP_RuleChoiceValue(i,c);
+            [choices addAction:[UIAlertAction actionWithTitle:@(WP_RuleChoiceLabel(i,c)) style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){SaveValue(i,[NSString stringWithFormat:@"%d",selected]);[t reloadData];}]];
+        }
+        [choices addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [self presentViewController:choices animated:YES completion:nil]; return;
+    }
+    UIAlertController* a=[UIAlertController alertControllerWithTitle:@(WP_RuleName(i)) message:[NSString stringWithFormat:@"%s\nWhole number from %d to %d. Applies after restart.",WP_RuleHelp(i),WP_RuleMin(i),WP_RuleMax(i)] preferredStyle:UIAlertControllerStyleAlert];
+    [a addTextFieldWithConfigurationHandler:^(UITextField* field){field.text=[NSString stringWithFormat:@"%d",WP_LoadRule(WP_RuleKey(i),WP_RuleDefault(i),WP_RuleMin(i),WP_RuleMax(i))];field.keyboardType=UIKeyboardTypeNumbersAndPunctuation;}];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        if (!SaveValue(i,a.textFields.firstObject.text)) {
+            UIAlertController* error=[UIAlertController alertControllerWithTitle:@"Invalid value" message:@"Enter a whole number within the displayed range. Nothing was changed." preferredStyle:UIAlertControllerStyleAlert];[error addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];[self presentViewController:error animated:YES completion:nil];
+        } [t reloadData];
+    }]]; [self presentViewController:a animated:YES completion:nil];
+}
+@end
+void WP_ShowWorkshop(void) {
+    @autoreleasepool {
+        void (^present)(void)=^{
+            UIWindowScene* scene=nil;
+            for(UIScene* candidate in UIApplication.sharedApplication.connectedScenes) if ([candidate isKindOfClass:UIWindowScene.class] && candidate.activationState==UISceneActivationStateForegroundActive) {scene=(UIWindowScene*)candidate;break;}
+            if (!scene) return;
+            UIWindow* previous=scene.keyWindow;
+            UIWindow* host=[[UIWindow alloc] initWithWindowScene:scene];
+            UIViewController* root=[UIViewController new];host.rootViewController=root;host.windowLevel=UIWindowLevelAlert;[host makeKeyAndVisible];
+            __block NSInteger choice=-1;
+            UIAlertController* menu=[UIAlertController alertControllerWithTitle:@"Saves / Mod Workshop" message:@"Custom rules are for single-player. Restart after editing, then start a new mission. Keep stock saves separate from modded saves." preferredStyle:UIAlertControllerStyleAlert];
+            [menu addAction:[UIAlertAction actionWithTitle:@"Manage saves" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=0;}]];
+            [menu addAction:[UIAlertAction actionWithTitle:@"Mod Workshop" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=1;}]];
+            [menu addAction:[UIAlertAction actionWithTitle:@"Back" style:UIAlertActionStyleCancel handler:^(UIAlertAction* a){choice=2;}]];
+            [root presentViewController:menu animated:NO completion:nil];
+            while(choice<0) [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.02]];
+            if (choice==1) {
+                WPWorkshop* editor=[[WPWorkshop alloc] initWithStyle:UITableViewStyleInsetGrouped];
+                host.rootViewController=[[UINavigationController alloc] initWithRootViewController:editor];
+                while(!editor.finished) [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.02]];
+            }
+            host.hidden=YES;[previous makeKeyAndVisible];
+            if (choice==0) TiberianDawn_ManageSaveGames();
+        };
+        if (NSThread.isMainThread) present(); else dispatch_sync(dispatch_get_main_queue(),present);
+    }
+}
+#else
+// AppKit modal panels can retain key-window focus after dismissal. Restore
+// the SDL game window on every exit, including the save-manager branch.
+struct WPGameWindowRestore {
+    NSWindow* window;
+    ~WPGameWindowRestore() { if (window) [window makeKeyAndOrderFront:nil]; }
+};
+void WP_ShowWorkshop(void) {
+    @autoreleasepool {
+        WPGameWindowRestore restore{NSApp.keyWindow};
+        NSAlert* menu=[NSAlert new];menu.messageText=@"Saves / Mod Workshop";
+        [menu addButtonWithTitle:@"Mod Workshop"];[menu addButtonWithTitle:@"Manage saves"];[menu addButtonWithTitle:@"Back"];
+        NSInteger choice=[menu runModal];if(choice==NSAlertSecondButtonReturn){TiberianDawn_ManageSaveGames();return;}if(choice!=NSAlertFirstButtonReturn)return;
+        BOOL finished=NO;
+        while(!finished) {
+            NSAlert* a=[NSAlert new];a.messageText=@"Mod Workshop";a.informativeText=@"Choose a preset and rule. Edits apply after restarting; use new single-player missions. Stock is read-only. Modified rules disable multiplayer.";
+            NSView* view=[[NSView alloc] initWithFrame:NSMakeRect(0,0,440,120)];
+            NSPopUpButton* profiles=[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0,85,440,28) pullsDown:NO];[profiles addItemsWithTitles:@[@"Stock",@"Custom 1",@"Custom 2",@"Custom 3"]];[profiles selectItemWithTitle:Profile()];[view addSubview:profiles];
+            NSPopUpButton* rules=[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0,50,440,28) pullsDown:NO];
+            for(int i=0;i<WP_RuleCount();++i)[rules addItemWithTitle:[NSString stringWithFormat:@"%s (stock %d; %d…%d)",WP_RuleName(i),WP_RuleDefault(i),WP_RuleMin(i),WP_RuleMax(i)]];[view addSubview:rules];
+            NSTextField* value=[[NSTextField alloc] initWithFrame:NSMakeRect(0,10,440,28)];value.placeholderString=@"New whole-number value (leave blank to select preset only)";[view addSubview:value];a.accessoryView=view;
+            [a addButtonWithTitle:@"Save"];[a addButtonWithTitle:@"Done"];[a addButtonWithTitle:@"Reset preset…"];[a addButtonWithTitle:@"Edit selected rule…"];
+            NSInteger action=[a runModal];
+            if(action==NSAlertFirstButtonReturn+3) {
+                [[NSUserDefaults standardUserDefaults] setObject:profiles.titleOfSelectedItem forKey:@"WPActiveRules"];
+                if([Profile() isEqualToString:@"Stock"]) { NSAlert* error=[NSAlert new];error.messageText=@"Choose a Custom preset first.";[error runModal];continue; }
+                int index=(int)rules.indexOfSelectedItem;
+                NSAlert* edit=[NSAlert new];edit.messageText=@(WP_RuleName(index));
+                edit.informativeText=[NSString stringWithFormat:@"%s\nStock: %@. Restart and start a new mission after editing.",WP_RuleHelp(index),DisplayValue(index,WP_RuleDefault(index))];
+                int current=WP_LoadRule(WP_RuleKey(index),WP_RuleDefault(index),WP_RuleMin(index),WP_RuleMax(index));
+                NSPopUpButton* options=nil; NSTextField* number=nil;
+                if(WP_RuleChoiceCount(index)) {
+                    options=[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0,0,360,28) pullsDown:NO];
+                    for(int c=0;c<WP_RuleChoiceCount(index);++c) { [options addItemWithTitle:@(WP_RuleChoiceLabel(index,c))];if(WP_RuleChoiceValue(index,c)==current)[options selectItemAtIndex:c]; }
+                    edit.accessoryView=options;
+                } else {
+                    number=[[NSTextField alloc] initWithFrame:NSMakeRect(0,0,360,28)]; number.stringValue=[NSString stringWithFormat:@"%d",current];
+                    edit.informativeText=[edit.informativeText stringByAppendingFormat:@" Allowed: %d…%d.",WP_RuleMin(index),WP_RuleMax(index)];edit.accessoryView=number;
+                }
+                [edit addButtonWithTitle:@"Save"];[edit addButtonWithTitle:@"Cancel"];
+                if([edit runModal]==NSAlertFirstButtonReturn) {
+                    NSString* text=options ? [NSString stringWithFormat:@"%d",WP_RuleChoiceValue(index,(int)options.indexOfSelectedItem)] : number.stringValue;
+                    if(!SaveValue(index,text)){NSAlert* error=[NSAlert new];error.messageText=@"Invalid value. Nothing was changed.";[error runModal];}
+                }
+                continue;
+            }
+            if(action==NSAlertThirdButtonReturn) {
+                NSString* selected=profiles.titleOfSelectedItem;
+                if (![selected isEqualToString:@"Stock"]) {
+                    NSAlert* confirm=[NSAlert new];confirm.messageText=[@"Reset " stringByAppendingString:selected];
+                    confirm.informativeText=@"Clear this preset's custom rules? Saves and game data are kept.";
+                    [confirm addButtonWithTitle:@"Cancel"];[confirm addButtonWithTitle:@"Reset"];
+                    if([confirm runModal]==NSAlertSecondButtonReturn)
+                        [[NSUserDefaults standardUserDefaults] removeObjectForKey:[@"WPRules." stringByAppendingString:selected]];
+                }
+                continue;
+            }
+            if(action!=NSAlertFirstButtonReturn) {finished=YES;continue;}
+            [[NSUserDefaults standardUserDefaults] setObject:profiles.titleOfSelectedItem forKey:@"WPActiveRules"];
+            if(value.stringValue.length && ([Profile() isEqualToString:@"Stock"] || !SaveValue((int)rules.indexOfSelectedItem,value.stringValue))) {
+                NSAlert* error=[NSAlert new];error.messageText=@"Choose a Custom preset and enter a value in range.";[error runModal];
+            }
+        }
+    }
+}
+#endif

@@ -28,11 +28,11 @@ public:
     {
         return Put_Mouse_Message(static_cast<unsigned short>(key | WWKEY_DBL_BIT | WWKEY_VK_BIT), x, y, release);
     }
+#endif
     bool Put_Text_Character(unsigned char character)
     {
         return Put(static_cast<unsigned short>(WWKEY_TEXT_BIT | character));
     }
-#endif
 
 private:
     void Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent& motion);

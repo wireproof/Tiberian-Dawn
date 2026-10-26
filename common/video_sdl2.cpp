@@ -553,7 +553,7 @@ static void Update_HWCursor_Settings()
                                         hwcursor.GameW,
                                         hwcursor.GameH,
                                         {safe_left, safe_top, safe_right, safe_bottom},
-                                        Settings.Video.PresentationMode == 1);
+                                        Settings.Video.PresentationMode == 1, Settings.Video.PresentationMode == 3);
     render_dst.x = ipad_layout.viewport.x;
     render_dst.y = ipad_layout.viewport.y;
     render_dst.w = ipad_layout.viewport.width;
@@ -1747,7 +1747,7 @@ public:
             }
         }
         if (software_cursor) {
-            const float cursor_scale = Settings.Video.LargeCursor ? 1.5f : 1.0f;
+            const float cursor_scale = Settings.Video.LargeCursor ? 7.5f : 1.0f;
             const int game_x = cursor_x - static_cast<int>(hwcursor.HotX * cursor_scale);
             const int game_y = cursor_y - static_cast<int>(hwcursor.HotY * cursor_scale);
             metal_cursor.pixels = hwcursor.Surface->pixels;
@@ -1851,7 +1851,7 @@ public:
 
                 Get_Video_Mouse(x, y);
 
-                const float cursor_scale = Settings.Video.LargeCursor ? 1.5f : 1.0f;
+                const float cursor_scale = Settings.Video.LargeCursor ? 7.5f : 1.0f;
                 dst.x = x - static_cast<int>(hwcursor.HotX * cursor_scale);
                 dst.y = y - static_cast<int>(hwcursor.HotY * cursor_scale);
                 dst.w = static_cast<int>(hwcursor.Surface->w * cursor_scale);
@@ -2528,9 +2528,7 @@ int Video_Get_Effective_Frame_Limit()
     if (Settings.Video.BatterySaving || low_power_mode || thermal_state >= 2) {
         limit = std::min(limit, 30);
     }
-    if (last_frame_idle) {
-        limit = std::min(limit, 15);
-    }
+    // Keep foreground input responsive even between simulation updates.
     return limit;
 }
 #else

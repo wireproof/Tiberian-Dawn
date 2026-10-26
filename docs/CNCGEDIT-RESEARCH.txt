@@ -1,0 +1,83 @@
+CnCGEdit 1.2b application behavior reverse engineering — 2026-10-25
+
+Scope completed: the editor-specific static behavior needed to recreate its settings in native Tiberian Dawn. This is not a claim that every Delphi/VCL library function was reverse engineered or that the Windows application was dynamically tested.
+
+Original EXE SHA-256: 1247459321d49be7192a252785ada308d10b5e1a2a5f9025fdbcea06c73239fe
+Original EXE unchanged; no Windows execution. Provider: Ghidra 12.1.4, plus direct DFM/RTTI parsing.
+
+COMPLETED CHECKLIST
+[x] Full binary TFORM1 resource parsed through its exact final byte: 160 components.
+[x] 159 component fields matched to Delphi form-member offsets; 26 event references resolved to method addresses.
+[x] All five category load and save routines traced, including manually recovered vehicle and infantry routines.
+[x] All 56 selectable object entries recovered: 20 vehicles, 7 infantry, 2 naval, 5 aircraft, 22 buildings.
+[x] All 56 per-object argument/offset tables programmatically compared:load and save arrays match exactly.
+[x] Every user-editable field and checkbox associated with its form component, member offset and save-function parameter.
+[x] Dropdown encodings, signed-short versus byte limits, inverted aircraft flag, faction checkboxes resolved.
+[x] Open/backup and Default All behaviors examined.
+[x] Legacy omissions and unsafe wall offset behavior identified.
+
+DATA PATHS
+Vehicles:selection4521f4 -> load44f4dc; save event453510 -> save44dbf8.
+Naval:selection45212c -> load44f9f0; save event452c88 -> save44e870.
+Aircraft:selection450ed4 -> load450838; save event452aa8 -> save44ed40.
+Infantry:selection4510b4 -> load44fdf8; save event45290c -> save44f1f0.
+Buildings:selection451250 -> load450054; save event452d50 -> save44e1a0.
+Hex addresses above are virtual addresses with implicit0x.
+
+COMMON SETTINGS
+Vehicles/naval:cost,health,speed,sight,tech/build levels,armour,primary/secondary weapons,GDI/NOD availability,buildable,cloaked,invulnerable,double shot,invisible.
+Aircraft:cost,health,speed,sight,build level,armour,primary weapon,GDI/NOD availability,ammo,buildable,invulnerable,targetable,selectable,landable,carry people.
+Infantry:cost,health,speed,sight,tech/build levels,primary weapon,GDI/NOD availability.
+Buildings:cost,health,sight,tech/build levels,armour,primary weapon,GDI/NOD availability,buildable,invulnerable,double shot,power produced/required,tiberium storage,construction category.
+
+ENCODINGS AND FORMAT LIMITS
+- All GDI/NOD controls resolved. GDI only=F9,NOD only=FA,neither=FF,both=FB. These are patched executable bytes, NOT native ownership bitmasks.
+- Weapon choice25(None) writesFF; other choices write their index.
+- Armour writes selected index+1. UI names are only Level1..Level5; native names should come from engine enums, not assumed labels.
+- Building construction choices None/Infantry/Vehicles/Helicopters/Structures write0/2/4/6/8.
+- Aircraft Landable checkbox is inverted:checked0,unchecked1. Other booleans write checked1/unchecked0.
+- Most numeric fields are one byte; cost/health and a few building values use signed16-bit depending on object. Those widths follow instruction immediates in the old EXE, not sensible universal game limits.
+- Vehicles:dinosaurs(index16..19) cost writes1 byte; others2. HP writes1 byte for indices2,6,7,8,14; others2.
+- Naval:cost andHP2 bytes.
+- Aircraft:cost2 bytes,HP1 byte even though form allows30000; old inconsistency not to reproduce.
+- Infantry:minigunner(index0) cost1 byte; other cost2. HP1 byte.
+- Buildings:power required2 bytes for Temple/AdvComm/Obelisk; other1. Power produced2 only AdvPowerPlant; other1. Storage2 for Refinery/Silo; other1. Normal cost/HP2; wall cost/HP1.
+
+OPEN/BACKUP/RESET
+Open450c34 checks existence of c&c95.exe and default.dat. On first open it copies the full EXE to default.dat in2048-byte chunks; later opens reuse that backup. No version/hash/header/size validation is visible in this handler. Default All453c28 asks confirmation then rewrites the entire EXE from default.dat. Thus default means the first backed-up executable, potentially already modified, rather than canonical factory values. Preserve this familiar reset concept in native app using immutable compiled defaults and named presets, not binary backup replacement.
+
+LEGACY LIMITATIONS / BUGS TO AVOID
+- Aircraft Tech Level omitted; form explicitly says its offset was unknown.
+- Technicians and civilian buildings omitted.
+- Wall choices pass zero for unknown offsets. Load disables many controls but still reads offset0; decimal77 is consistent with'M' in an MZ header. Save continues to seek/write those zero offsets instead of guarding them. The native implementation must never reproduce this.
+- Making naval craft buildable is warned against in the original UI because their mission behavior is specialized.
+- Changes are explicitly saved per selected object; changing selection reloads fields, so unsaved edits are lost.
+
+NATIVE INTEGRATION RECOMMENDATION
+Use the existing Workshop as a CnCGEdit-inspired rules editor, backed by native type definitions and existing per-preset persistence. Keep original compiled values as Stock, offer named custom presets, clear Save/Reset and restart requirement, and preserve the single-player multiplayer lockout.
+Use proper boolean switches and named enum pickers rather than numeric IDs. Separate ownership(GDI/NOD) from human-player-only cheats:changing a shared unit type also changes enemy units of that type. Keep runtime cheats in a separate section.
+Add field-specific safety checks around engine capacities and lifecycle invariants. A carrier flag should not imply payload support or passenger capacity without verifying engine behavior. Constructor cross-check now confirms CnCGEdit Landable modifies the inverse fixed-wing argument; native IsLandable is a separate flag. Keep them separate, and omit the misleading legacy label until actual landing behavior is tested.
+No Windows executable patching or bundled CnCGEdit binary is needed in the iOS app. Data tables and native source provide a cleaner integration than embedding/emulating this editor.
+
+REMAINING VALIDATION, NOT RE GAPS
+- Device/runtime acceptance of native settings and presets, sustained play, save/load, stock restoration, and enemy/player effect must still be tested.
+- No exhaustive validation of arbitrary numeric combinations in the1998 editor, and no dynamic Windows reference run.
+- No claim of original game/remastered binary format portability; these offset tables apply only to the target format expected by this editor.
+
+ARTIFACTS
+control-map.json:all controls, properties, dropdown contents, member offsets and handlers.
+behavior-map.json:all categories, param-to-field maps, all 56 per-object offset arrays, codecs/open/reset semantics.
+form-tree.json:lossless structured form resource.
+ghidra-export/*.c:exported editor pseudocode; ExportEditor.java and run logs preserve recovery procedure.
+analysis-evidence.json and analysis-snapshot.json:earlier REA/Ghidra evidence.
+parse_form.py, map_controls.py, build_behavior_map.py:reproducible extraction/cross-check scripts.
+
+NATIVE SEMANTIC CROSS-CHECK (COMPLETED)
+The extracted game C&C95.exe still contains matching immediate-argument sequences at the editor offsets. Read-only decoding of32 A10 constructor PUSH operands and42 Visceroid constructor PUSH operands was checked against native constructor signatures and familiar speed/armor/weapon/cost/health fields. This adds game-artifact evidence to the editor/UI analysis.
+- CnCGEdit Landable: A10 offset0x890 is is_fixedwing, inverted by the checkbox; native IsLandable is independent.
+- CnCGEdit Invisible: Visceroid offset0xa6d6b is is_eight -> IsPieceOfEight, which native source documents as8-facing special units and uses for Jurassic animation. This is not a generic visibility/radar flag. Do not expose it under Invisible.
+- Gunboat and Hovercraft are UnitTypeClass UNIT_GUNBOAT and UNIT_HOVER, so the current native Vehicles list already covers the Naval tab's two objects.
+- Native radar invisibility is IsStealthy, separate from the mislabeled editor flag.
+
+Native0.2.5 implementation coverage reported by parent: common numeric/weapon/armor/build fields, GDI/NOD ownership, IsImmune, IsTwoShooter, vehicle IsCloakable, aircraft IsSelectable/IsLegalTarget/IsTransporter, and building Capacity/Power/Drain/ToBuild. Deliberately omit misleading Invisible and Landable legacy controls until represented with correct semantics and tested.
+Evidence:native-constructor-crosswalk.json and native-crosswalk.py; native source tiberiandawn/type.h:913/1828/1834,udata.cpp:1262/1346,aadata.cpp:281/353/354,unit.cpp:428/2087.

@@ -159,6 +159,8 @@ elseif(MACOS_PORT)
 endif()
 
 if(APPLE_NATIVE_PORT)
+    list(APPEND TIBDAWN_SRC wireproof_rules.cpp ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_workshop.mm)
+    set_source_files_properties(${CMAKE_SOURCE_DIR}/platform/apple/wireproof_workshop.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
     set_source_files_properties(
         ${CMAKE_SOURCE_DIR}/platform/apple/apple_relay_transport.mm
         PROPERTIES COMPILE_FLAGS "-fobjc-arc"
@@ -261,7 +263,7 @@ if(BUILD_VANILLATD)
         set_source_files_properties(${VANILLATD_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
         set_target_properties(TiberianDawn PROPERTIES
             MACOSX_BUNDLE True
-            MACOSX_BUNDLE_GUI_IDENTIFIER org.tiberiandawn.macos
+            MACOSX_BUNDLE_GUI_IDENTIFIER com.wireproof.tiberiandawn
             MACOSX_BUNDLE_BUNDLE_NAME "Tiberian Dawn"
             MACOSX_BUNDLE_BUNDLE_VERSION "${TIBERIAN_DAWN_BUILD_VERSION}"
             MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
@@ -274,7 +276,7 @@ if(BUILD_VANILLATD)
             # point and calls the game's entry as SDL_main.
             set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=SDL_main")
             set_source_files_properties(
-                ${CMAKE_SOURCE_DIR}/resources/ipados/Assets.xcassets
+                ${CMAKE_SOURCE_DIR}/resources/apple/Assets.xcassets
                 ${CMAKE_SOURCE_DIR}/platform/apple/PrivacyInfo.xcprivacy
                 PROPERTIES MACOSX_PACKAGE_LOCATION Resources
             )
@@ -311,7 +313,7 @@ if(BUILD_VANILLATD)
                 PROPERTIES MACOSX_PACKAGE_LOCATION Resources/ModernArt/units/infrastructure
             )
             target_sources(TiberianDawn PRIVATE
-                ${CMAKE_SOURCE_DIR}/resources/ipados/Assets.xcassets
+                ${CMAKE_SOURCE_DIR}/resources/apple/Assets.xcassets
                 ${CMAKE_SOURCE_DIR}/platform/apple/PrivacyInfo.xcprivacy
                 ${CMAKE_SOURCE_DIR}/resources/apple/ModernArt/manifest.ini
                 ${CMAKE_SOURCE_DIR}/resources/apple/ModernArt/ui/cursor-default.png
@@ -330,7 +332,7 @@ if(BUILD_VANILLATD)
                 MACOSX_BUNDLE_BUNDLE_NAME "Tiberian Dawn for iPad"
                 MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/platform/apple/Info-iPadOS.plist.in"
                 XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IPADOS_BUNDLE_IDENTIFIER}"
-                XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "2"
+                XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
                 XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST "NO"
                 XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
@@ -424,7 +426,7 @@ if(BUILD_VANILLATD)
             endif()
         elseif(MACOS_PORT)
             set_source_files_properties(
-                ${CMAKE_SOURCE_DIR}/resources/macos/Assets.xcassets
+                ${CMAKE_SOURCE_DIR}/resources/apple/Assets.xcassets
                 PROPERTIES MACOSX_PACKAGE_LOCATION Resources
             )
             set_source_files_properties(
@@ -460,7 +462,7 @@ if(BUILD_VANILLATD)
                 PROPERTIES MACOSX_PACKAGE_LOCATION Resources/ModernArt/units/infrastructure
             )
             target_sources(TiberianDawn PRIVATE
-                ${CMAKE_SOURCE_DIR}/resources/macos/Assets.xcassets
+                ${CMAKE_SOURCE_DIR}/resources/apple/Assets.xcassets
                 ${CMAKE_SOURCE_DIR}/resources/apple/ModernArt/manifest.ini
                 ${CMAKE_SOURCE_DIR}/resources/apple/ModernArt/ui/cursor-default.png
                 ${CMAKE_SOURCE_DIR}/resources/apple/ModernArt/units/buggy/buggy-atlas-4x.png
@@ -474,11 +476,11 @@ if(BUILD_VANILLATD)
                 ${CMAKE_SOURCE_DIR}/resources/apple/ModernArt/units/infrastructure/nod-infrastructure-activity-atlas-4x.png
             )
             set_target_properties(TiberianDawn PROPERTIES
-                MACOSX_BUNDLE_GUI_IDENTIFIER "org.tiberiandawn.macos"
+                MACOSX_BUNDLE_GUI_IDENTIFIER "com.wireproof.tiberiandawn"
                 MACOSX_BUNDLE_BUNDLE_NAME "Tiberian Dawn"
                 MACOSX_BUNDLE_ICON_FILE "AppIcon.icns"
                 MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/platform/apple/Info-macOS.plist.in"
-                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "org.tiberiandawn.macos"
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.wireproof.tiberiandawn"
                 XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
             )
             target_link_libraries(TiberianDawn "-framework AppKit" "-framework AVFAudio" "-framework Metal" "-framework MetalKit" "-framework QuartzCore" "-framework UniformTypeIdentifiers")
@@ -515,4 +517,8 @@ if(BUILD_VANILLATD)
                     -g3 -fno-omit-frame-pointer)
         target_link_options(TiberianDawn PUBLIC -fsanitize=address)
     endif()
+endif()
+
+if(TARGET TiberianDawn AND (IPADOS_PORT OR MACOS_PORT OR VISIONOS_PORT OR CMAKE_SYSTEM_NAME STREQUAL "iOS"))
+    target_compile_definitions(TiberianDawn PRIVATE WIREPROOF_APP_VERSION="${PROJECT_VERSION}")
 endif()

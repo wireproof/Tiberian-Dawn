@@ -1,3 +1,4 @@
+#include "wireproof_rules.h"
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -627,7 +628,7 @@ int Main_Menu(unsigned int timeout)
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #ifdef NEWMENU
     TextButtonClass savebtn(BUTTON_SAVES,
-                            TiberianDawn_LocalizedText("main_saves"),
+                            "Saves / Mod Workshop",
                             TPF_CENTER | TPF_6PT_GRAD | TPF_USE_GRAD_PAL | TPF_NOSHADOW,
                             D_MULTI_X,
                             starty,
@@ -636,7 +637,7 @@ int Main_Menu(unsigned int timeout)
     starty += ystep;
 #else
     TextButtonClass savebtn(BUTTON_SAVES,
-                            TiberianDawn_LocalizedText("main_saves"),
+                            "Saves / Mod Workshop",
                             TPF_CENTER | TPF_6PT_GRAD | TPF_USE_GRAD_PAL | TPF_NOSHADOW,
                             D_MULTI_X,
                             (D_LOAD_Y + D_MULTI_Y) / 2,
@@ -905,7 +906,11 @@ int Main_Menu(unsigned int timeout)
                              GREEN,
                              TBLACK,
                              TPF_6POINT | TPF_FULLSHADOW | TPF_RIGHT,
+#ifdef WIREPROOF_APP_VERSION
+                             "wireproof v" WIREPROOF_APP_VERSION);
+#else
                              VersionText);
+#endif
 
             /*
             **	Copy the menu to the visible page.
@@ -965,13 +970,16 @@ int Main_Menu(unsigned int timeout)
 
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
         case (BUTTON_SAVES | KN_BUTTON):
-            TiberianDawn_ManageSaveGames();
+            WP_ShowWorkshop();
             Keyboard->Clear();
             display = true;
             break;
 #endif
 
         case (BUTTON_MULTI | KN_BUTTON):
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+            if (WP_RulesActive()) { WP_ShowWorkshop(); Keyboard->Clear(); display=true; break; }
+#endif
 #if (defined(IPADOS_PORT) || defined(MACOS_PORT)) && !defined(NETWORKING)
             // The Apple menu keeps its layout when networking is omitted, but
             // the disabled button must not enter the legacy transport dialog.
@@ -1041,8 +1049,11 @@ int Main_Menu(unsigned int timeout)
 
         case KN_RETURN:
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
+            if (buttons[curbutton] == &multibtn && WP_RulesActive()) {
+                WP_ShowWorkshop(); Keyboard->Clear(); display = true; break;
+            }
             if (buttons[curbutton] == &savebtn) {
-                TiberianDawn_ManageSaveGames();
+                WP_ShowWorkshop();
                 Keyboard->Clear();
                 display = true;
                 break;

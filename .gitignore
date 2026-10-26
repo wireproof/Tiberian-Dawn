@@ -29,3 +29,6 @@ autosave.ipad*
 
 # Obsolete local simulator captures can contain device information.
 /Simulator-*.png
+
+# Local development notes, not release source.
+/PRIVATE-WIREPROOF.md

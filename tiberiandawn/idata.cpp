@@ -97,7 +97,7 @@ int MiniGunnerDos[DO_COUNT][3] = {
     0,   1,  1  //	DO_PLEAD_DEATH		// N/A
 };
 
-static InfantryTypeClass const E1(INFANTRY_E1,          // Infantry type number.
+static InfantryTypeClass E1(INFANTRY_E1,          // Infantry type number.
                                   TXT_E1,               // Translate name number for infantry type.
                                   "E1",                 // INI name for infantry.
                                   1,                    // Build level.
@@ -167,7 +167,7 @@ int GrenadierDos[DO_COUNT][3] = {
     0,   1,  1   //	DO_PLEAD_DEATH		// N/A
 };
 
-static InfantryTypeClass const E2(INFANTRY_E2,         // Infantry type number.
+static InfantryTypeClass E2(INFANTRY_E2,         // Infantry type number.
                                   TXT_E2,              // Translate name number for infantry type.
                                   "E2",                // INI name for infantry.
                                   1,                   // Build level.
@@ -236,7 +236,7 @@ int BazookaDos[DO_COUNT][3] = {
     0,   1,  1   //	DO_PLEAD_DEATH		// N/A
 };
 
-static InfantryTypeClass const E3(INFANTRY_E3,       // Infantry type number.
+static InfantryTypeClass E3(INFANTRY_E3,       // Infantry type number.
                                   TXT_E3,            // Translate name number for infantry type.
                                   "E3",              // INI name for infantry.
                                   2,                 // Build level.
@@ -306,7 +306,7 @@ int FlamethrowerDos[DO_COUNT][3] = {
     0,   1,  1   //	DO_PLEAD_DEATH		// N/A
 };
 
-static InfantryTypeClass const E4(INFANTRY_E4,            // Infantry type number.
+static InfantryTypeClass E4(INFANTRY_E4,            // Infantry type number.
                                   TXT_E4,                 // Translate name number for infantry type.
                                   "E4",                   // INI name for infantry.
                                   1,                      // Build level.
@@ -374,7 +374,7 @@ int ChemwarriorDos[DO_COUNT][3] = {
     0,   1,  1   //	DO_PLEAD_DEATH		// N/A
 };
 
-static InfantryTypeClass const E5(INFANTRY_E5,           // Infantry type number.
+static InfantryTypeClass E5(INFANTRY_E5,           // Infantry type number.
                                   TXT_E5,                // Translate name number for infantry type.
                                   "E5",                  // INI name for infantry.
                                   7,                     // Build level.
@@ -444,7 +444,7 @@ int EngineerDos[DO_COUNT][3] = {
     0,   1,  1  //	DO_PLEAD_DEATH		// N/A
 };
 
-static InfantryTypeClass const E7(INFANTRY_E7,        // Infantry type number.
+static InfantryTypeClass E7(INFANTRY_E7,        // Infantry type number.
                                   TXT_E7,             // Translate name number for infantry type.
                                   "E6",               // INI name for infantry.
                                   3,                  // Build level.
@@ -514,7 +514,7 @@ int CommandoDos[DO_COUNT][3] = {
     0,   1,  1  //	DO_PLEAD_DEATH		// N/A
 
 };
-static InfantryTypeClass const Commando(INFANTRY_RAMBO,     // Infantry type number.
+static InfantryTypeClass Commando(INFANTRY_RAMBO,     // Infantry type number.
                                         TXT_RAMBO,          // Translate name number for infantry type.
                                         "RMBO",             // INI name for infantry.
                                         7,                  // Build level.
@@ -584,7 +584,7 @@ int CivilianDos1[DO_COUNT][3] = {
     277, 6,  0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const C1(INFANTRY_C1,         // Infantry type number.
+static InfantryTypeClass C1(INFANTRY_C1,         // Infantry type number.
                                   TXT_C1,              // Translate name number for infantry type.
                                   "C1",                // INI name for infantry.
                                   99,                  // Build level.
@@ -651,7 +651,7 @@ int CivilianDos2[DO_COUNT][3] = {
     277, 6,  0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const C2(INFANTRY_C2,         // Infantry type number.
+static InfantryTypeClass C2(INFANTRY_C2,         // Infantry type number.
                                   TXT_C2,              // Translate name number for infantry type.
                                   "C2",                // INI name for infantry.
                                   99,                  // Build level.
@@ -719,7 +719,7 @@ int CivilianDos3[DO_COUNT][3] = {
 
 };
 
-static InfantryTypeClass const C3(INFANTRY_C3,         // Infantry type number.
+static InfantryTypeClass C3(INFANTRY_C3,         // Infantry type number.
                                   TXT_C3,              // Translate name number for infantry type.
                                   "C3",                // INI name for infantry.
                                   99,                  // Build level.
@@ -786,7 +786,7 @@ int CivilianDos4[DO_COUNT][3] = {
     277, 6,  0, //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const C4(INFANTRY_C4,         // Infantry type number.
+static InfantryTypeClass C4(INFANTRY_C4,         // Infantry type number.
                                   TXT_C4,              // Translate name number for infantry type.
                                   "C4",                // INI name for infantry.
                                   99,                  // Build level.
@@ -853,7 +853,7 @@ int CivilianDos5[DO_COUNT][3] = {
     277, 6,  0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const C5(INFANTRY_C5,         // Infantry type number.
+static InfantryTypeClass C5(INFANTRY_C5,         // Infantry type number.
                                   TXT_C5,              // Translate name number for infantry type.
                                   "C5",                // INI name for infantry.
                                   99,                  // Build level.
@@ -920,7 +920,7 @@ int CivilianDos6[DO_COUNT][3] = {
     277, 6,  0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const C6(INFANTRY_C6,         // Infantry type number.
+static InfantryTypeClass C6(INFANTRY_C6,         // Infantry type number.
                                   TXT_C6,              // Translate name number for infantry type.
                                   "C6",                // INI name for infantry.
                                   99,                  // Build level.
@@ -987,7 +987,7 @@ int CivilianDos7[DO_COUNT][3] = {
     277, 6,  0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const C7(INFANTRY_C7,         // Infantry type number.
+static InfantryTypeClass C7(INFANTRY_C7,         // Infantry type number.
                                   TXT_C7,              // Translate name number for infantry type.
                                   "C7",                // INI name for infantry.
                                   99,                  // Build level.
@@ -1054,7 +1054,7 @@ int CivilianDos8[DO_COUNT][3] = {
     277, 6,  0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const C8(INFANTRY_C8,         // Infantry type number.
+static InfantryTypeClass C8(INFANTRY_C8,         // Infantry type number.
                                   TXT_C8,              // Translate name number for infantry type.
                                   "C8",                // INI name for infantry.
                                   99,                  // Build level.
@@ -1121,7 +1121,7 @@ int CivilianDos9[DO_COUNT][3] = {
     277, 6,  0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const C9(INFANTRY_C9,         // Infantry type number.
+static InfantryTypeClass C9(INFANTRY_C9,         // Infantry type number.
                                   TXT_C9,              // Translate name number for infantry type.
                                   "C9",                // INI name for infantry.
                                   99,                  // Build level.
@@ -1190,7 +1190,7 @@ int NikoombaDos[DO_COUNT][3] = {
 };
 
 // Nikoomba
-static InfantryTypeClass const C10(INFANTRY_C10,       // Infantry type number.
+static InfantryTypeClass C10(INFANTRY_C10,       // Infantry type number.
                                    TXT_C10,            // Translate name number for infantry type.
                                    "C10",              // INI name for infantry.
                                    99,                 // Build level.
@@ -1257,7 +1257,7 @@ int MoebiusDos[DO_COUNT][3] = {
     151, 14, 0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const Moebius(INFANTRY_MOEBIUS,  // Infantry type number.
+static InfantryTypeClass Moebius(INFANTRY_MOEBIUS,  // Infantry type number.
                                        TXT_MOEBIUS,       // Translate name number for infantry type.
                                        "MOEBIUS",         // INI name for infantry.
                                        99,                // Build level.
@@ -1324,7 +1324,7 @@ int DelphiDos[DO_COUNT][3] = {
     277, 6,  0, //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const Delphi(INFANTRY_DELPHI,  // Infantry type number.
+static InfantryTypeClass Delphi(INFANTRY_DELPHI,  // Infantry type number.
                                       TXT_DELPHI,       // Translate name number for infantry type.
                                       "DELPHI",         // INI name for infantry.
                                       99,               // Build level.
@@ -1391,7 +1391,7 @@ int DrChanDos[DO_COUNT][3] = {
     151, 14, 0  //	DO_PLEAD_DEATH
 };
 
-static InfantryTypeClass const DrChan(INFANTRY_CHAN,    // Infantry type number.
+static InfantryTypeClass DrChan(INFANTRY_CHAN,    // Infantry type number.
                                       TXT_CHAN,         // Translate name number for infantry type.
                                       "CHAN",           // INI name for infantry.
                                       99,               // Build level.

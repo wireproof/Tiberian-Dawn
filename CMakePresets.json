@@ -119,7 +119,7 @@
             "cacheVariables": {
                 "CMAKE_OSX_SYSROOT": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk",
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "/private/tmp/TiberianDawnApple-iPad-Device-Products",
-                "IPADOS_BUNDLE_IDENTIFIER": "org.tiberiandawn.ipad"
+                "IPADOS_BUNDLE_IDENTIFIER": "com.wireproof.tiberiandawn"
             }
         },
         {
@@ -167,7 +167,7 @@
             "generator": "Xcode",
             "binaryDir": "${sourceDir}/build/macos-universal",
             "cacheVariables": {
-                "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0",
+                "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
                 "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
                 "CMAKE_FIND_FRAMEWORK": "FIRST",
                 "CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED": "NO",

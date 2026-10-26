@@ -117,6 +117,14 @@ int main()
     Assert_Contained(hostile);
     assert(hostile.compact);
 
+    for (auto dimensions : {IPadViewport{0,0,900,2100}, IPadViewport{0,0,2100,1800}, IPadViewport{0,0,1800,2100}}) {
+        auto fill=Calculate_IPad_Layout(dimensions.width,dimensions.height,dimensions.width/2,dimensions.height/2,640,400,{20,40,60,30},false,true);
+        Assert_Contained(fill); Assert_Center_Maps_To_Game_Center(fill);
+        assert(fill.viewport.width==dimensions.width-80);
+        assert(fill.viewport.height==dimensions.height-70);
+        int x,y; Map_IPad_Output_Point(fill,fill.viewport.x+fill.viewport.width-1,fill.viewport.y+fill.viewport.height-1,x,y);
+        assert(x==639 && y==399);
+    }
     std::cout << "iPad layout hardening matrix passed\n";
     return 0;
 }

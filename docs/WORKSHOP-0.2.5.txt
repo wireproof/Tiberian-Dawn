@@ -1,0 +1,25 @@
+Tiberian Dawn Wireproof 0.2.5 (205) — 2026-10-25
+Bundle ID: com.wireproof.tiberiandawn
+
+CnCGEdit-inspired native Mod Workshop:
+- Named weapon, armor, boolean and factory choices.
+- GDI/Nod availability overrides preserve other house ownership bits.
+- Combat immunity, double-shot bursts and vehicle cloaking.
+- Aircraft selection, targetability and passenger transport.
+- Building power generation/consumption, storage and production category.
+- Existing preset keys retained. Stock remains read-only; custom presets reset independently.
+
+Use Saves / Mod Workshop > Mod Workshop > Preset > Custom 1, 2 or 3.
+Choose a unit/building, edit settings, then restart the app and start a new mission.
+Type settings affect every owner, including enemies. Credit refill/auto-heal remain player cheats.
+Select Stock and restart to return to compiled defaults. Keep modded saves separate.
+Factory/transport changes are experimental: flags do not redesign exits, movement or animations.
+Misleading old Invisible/Landable controls are intentionally omitted; see CNCGEDIT-RESEARCH.txt.
+
+Validation:
+iOS arm64 Release and macOS arm64+x86_64 Release builds passed.
+All25 upstream host tests passed; standalone preset validation test passed including sparse choices, Stock protection and reset.
+IPA ZIP CRC, bundle/version,20 MIX files, ad-hoc signature and full copied-file SHA256 verified.
+Mac universal architectures and signature verified.
+Mac UI automation reached an older running build, then failed to bind the new bundle identity. Updated workshop UI and physical Duo gameplay are not runtime-verified.
+No GitHub release published in this pass. This is a device-test candidate, not a fully-playable certification.

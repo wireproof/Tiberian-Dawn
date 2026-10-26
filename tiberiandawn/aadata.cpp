@@ -52,7 +52,7 @@ void const* AircraftTypeClass::LRotorData = NULL;
 void const* AircraftTypeClass::RRotorData = NULL;
 
 // A-10 attack plane
-static AircraftTypeClass const AttackPlane(AIRCRAFT_A10, // What kind of aircraft is this.
+static AircraftTypeClass AttackPlane(AIRCRAFT_A10, // What kind of aircraft is this.
                                            TXT_A10,      // Translated text number for aircraft.
                                            "A10",        // INI name of aircraft.
                                            99,           // Build level.
@@ -93,7 +93,7 @@ static AircraftTypeClass const AttackPlane(AIRCRAFT_A10, // What kind of aircraf
 );
 
 // Transport helicopter.
-static AircraftTypeClass const TransportHeli(AIRCRAFT_TRANSPORT, // What kind of aircraft is this.
+static AircraftTypeClass TransportHeli(AIRCRAFT_TRANSPORT, // What kind of aircraft is this.
                                              TXT_TRANS,          // Translated text number for aircraft.
                                              "TRAN",             // INI name of aircraft.
                                              6,                  // Build level.
@@ -134,7 +134,7 @@ static AircraftTypeClass const TransportHeli(AIRCRAFT_TRANSPORT, // What kind of
 );
 
 // Apache attach helicopter.
-static AircraftTypeClass const AttackHeli(AIRCRAFT_HELICOPTER, // What kind of aircraft is this.
+static AircraftTypeClass AttackHeli(AIRCRAFT_HELICOPTER, // What kind of aircraft is this.
                                           TXT_HELI,            // Translated text number for aircraft.
                                           "HELI",              // INI name of aircraft.
                                           6,                   // Build level.
@@ -175,7 +175,7 @@ static AircraftTypeClass const AttackHeli(AIRCRAFT_HELICOPTER, // What kind of a
 );
 
 // Orca attack helicopter.
-static AircraftTypeClass const OrcaHeli(AIRCRAFT_ORCA,   // What kind of aircraft is this.
+static AircraftTypeClass OrcaHeli(AIRCRAFT_ORCA,   // What kind of aircraft is this.
                                         TXT_ORCA,        // Translated text number for aircraft.
                                         "ORCA",          // INI name of aircraft.
                                         6,               // Build level.
@@ -216,7 +216,7 @@ static AircraftTypeClass const OrcaHeli(AIRCRAFT_ORCA,   // What kind of aircraf
 );
 
 // C-17 transport plane.
-static AircraftTypeClass const CargoPlane(AIRCRAFT_CARGO, // What kind of aircraft is this.
+static AircraftTypeClass CargoPlane(AIRCRAFT_CARGO, // What kind of aircraft is this.
                                           TXT_C17,        // Translated text number for aircraft.
                                           "C17",          // INI name of aircraft.
                                           99,             // Build level.

@@ -44,6 +44,75 @@ bool Is_Text_Producing_Scancode(SDL_Scancode scancode)
 }
 }
 
+// Text entry is shared by desktop and touch builds.
+uint32_t Decode_UTF8_Character(const char*& text)
+{
+    const unsigned char first = static_cast<unsigned char>(*text++);
+    if (first < 0x80) {
+        return first;
+    }
+
+    int continuation_count = 0;
+    uint32_t codepoint = 0;
+    if ((first & 0xE0) == 0xC0) {
+        continuation_count = 1;
+        codepoint = first & 0x1F;
+    } else if ((first & 0xF0) == 0xE0) {
+        continuation_count = 2;
+        codepoint = first & 0x0F;
+    } else if ((first & 0xF8) == 0xF0) {
+        continuation_count = 3;
+        codepoint = first & 0x07;
+    } else {
+        return 0;
+    }
+
+    for (int i = 0; i < continuation_count; ++i) {
+        const unsigned char next = static_cast<unsigned char>(*text);
+        if ((next & 0xC0) != 0x80) {
+            return 0;
+        }
+        ++text;
+        codepoint = (codepoint << 6) | (next & 0x3F);
+    }
+    return codepoint;
+}
+
+unsigned char Legacy_Character_From_Unicode(uint32_t codepoint)
+{
+    // The original Gold assets use an 8-bit character set. Latin-1 retains
+    // German umlauts and ß; a few common smart punctuation marks are folded.
+    if (codepoint >= 0x20 && codepoint <= 0xFF) {
+        return static_cast<unsigned char>(codepoint);
+    }
+    switch (codepoint) {
+    case 0x2018:
+    case 0x2019:
+        return '\'';
+    case 0x201C:
+    case 0x201D:
+        return '"';
+    case 0x2013:
+    case 0x2014:
+        return '-';
+    case 0x2026:
+        return '.';
+    default:
+        return 0;
+    }
+}
+
+void Queue_Text_Input(WWKeyboardClassSDL2& keyboard, const char* text)
+{
+    while (text && *text) {
+        const uint32_t codepoint = Decode_UTF8_Character(text);
+        const unsigned char character = Legacy_Character_From_Unicode(codepoint);
+        if (character != 0) {
+            keyboard.Put_Text_Character(character);
+        }
+    }
+}
+
 #ifdef IPADOS_PORT
 namespace
 {
@@ -460,73 +529,6 @@ void Discard_VisionOS_Look_Scroll(void)
 #endif
 }
 
-uint32_t Decode_UTF8_Character(const char*& text)
-{
-    const unsigned char first = static_cast<unsigned char>(*text++);
-    if (first < 0x80) {
-        return first;
-    }
-
-    int continuation_count = 0;
-    uint32_t codepoint = 0;
-    if ((first & 0xE0) == 0xC0) {
-        continuation_count = 1;
-        codepoint = first & 0x1F;
-    } else if ((first & 0xF0) == 0xE0) {
-        continuation_count = 2;
-        codepoint = first & 0x0F;
-    } else if ((first & 0xF8) == 0xF0) {
-        continuation_count = 3;
-        codepoint = first & 0x07;
-    } else {
-        return 0;
-    }
-
-    for (int i = 0; i < continuation_count; ++i) {
-        const unsigned char next = static_cast<unsigned char>(*text);
-        if ((next & 0xC0) != 0x80) {
-            return 0;
-        }
-        ++text;
-        codepoint = (codepoint << 6) | (next & 0x3F);
-    }
-    return codepoint;
-}
-
-unsigned char Legacy_Character_From_Unicode(uint32_t codepoint)
-{
-    // The original Gold assets use an 8-bit character set. Latin-1 retains
-    // German umlauts and ß; a few common smart punctuation marks are folded.
-    if (codepoint >= 0x20 && codepoint <= 0xFF) {
-        return static_cast<unsigned char>(codepoint);
-    }
-    switch (codepoint) {
-    case 0x2018:
-    case 0x2019:
-        return '\'';
-    case 0x201C:
-    case 0x201D:
-        return '"';
-    case 0x2013:
-    case 0x2014:
-        return '-';
-    case 0x2026:
-        return '.';
-    default:
-        return 0;
-    }
-}
-
-void Queue_Text_Input(WWKeyboardClassSDL2& keyboard, const char* text)
-{
-    while (text && *text) {
-        const uint32_t codepoint = Decode_UTF8_Character(text);
-        const unsigned char character = Legacy_Character_From_Unicode(codepoint);
-        if (character != 0) {
-            keyboard.Put_Text_Character(character);
-        }
-    }
-}
 
 #ifdef VISIONOS_PORT
 float Vision_Event_Coordinate(void* encoded)
@@ -741,10 +743,10 @@ void WWKeyboardClassSDL2::Fill_Buffer_From_System(void)
 #endif
             }
             break;
+#endif
         case SDL_TEXTINPUT:
             Queue_Text_Input(*this, event.text.text);
             break;
-#endif
         case SDL_MOUSEMOTION: {
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #ifdef IPADOS_PORT

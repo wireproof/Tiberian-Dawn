@@ -66,7 +66,7 @@ COORDINATE const StoppingCoordAbs[5] = {
 **
 **	bullet type				dmg,	rof,	range,	sound
 */
-WeaponTypeClass const Weapons[WEAPON_COUNT] = {
+WeaponTypeClass Weapons[WEAPON_COUNT] = {
     {BULLET_SNIPER, 125, 40, 0x0580, VOC_SNIPER, ANIM_NONE},        //	WEAPON_RIFLE
     {BULLET_SPREADFIRE, 25, 50, 0x0400, VOC_MINI, ANIM_GUN_N},      //	WEAPON_CHAIN_GUN
     {BULLET_BULLET, 1, 7, 0x01C0, VOC_RIFLE, ANIM_NONE},            //	WEAPON_PISTOL

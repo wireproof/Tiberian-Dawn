@@ -1,3 +1,4 @@
+#include "wireproof_rules.h"
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -569,6 +570,9 @@ bool Init_Game(int, char*[])
 
     //	malloc(6);
 
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WP_InitRules();
+#endif
     ObjectTypeClass::One_Time();
     BuildingTypeClass::One_Time();
     BulletTypeClass::One_Time();
@@ -2208,6 +2212,10 @@ void Parse_INI_File(void)
  *=============================================================================================*/
 int Version_Number(void)
 {
+#ifdef WIREPROOF_APP_VERSION
+    snprintf(VersionText, sizeof(VersionText), "wireproof v%s", WIREPROOF_APP_VERSION);
+    return 1;
+#else
     const char* demo_text = Is_Demo() ? "DEMO " : "";
 
     // Only print the git tag version number if it starts with 'v'
@@ -2230,6 +2238,7 @@ int Version_Number(void)
     }
 
     return (1);
+#endif
 }
 
 /***********************************************************************************************

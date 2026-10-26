@@ -1605,7 +1605,14 @@ bool DisplayClass::Scroll_Map(DirType facing, int& distance, bool really)
         }
 #endif
         IsToRedraw = true;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        // Adaptive/zoomed Apple surfaces also contain fixed sidebar pixels.
+        // Never shift that composited framebuffer into the tactical view:
+        // rebuild the world and fixed UI together for each camera movement.
+        Flag_To_Redraw(true);
+#else
         Flag_To_Redraw(false);
+#endif
     }
     return (true);
 }

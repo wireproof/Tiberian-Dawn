@@ -2,9 +2,11 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.4.1
+## Latest release: v0.4.2
 
-[Download v0.4.1](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.1).
+[Download v0.4.2](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.2).
+Camera scrolling now rebuilds the frame to address black patches and sidebar
+smearing. Device confirmation and scrolling-performance feedback are pending.
 **Double-tap the floating controller** to open a larger circular map joystick.
 Drag farther from the center to scroll faster; release to stop. Double-tap
 again to return to the normal button. Single-tap still opens Orders & Groups;

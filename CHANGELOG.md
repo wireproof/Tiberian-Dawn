@@ -4,6 +4,15 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.2 — 2026-10-25
+
+- Rebuild the full Apple game frame during camera scrolling instead of reusing
+  a composited framebuffer block, preventing sidebar pixels and stale black
+  regions from being dragged across the battlefield.
+- Retain the double-tap joystick and proportional scrolling. Full redraw during
+  movement favors correct output; device performance and artifact confirmation
+  remain pending.
+
 ## 0.4.1 — 2026-10-25
 
 - Double-tap the floating controller to expand a circular map joystick;

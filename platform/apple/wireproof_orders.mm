@@ -84,6 +84,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @end
 
 @interface WPOrdersPanel : UIView
+@property(nonatomic,strong) UISegmentedControl *tabs;
+@property(nonatomic,strong) UIStackView *gamePage;
+@property(nonatomic,strong) UIStackView *optionsPage;
 @property(nonatomic,strong) UIStackView *cheatStack;
 @property(nonatomic,strong) UIButton *cheatButton;
 @property(nonatomic,strong) UILabel *cheatStatus;
@@ -234,8 +237,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         UILabel *help=[UILabel new];help.numberOfLines=0;help.font=[UIFont systemFontOfSize:11];help.textColor=UIColor.lightGrayColor;
         help.text=@"Player only • Single player\nShroud on restores the earlier explored area and current unit sight. Toggles/speed reset on mission load.";
         [cheatRows addObject:help];
-        self.cheatStack=[[UIStackView alloc] initWithArrangedSubviews:cheatRows];
-        self.cheatStack.axis=UILayoutConstraintAxisVertical;self.cheatStack.spacing=6;
+        NSMutableArray *cheatColumns=[NSMutableArray new];
+        for(NSUInteger start=0;start<cheatRows.count;start+=6) {
+            UIStackView *column=[[UIStackView alloc] initWithArrangedSubviews:[cheatRows subarrayWithRange:NSMakeRange(start,MIN(6,cheatRows.count-start))]];
+            column.axis=UILayoutConstraintAxisVertical;column.spacing=6;[cheatColumns addObject:column];
+        }
+        self.cheatStack=[[UIStackView alloc] initWithArrangedSubviews:cheatColumns];self.cheatStack.spacing=8;
         NSMutableArray *stickRows=[NSMutableArray new], *stickSliders=[NSMutableArray new], *stickLabels=[NSMutableArray new];
         for(int i=0;i<2;i++) {
             NSString *key=i?@"Wireproof.JoystickSpeed":@"Wireproof.JoystickSize";
@@ -252,13 +259,21 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         }
         self.joystickSliders=stickSliders;self.joystickLabels=stickLabels;
         UIStackView *stickControls=[[UIStackView alloc] initWithArrangedSubviews:stickRows];stickControls.axis=UILayoutConstraintAxisVertical;stickControls.spacing=6;
-        self.stack=[[UIStackView alloc] initWithArrangedSubviews:@[
-            self.toggle,self.cheatButton,self.cheatStack,self.zoomLabel,zoomRow,stickControls,
+        UIStackView *zoomControls=[[UIStackView alloc] initWithArrangedSubviews:@[self.zoomLabel,zoomRow]];zoomControls.axis=UILayoutConstraintAxisVertical;zoomControls.spacing=6;
+        self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,stickControls]];self.optionsPage.spacing=8;
+        UIStackView *groupColumn=[[UIStackView alloc] initWithArrangedSubviews:@[
             [self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],
             [self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]],
-            [self gridRow:@[modes[0],modes[1]]], [self gridRow:@[modes[2],modes[3]]],
-            [self gridRow:@[orders[3],orders[4]]],
-            [self gridRow:@[orders[0],orders[1]]], [self gridRow:@[orders[2],orders[5]]]]];
+            [self gridRow:@[modes[0],modes[1]]],[self gridRow:@[modes[2],modes[3]]]]];
+        groupColumn.axis=UILayoutConstraintAxisVertical;groupColumn.spacing=6;
+        UIStackView *orderColumn=[[UIStackView alloc] initWithArrangedSubviews:@[
+            [self gridRow:@[orders[3],orders[4]]],[self gridRow:@[orders[0],orders[1]]],[self gridRow:@[orders[2],orders[5]]]]];
+        orderColumn.axis=UILayoutConstraintAxisVertical;orderColumn.spacing=6;
+        self.gamePage=[[UIStackView alloc] initWithArrangedSubviews:@[groupColumn,orderColumn]];self.gamePage.spacing=8;
+        self.tabs=[[UISegmentedControl alloc] initWithItems:@[@"Game",@"Cheats",@"Options"]];self.tabs.selectedSegmentIndex=0;
+        [self.tabs.heightAnchor constraintEqualToConstant:36].active=YES;
+        [self.tabs addTarget:self action:@selector(tabChanged:) forControlEvents:UIControlEventValueChanged];
+        self.stack=[[UIStackView alloc] initWithArrangedSubviews:@[self.toggle,self.tabs,self.gamePage,self.cheatStack,self.optionsPage]];
         self.stack.axis=UILayoutConstraintAxisVertical; self.stack.spacing=6;
         self.stack.translatesAutoresizingMaskIntoConstraints=YES;
         self.body=[UIScrollView new]; self.body.alwaysBounceVertical=NO;
@@ -317,6 +332,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (void)speedChanged:(UISlider*)slider {
     WPCheats::Shared().speed((int)slider.tag,(int)lroundf(slider.value));[self refresh];
 }
+- (void)tabChanged:(UISegmentedControl*)tabs { self.body.contentOffset=CGPointZero;[self refresh]; }
 - (void)joystickChanged:(UISlider*)slider {
     WPOrders::Shared().setJoystickSetting(slider.tag,(int)lroundf(slider.value));
     [[NSUserDefaults standardUserDefaults] setInteger:WPOrders::Shared().joystickSetting(slider.tag) forKey:slider.tag?@"Wireproof.JoystickSpeed":@"Wireproof.JoystickSize"];
@@ -356,12 +372,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (void)refresh {
     auto s=WPOrders::Shared().snapshot();
     auto cheats=WPCheats::Shared().snapshot();
-    self.cheatButton.enabled=cheats.available;
-    [self.cheatButton setTitle:self.cheatsOpen?@"Back to orders":@"Cheats" forState:UIControlStateNormal];
-    for(UIView *row in self.stack.arrangedSubviews) {
-        if(row==self.toggle||row==self.cheatButton)continue;
-        row.hidden=row==self.cheatStack?!self.cheatsOpen:self.cheatsOpen;
-    }
+    self.gamePage.hidden=self.tabs.selectedSegmentIndex!=0;
+    self.cheatStack.hidden=self.tabs.selectedSegmentIndex!=1;
+    self.optionsPage.hidden=self.tabs.selectedSegmentIndex!=2;
     self.cheatStack.userInteractionEnabled=cheats.available;
     self.cheatStatus.text=[NSString stringWithFormat:@"Credits: %d\nPower: %d / %d",cheats.money,cheats.power,cheats.drain];
     self.instantSwitch.on=cheats.instant;self.freeSwitch.on=cheats.free;
@@ -385,7 +398,13 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self.bubble setImage:[UIImage systemImageNamed:panHeld?@"hand.draw.fill":@"gamecontroller.fill"] forState:UIControlStateNormal];
     self.layer.cornerRadius=self.expanded?12:28;
     CGRect safe=[self availableRect];
-    CGFloat width=self.expanded?MIN(256,MAX(56,safe.size.width)):56;
+    BOOL landscape=self.window.bounds.size.width>self.window.bounds.size.height;
+    for(UIStackView *page in @[self.gamePage,self.cheatStack,self.optionsPage]) {
+        page.axis=landscape?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
+        page.distribution=landscape?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
+        page.alignment=landscape?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
+    }
+    CGFloat width=self.expanded?MIN(landscape?520:256,MAX(56,safe.size.width)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {

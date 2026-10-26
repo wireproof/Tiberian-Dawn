@@ -4,6 +4,14 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.8 — 2026-10-26
+
+- Organize the floating controller into Game, Cheats and Options tabs.
+- Game contains orders and control groups; Options contains zoom and joystick tuning.
+- Stack controls vertically in portrait and arrange them in side-by-side columns
+  in landscape. Keep dragging, collapsing, safe-area bounds and overflow scrolling.
+- Physical-device tab and rotation verification remains pending.
+
 ## 0.4.7 — 2026-10-25
 
 - Add saved joystick size (0.5–2×) and speed (0.25–3×) sliders with minus/plus

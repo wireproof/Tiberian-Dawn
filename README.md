@@ -1,58 +1,32 @@
 # Tiberian Dawn — Wireproof
 
-Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
+Classic Command & Conquer, adapted for touch on iPhone and iPad and native play on macOS. Built on [Cesarus85’s Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and EA’s released source.
 
-## Latest release: v0.5.5
+**[Download the latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest) · [Watch gameplay](https://wireproof.github.io/Tiberian-Dawn/) · [Screenshot gallery](docs/showcase/README.md)**
 
-[Download v0.5.5](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.5).
+An unofficial, free, non-commercial community project. **EA has not endorsed and does not support this product.**
 
-The joystick is now independent: drag its center to scroll and its outer ring
-to reposition. **Double-tap** to shrink it into a hand button and switch from
-one-finger drag selection to map dragging. Ordinary taps still click.
-Double-tap again to return to normal selection and the full joystick.
-Map-drag mode resets when leaving gameplay.
-The joystick and controller each remember separate positions for cover portrait,
-cover landscape, inner portrait, and inner landscape.
+## Current release — v0.5.5
 
-Workshop **Apply to…** copies chosen settings to selected compatible units.
-Portrait sidebars use five rows on all screens, with a larger 1.625× presentation
-and map space beneath the arrows. Instant Weapons recharges Airstrike, the Ion Cannon and
-nuke when available. Build Anywhere removes base proximity limits
-while preserving terrain and occupancy checks. Both cheats are player-only and
-single-player, and reset on mission load.
+**Saved Touch Control Layouts** · [Release notes and IPA](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.5)
 
-Tap a group number to select it; hold to replace it with the current selection.
-Holding with nothing selected clears that group. Cover and inner displays
-remember separate zoom levels.
+The joystick and floating controller now save their positions independently for **cover portrait, cover landscape, inner portrait, and inner landscape**. Positions are stored relative to the usable display area. Existing positions seed each layout until you customize it, and a short settling delay avoids saving temporary geometry during folding or rotation.
 
-The controller has **Game, Cheats and Options** tabs. It opens vertically in
-portrait and with side-by-side columns in landscape.
+This release builds on recent improvements to compact controls, Workshop bulk editing, single-player cheats, separate cover/inner zoom settings, and front-end presentation. Those features are described below; they were not all introduced in v0.5.5.
 
-The **gamepad is a second floating icon**. Tap it for Orders, Groups, Zoom and
-Cheats; drag the icon or open panel header to reposition it. Tap the header to
-collapse it. The joystick remains independent, with a slower proportional speed
-and half the previous maximum. Map scrolling now clamps signed coordinates before
-packing them, preventing large drags past an edge from wrapping across the map.
-Adaptive gameplay fills the available safe area without integer-scale borders
-or stretching. Taller displays gain additional build slots with scroll arrows
-below the expanded list. Mac retains keyboard/controller camera controls and Option-C for cheats.
-Joystick size (0.5–2×) and speed (0.25–3×) now have saved sliders with −/+
-buttons in 0.25 steps. The portrait menu uses compact button spacing.
-The power gauge follows the extended sidebar. Opening Options keeps the adaptive
-battlefield size, and the main menu reflows to the available screen with proportional
-logo artwork. Physical-device layout confirmation remains pending.
+Host checks and both Apple builds passed for the release. Physical-device confirmation of position switching and persistence across relaunch is still pending.
 
 ## Gameplay showcase
 
-Real-device footage and screenshots from the Duo cover and inner displays.
+Watch in your browser with sound, seeking, and fullscreen controls—no MOV download required.
 
-| Video | Length |
-| --- | --- |
-| [Cover-screen gameplay (v0.5.2)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.2/Tiberian-Dawn-v0.5.2-Duo-Cover-Gameplay.mp4) | 2:03 |
-| [Inner-display gameplay](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Inner-Gameplay.mp4) | 2:57 |
-| [Inner-display Workshop demo](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Workshop-Demo.mp4) | 0:50 |
+| Showcase | Runtime | Watch |
+| --- | --- | --- |
+| Duo cover display | 2:03 | [Play cover gameplay](https://wireproof.github.io/Tiberian-Dawn/#cover-gameplay) |
+| Duo inner display | 2:57 | [Play inner gameplay](https://wireproof.github.io/Tiberian-Dawn/#inner-gameplay) |
+| Mod Workshop on the inner display | 0:50 | [Play Workshop demo](https://wireproof.github.io/Tiberian-Dawn/#workshop) |
 
-All videos include audio. [View the complete screenshot gallery](docs/showcase/README.md).
+These are owner-supplied recordings from the v0.5.2-era showcase, not proof of later fixes. Browser copies use H.264 video and AAC audio in fast-start MP4 containers. Original recordings are preserved separately.
 
 ### Cover display
 
@@ -64,27 +38,63 @@ All videos include audio. [View the complete screenshot gallery](docs/showcase/R
 
 | Gameplay | Orders and groups |
 | --- | --- |
-| ![Inner gameplay](docs/showcase/inner-gameplay.jpg) | ![Inner game controls](docs/showcase/inner-game-controls.jpg) |
+| ![Inner gameplay](docs/showcase/inner-gameplay.jpg) | ![Inner controls](docs/showcase/inner-game-controls.jpg) |
 
 | Cheats | Zoom and joystick options |
 | --- | --- |
 | ![Inner cheats](docs/showcase/inner-cheats.jpg) | ![Inner options](docs/showcase/inner-options.jpg) |
 
-![Inner display with production sidebar](docs/showcase/inner-sidebar.jpg)
+[See all screenshots, including the production sidebar →](docs/showcase/README.md)
 
-An iPad showcase will be added when available.
+**iPad photos and gameplay are coming when available.**
 
-## Release 0.2.8
+## Full features
 
-- Native touch controls and adaptable display layout.
-- Mod Workshop with readable unit/building/weapon names, Stock and three custom presets.
-- Health, cost, weapons, armor, faction availability, cloaking, combat immunity, building power/storage and more.
-- Touch feedback circles are 3 times their previous diameter; the game cursor is restored to its 0.2.6 size. Touch coordinates remain unchanged.
-- Bundle identifier: `com.wireproof.tiberiandawn`; title label: `wireproof v0.2.8`.
+### Touch controls and display layouts
 
-Download the IPA from this repository's Releases and install/resign with your sideloading tool or LiveContainer. Preserve the existing data container when updating. Workshop changes apply after restarting and beginning a new mission. Shared type edits also affect enemies; custom rules disable multiplayer. Selecting Stock restores compiled rules on restart.
+- Independent floating joystick and gamepad. Drag the joystick center to scroll; drag its outer ring to reposition. Tap the gamepad to open the panel, drag the icon or panel header to move it, and tap the header to collapse it.
+- Double-tap the joystick to switch to a compact hand button and one-finger map dragging. Ordinary taps still click. Double-tap again to restore drag selection and the full joystick; map-drag mode resets when leaving gameplay.
+- Saved control positions for each display and orientation, plus separate **Cover zoom** and **Inner zoom** settings.
+- Adjustable joystick size (0.5–2×) and speed (0.25–3×), with saved sliders and 0.25-step buttons.
+- Responsive Game, Cheats, and Options tabs. Landscape keeps groups 1–9 in one row; compact layouts leave more room for the battlefield.
+- Adaptive gameplay viewport and enlarged portrait sidebar with five visible production rows. Campaign screens and movies use separate presentation handling to preserve their artwork proportions.
+- Native macOS keyboard/controller camera controls and **Option-C** for cheats.
 
-## Source build
+### Orders and control groups
+
+Tap **1–9** to recall a group. Hold a number to replace that group with the current selection; hold with nothing selected to clear it. The panel also provides **Stop, Guard, Scatter, Cancel, Force Attack, and Force Move**.
+
+### Single-player cheats
+
+| Control | What it does |
+| --- | --- |
+| Credits and power | Add 1,000 or 10,000 credits; add 100 or 1,000 power |
+| Invincibility, Shroud, Instant Build, Zero Cost | Quick switches in the floating Cheats tab |
+| Instant Weapons | Recharge available Airstrike, Ion Cannon, and nuclear weapons |
+| Build Anywhere | Remove base-proximity restrictions; terrain and occupancy rules still apply |
+| Unit speed | Separate infantry, vehicle, and aircraft multipliers |
+
+In-game cheats are intended for the player in single-player. Toggles and speed settings reset on mission load. Instant Weapons does not grant weapons unavailable to the player.
+
+### Mod Workshop
+
+Create reusable rules with **Stock and three custom presets**, readable unit/building/weapon names, and editable health, cost, weapons, armor, faction availability, cloaking, combat immunity, building power/storage, and more.
+
+**Apply to…** lets you choose settings first, then compatible target units, so shared changes do not require editing every entry individually.
+
+Workshop changes apply after restarting and beginning a new mission. Type edits affect **every owner, including enemies**. Custom rules disable multiplayer; selecting Stock restores compiled rules on restart. Prerequisites and ownership remain advanced bitmask settings.
+
+## Install or update
+
+1. Download the IPA from [Releases](https://github.com/wireproof/Tiberian-Dawn/releases/latest).
+2. Install/resign with your sideloading tool or LiveContainer.
+3. When updating LiveContainer, replace the app in its **existing data container** to preserve saves.
+
+The bundle identifier remains `com.wireproof.tiberiandawn`. macOS builds can be produced from source below. See the asset and licensing notes before redistributing builds or game data.
+
+## Build from source
+
+### iPhone / iPad
 
 ```sh
 git clone --recurse-submodules https://github.com/wireproof/Tiberian-Dawn.git
@@ -94,11 +104,44 @@ cmake --preset ipados-device
 cmake --build --preset ipados-device-release -- CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 ```
 
-Use the `macos-universal` configure/build presets for macOS. This release was built with Xcode 27.1. Keep the SDL submodule at its recorded commit and apply the supplied patch. Local CMake builds do not include original game data automatically: import data through the app, or place an authorized GameData directory into the built bundle and re-sign it before packaging.
+### macOS
+
+```sh
+cmake --preset macos-universal
+cmake --build --preset macos-universal
+sh scripts/package-macos-app.sh
+```
+
+Keep SDL at its recorded submodule commit and apply the supplied patch through the dependency helper. Local source builds do not automatically include original game data: import authorized data through the app, or add an authorized GameData directory to the built bundle and re-sign before packaging.
 
 ## Validation and limits
 
-Both Apple Release builds and all 26 host tests passed. Workshop persistence/validation tests passed in 0.2.5. The owner reports good gameplay in 0.2.6 on their Duo; the corrected touch indicator in 0.2.8 still needs device confirmation. macOS is an ad-hoc-signed local build, not notarized. Vision Pro and arbitrary workshop combinations are not certified by this fork.
+| Area | Status |
+| --- | --- |
+| v0.5.5 host validation | All 26 host tests and Apple parity checks passed |
+| Apple builds | iOS Release compiled; Universal 2 macOS package signed and verified |
+| Duo gameplay | Owner-provided gameplay and screenshots are available above |
+| Latest layout changes | Fold/rotation switching and relaunch persistence still need physical-device confirmation |
+| Display presentation | Cover/inner zoom separation and campaign/menu/movie alignment need continued real-device regression testing |
+| iPad | Dedicated showcase and broader device validation pending |
+| macOS distribution | Ad-hoc signed local build; not notarized |
+| Multiplayer | Custom Workshop rules disable it; cross-device compatibility is not certified here |
+| Other configurations | Arbitrary Workshop combinations and Vision Pro are not certified |
+
+Build and host-test success do not replace on-device gameplay testing. Historical upstream release/notarization claims apply to upstream, not this fork.
+
+## Future plans
+
+These are planned or exploratory directions, **not shipped features or promises of a release date**.
+
+- **More real-device coverage:** add iPad screenshots/video, broaden portrait and landscape testing, and keep improving cover/inner display transitions, saved layouts, and presentation alignment.
+- **Original-game reference research:** continue comparing the original C&C95 behavior with the mobile port to guide compatibility fixes and optimization. Current research is partial; it is not a complete reconstruction of the game.
+- **Optional modern graphics:** investigate user-supplied Remastered assets and a classic/modern graphics toggle. Asset mapping, rendering, memory use, team colors, and licensing still need work; Remastered graphics are not currently supported.
+- **A broader Command & Conquer library:** explore C&C DOS and Red Alert references and, eventually, a shared launcher for selecting games. Collecting/reference analysis of those files does not mean native ports are available.
+
+## Credits
+
+Thanks to **Westwood Studios and Electronic Arts**, **The Assembly Armada / Vanilla Conquer**, **Cesarus85’s Apple port**, the SDL and other dependency maintainers, and everyone providing device testing, screenshots, and gameplay footage.
 
 ## CnCGEdit credit
 
@@ -108,7 +151,7 @@ CnCGEdit's executable and original source code are not included. The workshop is
 
 ## Licensing and assets
 
-Source licenses and original notices are preserved; see `tiberiandawn/license.txt`, `redalert/license.txt`, and dependency licenses. The GPL source license does not grant ownership of game artwork/audio. EA owns the classic assets bundled in the release IPA; they are not committed to this source repository or relicensed as GPL.
+Source licenses and original notices are preserved; see [Tiberian Dawn’s license](tiberiandawn/license.txt), [Red Alert’s license](redalert/license.txt), and dependency licenses. The GPL source license does not grant ownership of game artwork/audio. EA owns the classic assets bundled in the release IPA; they are not committed to this source repository or relicensed as GPL.
 
 The requested release includes the classic soundtrack. EA's [current modding guidelines](https://www.ea.com/games/command-and-conquer/news/modding-faq) explicitly exclude game music files from mods. The historic freeware release is not represented here as an unrestricted redistribution license. This project is unofficial, free and non-commercial.
 

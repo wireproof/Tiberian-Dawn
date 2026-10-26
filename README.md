@@ -17,6 +17,8 @@ An unofficial, free, non-commercial community project. **EA has not endorsed and
 
 All 26 host tests, Apple parity checks, iOS Release compilation, and Universal 2 macOS packaging passed. Physical testing of UI-size extremes, LiveContainer hinge detection, and preference restoration remains pending. Update within the existing LiveContainer data container to preserve saves.
 
+**LiveContainer / Duo compatibility:** the app is built with the iOS 27.1 SDK and hinge detection requires iOS 27.1 or later. LiveContainer must expose UIKit hinge updates to the hosted app; this still needs device verification. If no hinge is reported, the standard Zoom profile is used. A requirement to rebuild LiveContainer itself with SDK 27.1 has not been established.
+
 ## Gameplay showcase
 
 Watch in your browser with sound, seeking, and fullscreen controls—no MOV download required.

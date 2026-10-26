@@ -2,9 +2,16 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.4.0
+## Latest release: v0.4.1
 
-[Download v0.4.0](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.0).
+[Download v0.4.1](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.1).
+**Double-tap the floating controller** to open a larger circular map joystick.
+Drag farther from the center to scroll faster; release to stop. Double-tap
+again to return to the normal button. Single-tap still opens Orders & Groups;
+drag the normal button to reposition it. Joystick scrolling works even when
+Edge scroll is OFF. Physical-device gesture confirmation is pending.
+
+Previous update:
 Adds **Instant Build** and **Zero Cost**, fixes battlefield shroud removal,
 enlarges radar terrain within its panel, and reduces the touch cursor to 2x.
 Instant Build charges the remaining cost when affordable; enable Zero Cost

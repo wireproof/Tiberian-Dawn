@@ -4,6 +4,17 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.1 — 2026-10-25
+
+- Double-tap the floating controller to expand a circular map joystick;
+  double-tap it again to return to the normal button.
+- Joystick displacement controls scroll speed, with a center dead zone and
+  release/cancellation/focus-loss reset. It works with edge scrolling disabled.
+- Preserve single-tap Orders & Groups, normal-button dragging and hold-to-pan.
+- The touch joystick uses the existing analog camera-scroll path; macOS retains
+  physical controller and keyboard camera controls.
+- Physical-device confirmation of gesture feel remains pending.
+
 ## 0.4.0 — 2026-10-25
 
 - Add separate Instant Build and Zero Cost single-player switches on iOS and

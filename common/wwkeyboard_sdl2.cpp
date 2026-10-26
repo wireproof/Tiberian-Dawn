@@ -1152,6 +1152,18 @@ void WWKeyboardClassSDL2::Handle_Controller_Button_Event(const SDL_ControllerBut
     }
 }
 
+#ifdef IPADOS_PORT
+static bool WP_JoystickScroll(ScrollDirType& direction,float& intensity) {
+    const auto stick=WPOrders::Shared().stick();
+    if(stick.intensity<=0)return false;
+    // The engine uses eight compass directions; preserve radial stick speed.
+    const int octant=(static_cast<int>(std::lround(std::atan2(stick.y,stick.x)*4.0/3.141592653589793))+8)%8;
+    static const ScrollDirType directions[]={SDIR_E,SDIR_SE,SDIR_S,SDIR_SW,SDIR_W,SDIR_NW,SDIR_N,SDIR_NE};
+    direction=directions[octant];intensity=0.15f+1.35f*stick.intensity;
+    return true;
+}
+#endif
+
 bool WWKeyboardClassSDL2::Is_Analog_Scroll_Active()
 {
 #ifdef VISIONOS_PORT
@@ -1159,6 +1171,7 @@ bool WWKeyboardClassSDL2::Is_Analog_Scroll_Active()
 #elif defined(IPADOS_PORT)
     ScrollDirType touch_direction = SDIR_NONE;
     float touch_intensity = 0.0f;
+    if (WP_JoystickScroll(touch_direction,touch_intensity)) return true;
     if (Current_IPad_Touch_Edge_Scroll(touch_direction, touch_intensity)) return true;
 #endif
     return AnalogScrollActive;
@@ -1171,6 +1184,7 @@ unsigned char WWKeyboardClassSDL2::Get_Scroll_Direction()
 #elif defined(IPADOS_PORT)
     ScrollDirType touch_direction = SDIR_NONE;
     float touch_intensity = 0.0f;
+    if (WP_JoystickScroll(touch_direction,touch_intensity)) return touch_direction;
     if (Current_IPad_Touch_Edge_Scroll(touch_direction, touch_intensity)) return touch_direction;
 #endif
     return ScrollDirection;
@@ -1183,6 +1197,7 @@ float WWKeyboardClassSDL2::Get_Scroll_Intensity()
 #elif defined(IPADOS_PORT)
     ScrollDirType touch_direction = SDIR_NONE;
     float touch_intensity = 0.0f;
+    if (WP_JoystickScroll(touch_direction,touch_intensity)) return touch_intensity;
     if (Current_IPad_Touch_Edge_Scroll(touch_direction, touch_intensity)) return touch_intensity;
 #endif
     return 1.0f;

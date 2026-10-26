@@ -46,6 +46,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic) BOOL configured;
 @property(nonatomic,strong) UIButton *bubble;
 @property(nonatomic) CGPoint position;
+@property(nonatomic) BOOL joystickMode;
+@property(nonatomic,strong) UIView *joystickBase;
+@property(nonatomic,strong) UIView *joystickThumb;
 @end
 @implementation WPOrdersPanel
 - (UIButton*)button:(NSString*)title tag:(NSInteger)tag {
@@ -86,8 +89,22 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.bubble=[UIButton buttonWithType:UIButtonTypeSystem];
         [self.bubble setImage:[UIImage systemImageNamed:@"gamecontroller.fill"] forState:UIControlStateNormal];
         self.bubble.tintColor=UIColor.whiteColor;
-        self.bubble.accessibilityLabel=@"Tap for Orders and Groups. Drag to reposition. Hold to pan the map with your other finger.";
-        [self.bubble addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];
+        self.bubble.accessibilityLabel=@"Tap for Orders and Groups. Double tap for map joystick. Drag to reposition. Hold to pan the map with your other finger.";
+        UITapGestureRecognizer *single=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(openOrders:)];
+        UITapGestureRecognizer *doubleTap=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleJoystick:)];
+        doubleTap.numberOfTapsRequired=2;
+        [single requireGestureRecognizerToFail:doubleTap];
+        [self.bubble addGestureRecognizer:single];[self.bubble addGestureRecognizer:doubleTap];
+        self.joystickBase=[UIView new];self.joystickBase.backgroundColor=[UIColor colorWithWhite:0.12 alpha:0.85];
+        self.joystickBase.layer.borderWidth=2;self.joystickBase.layer.borderColor=[UIColor colorWithWhite:0.7 alpha:0.7].CGColor;
+        self.joystickBase.accessibilityLabel=@"Map joystick. Drag farther to scroll faster. Double tap to close.";
+        self.joystickThumb=[UIView new];self.joystickThumb.userInteractionEnabled=NO;
+        self.joystickThumb.backgroundColor=UIColor.systemBlueColor;self.joystickThumb.layer.cornerRadius=22;
+        [self.joystickBase addSubview:self.joystickThumb];[self addSubview:self.joystickBase];
+        UIPanGestureRecognizer *stickPan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(moveJoystick:)];
+        stickPan.maximumNumberOfTouches=1;[self.joystickBase addGestureRecognizer:stickPan];
+        UITapGestureRecognizer *closeStick=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleJoystick:)];
+        closeStick.numberOfTapsRequired=2;[self.joystickBase addGestureRecognizer:closeStick];
         self.bubble.tag=100;
         for (UIView *handle in @[self.toggle,self.bubble]) {
             UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)];
@@ -189,14 +206,33 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         [self addSubview:self.bubble];
     } return self;
 }
+- (void)openOrders:(UITapGestureRecognizer*)tap {
+    self.expanded=YES;[self refresh];
+}
+- (void)toggleJoystick:(UITapGestureRecognizer*)tap {
+    WPOrders::Shared().setStick(0,0);WPOrders::Shared().hold_pan(false);
+    self.joystickMode=!self.joystickMode;self.expanded=NO;[self refresh];
+}
+- (void)moveJoystick:(UIPanGestureRecognizer*)pan {
+    if(pan.state==UIGestureRecognizerStateEnded || pan.state==UIGestureRecognizerStateCancelled || pan.state==UIGestureRecognizerStateFailed) {
+        WPOrders::Shared().setStick(0,0);self.joystickThumb.center=CGPointMake(self.bounds.size.width/2,self.bounds.size.height/2);return;
+    }
+    CGPoint p=[pan locationInView:self.joystickBase];
+    CGFloat radius=MAX(1,(self.joystickBase.bounds.size.width-44)/2-6);
+    CGFloat x=(p.x-self.joystickBase.bounds.size.width/2)/radius;
+    CGFloat y=(p.y-self.joystickBase.bounds.size.height/2)/radius;
+    CGFloat length=hypot(x,y);if(length>1){x/=length;y/=length;}
+    WPOrders::Shared().setStick(x,y);
+    self.joystickThumb.center=CGPointMake(self.joystickBase.bounds.size.width/2+x*radius,self.joystickBase.bounds.size.height/2+y*radius);
+}
 - (void)didMoveToWindow {
     [super didMoveToWindow];
-    if (!self.window) WPOrders::Shared().hold_pan(false);
+    if (!self.window) {WPOrders::Shared().hold_pan(false);WPOrders::Shared().setStick(0,0);}
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidHideNotification object:nil];
     if (self.window) [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardClosed:)
         name:UIKeyboardDidHideNotification object:nil];
 }
-- (void)dealloc { WPOrders::Shared().hold_pan(false); [[NSNotificationCenter defaultCenter] removeObserver:self]; }
+- (void)dealloc { WPOrders::Shared().setStick(0,0);WPOrders::Shared().hold_pan(false); [[NSNotificationCenter defaultCenter] removeObserver:self]; }
 - (void)keyboardClosed:(NSNotification*)notification {
     // Keyboard animations may replace/reorder the window's root content. Keep
     // our overlay above it and clear any cancelled drag from the transition.
@@ -297,18 +333,19 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.zoomSlider.value=quarters; self.zoomSlider.accessibilityValue=self.zoomLabel.text;
     self.zoomMinus.enabled=quarters>2; self.zoomPlus.enabled=quarters<12;
     self.hidden=!s.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
-    if (self.hidden) WPOrders::Shared().hold_pan(false);
+    if (self.hidden) {WPOrders::Shared().hold_pan(false);WPOrders::Shared().setStick(0,0);}
     if (!self.configured && self.window) { self.expanded=NO; self.configured=YES; }
     NSString *title=s.force==1?@"Force Attack: tap target • Cancel below":s.force==2?@"Force Move: tap destination • Cancel below":[NSString stringWithFormat:@"Orders & Groups %@ · %d selected",self.expanded?@"▾":@"▸",s.selected];
     [self.toggle setTitle:title forState:UIControlStateNormal];
-    self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded;
+    self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded || self.joystickMode;
+    self.joystickBase.hidden=!self.joystickMode;
     BOOL panHeld=WPOrders::Shared().panHeld();
     self.bubble.tintColor=panHeld?UIColor.systemBlueColor:(s.force?UIColor.systemOrangeColor:UIColor.whiteColor);
     [self.bubble setImage:[UIImage systemImageNamed:panHeld?@"hand.draw.fill":@"gamecontroller.fill"] forState:UIControlStateNormal];
-    self.layer.cornerRadius=self.expanded?12:28;
+    self.layer.cornerRadius=self.joystickMode?72:self.expanded?12:28;
     CGRect safe=[self availableRect];
-    CGFloat width=self.expanded?MIN(256,MAX(56,safe.size.width)):56;
-    CGFloat height=56;
+    CGFloat width=self.joystickMode?MIN(144,MIN(safe.size.width,safe.size.height)):self.expanded?MIN(256,MAX(56,safe.size.width)):56;
+    CGFloat height=self.joystickMode?width:56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {
         CGSize fit=[self.stack systemLayoutSizeFittingSize:CGSizeMake(width-12,0)
@@ -321,6 +358,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [UIView performWithoutAnimation:^{
         self.frame=CGRectMake(x,y,width,height);
         self.bubble.frame=self.bounds;
+        self.joystickBase.frame=self.bounds;self.joystickBase.layer.cornerRadius=width/2;
+        self.joystickThumb.bounds=CGRectMake(0,0,44,44);
+        if(WPOrders::Shared().stick().intensity<=0)self.joystickThumb.center=CGPointMake(width/2,height/2);
         if (self.expanded) {
             self.body.frame=CGRectInset(self.bounds,6,6);
             self.stack.frame=CGRectMake(0,0,width-12,contentHeight);

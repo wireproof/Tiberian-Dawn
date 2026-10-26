@@ -2,8 +2,10 @@
 #define WIREPROOF_ORDERS_H
 #include <mutex>
 #include <deque>
+#include <cmath>
 namespace WPOrders {
 enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center };
+struct Stick { float x=0, y=0, intensity=0; };
 struct Command { Kind kind; int group; };
 struct Snapshot { bool active; int selected; int force; };
 // UI threads only enqueue intentions. The game thread owns all game objects.
@@ -12,12 +14,13 @@ class State {
     std::deque<Command> pending;
     Snapshot state = {false,0,0};
     bool pan_held = false;
+    Stick joystick;
     int zoom_quarters = 6;
 public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); state.force=0; pan_held=false; }
+        if (!active) { pending.clear(); state.force=0; pan_held=false; joystick={}; }
         if (!selected) state.force=0;
     }
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
@@ -25,6 +28,16 @@ public:
     void stepZoom(int delta) { std::lock_guard<std::mutex> lock(mutex); int value=zoom_quarters+delta; zoom_quarters=value<2?2:value>12?12:value; }
     void hold_pan(bool held) { std::lock_guard<std::mutex> lock(mutex); pan_held=held && state.active; }
     bool panHeld() { std::lock_guard<std::mutex> lock(mutex); return pan_held; }
+    void setStick(float x,float y) {
+        std::lock_guard<std::mutex> lock(mutex);
+        joystick={};
+        if(!state.active || !std::isfinite(x) || !std::isfinite(y))return;
+        const float length=std::sqrt(x*x+y*y);
+        if(length<=0.12f || !std::isfinite(length))return;
+        joystick.x=x/length;joystick.y=y/length;
+        joystick.intensity=(std::fmin(length,1.0f)-0.12f)/0.88f;
+    }
+    Stick stick() { std::lock_guard<std::mutex> lock(mutex); return joystick; }
     Snapshot snapshot() { std::lock_guard<std::mutex> lock(mutex); return state; }
     bool enqueue(Kind kind, int group=0) {
         std::lock_guard<std::mutex> lock(mutex);

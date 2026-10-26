@@ -1023,7 +1023,8 @@ void Get_Video_Mouse(int& x, int& y)
 
 #ifdef TIBERIAN_DAWN_APPLE_PORT
 static bool battlefield_active = false;
-static float battlefield_zoom = 1.0f;
+// Zoom is fixed at native scale; touch gestures do not change magnification.
+static constexpr float battlefield_zoom = 1.0f;
 static int battlefield_right = 480, battlefield_top = 16;
 void Video_Publish_Order_Icon(int kind) {
 #ifdef IPADOS_PORT
@@ -1039,19 +1040,6 @@ void Video_Publish_Order_Icon(int kind) {
 #endif
 }
 float Video_Battlefield_Zoom() { return battlefield_active ? battlefield_zoom : 1.0f; }
-bool Video_Battlefield_Contains(float x, float y) {
-    if (!battlefield_active) return false;
-    int gx,gy;
-    Map_IPad_Normalized_Point(ipad_layout,x,y,gx,gy);
-    const float px=x*renderer_output_w, py=y*renderer_output_h;
-    return px>=render_dst.x && py>=render_dst.y && px<render_dst.x+render_dst.w && py<render_dst.y+render_dst.h
-        && gx<battlefield_right && gy>=battlefield_top;
-}
-void Video_Adjust_Battlefield_Zoom(float ratio) {
-    if (!battlefield_active || !std::isfinite(ratio) || ratio <= 0) return;
-    battlefield_zoom = std::max(1.0f, std::min(3.0f, battlefield_zoom * ratio));
-    force_present = true;
-}
 void Video_Set_Battlefield(bool active, int right, int top) {
     if (battlefield_active != active || battlefield_right != right || battlefield_top != top) force_present = true;
     battlefield_active = active; battlefield_right = right; battlefield_top = top;

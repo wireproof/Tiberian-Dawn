@@ -37,11 +37,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     UIButton *b=[UIButton buttonWithType:UIButtonTypeSystem];
     [b setTitle:title forState:UIControlStateNormal]; b.tag=tag;
     b.titleLabel.font=[UIFont systemFontOfSize:14 weight:UIFontWeightSemibold];
-    b.titleLabel.adjustsFontSizeToFitWidth=YES; b.titleLabel.minimumScaleFactor=0.75;
+    b.titleLabel.adjustsFontSizeToFitWidth=YES; b.titleLabel.minimumScaleFactor=0.75; b.titleLabel.numberOfLines=2; b.titleLabel.textAlignment=NSTextAlignmentCenter;
     b.tintColor=UIColor.whiteColor; b.backgroundColor=[UIColor colorWithWhite:0.18 alpha:0.96];
     b.layer.cornerRadius=9; b.accessibilityLabel=title;
     [b.heightAnchor constraintEqualToConstant:44].active=YES;
-    [b.widthAnchor constraintGreaterThanOrEqualToConstant:55].active=YES;
+    [b.widthAnchor constraintGreaterThanOrEqualToConstant:44].active=YES;
     [b addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];
     return b;
 }
@@ -105,7 +105,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         for (NSInteger i=0;i<4;i++) [modes addObject:[self button:modeNames[i] tag:300+i]];
         self.modeButtons=modes;
         self.stack=[[UIStackView alloc] initWithArrangedSubviews:@[
-            self.toggle,[self row:groups],
+            self.toggle,
+            [self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],
+            [self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]],
             [self gridRow:@[modes[0],modes[1]]], [self gridRow:@[modes[2],modes[3]]],
             [self gridRow:@[orders[3],orders[4]]],
             [self gridRow:@[orders[0],orders[1]]], [self gridRow:@[orders[2],orders[5]]]]];
@@ -179,7 +181,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.bubble.tintColor=s.force?UIColor.systemOrangeColor:UIColor.whiteColor;
     self.layer.cornerRadius=self.expanded?12:28;
     CGRect safe=[self availableRect];
-    CGFloat width=self.expanded?MIN(420,MAX(56,safe.size.width)):56;
+    CGFloat width=self.expanded?MIN(256,MAX(56,safe.size.width)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {

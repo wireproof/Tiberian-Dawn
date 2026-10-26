@@ -2,18 +2,13 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Prerelease 0.3.4
+## Latest release: v0.3.5
 
-[Download the 0.3.4 IPA](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.3.4).
-This candidate adds adaptive portrait/landscape gameplay, battlefield-only pinch
-zoom (1x–3x), a draggable Orders/Groups panel with game cursor icons, and the
-original CnCGEdit weapon names. Two-finger drag pans; two-finger tap or a hold
-right-clicks. macOS supports Control+wheel zoom. See [touch controls](docs/TOUCH-ORDERS.md).
-
-Both Apple targets compile and the 26 host tests pass. The Metal shaders compile
-on macOS. Duo cover/inner transitions, touch targeting, keyboard dismissal and
-zoom require physical-device confirmation; this is a prerelease, not a claim of
-completed device validation. The previous stable release remains available below.
+[Download v0.3.5](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.3.5)
+restores the pre-0.3.4 touch gestures and removes interactive zoom. The draggable
+Orders panel now uses two rows of groups (1–5 and 6–9), with actions below in a
+narrower layout. Adaptive display sizing and original CnCGEdit labels remain.
+Physical-device confirmation of this update is pending.
 
 ## Release 0.2.8
 
@@ -39,7 +34,7 @@ Use the `macos-universal` configure/build presets for macOS. This release was bu
 
 ## Validation and limits
 
-Both Apple Release builds and all 25 host tests passed. Workshop persistence/validation tests passed in 0.2.5. The owner reports good gameplay in 0.2.6 on their Duo; the corrected touch indicator in 0.2.8 still needs device confirmation. macOS is an ad-hoc-signed local build, not notarized. Vision Pro and arbitrary workshop combinations are not certified by this fork.
+Both Apple Release builds and all 26 host tests passed. Workshop persistence/validation tests passed in 0.2.5. The owner reports good gameplay in 0.2.6 on their Duo; the corrected touch indicator in 0.2.8 still needs device confirmation. macOS is an ad-hoc-signed local build, not notarized. Vision Pro and arbitrary workshop combinations are not certified by this fork.
 
 ## CnCGEdit credit
 

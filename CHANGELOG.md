@@ -4,6 +4,14 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.3.5 — 2026-10-25
+
+- Revert the 0.3.4 pinch and Control+wheel zoom gestures. Restore the previous
+  touch gesture handling while retaining adaptive display sizing.
+- Narrow the draggable Orders panel to 256 points and arrange groups in two
+  rows: 1–5 and 6–9. Keep the game icons and action controls below.
+- Published as the latest main release; physical-device confirmation pending.
+
 ## 0.3.4 — 2026-10-25 (prerelease; device validation pending)
 
 - Adapt the gameplay framebuffer to portrait/landscape window proportions,

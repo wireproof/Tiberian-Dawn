@@ -1,3 +1,12 @@
+# v0.3.5 control update
+
+Interactive pinch and Control+wheel zoom were reverted after device feedback.
+Touch handling is restored to the pre-0.3.4 behavior. The panel is 256 points
+wide, with groups 1–5 and 6–9 on separate rows and actions below. Collapse,
+dragging, and original game icons remain. Physical-device confirmation pending.
+
+The sections below record the prior implementation history.
+
 # Touch orders and groups — v0.3.4
 
 During a mission, tap the circular game-controller button to open **Orders & Groups**.

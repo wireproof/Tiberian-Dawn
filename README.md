@@ -46,7 +46,15 @@ logo artwork. Physical-device layout confirmation remains pending.
 
 [![Duo cover-screen gameplay](docs/showcase/duo-cover-v0.5.2.jpg)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.2/Tiberian-Dawn-v0.5.2-Duo-Cover-Gameplay.mp4)
 
-Recorded on the physical Duo cover display. Inner-display and iPad showcases will be added when available.
+[Duo inner-display gameplay (2:57, with audio)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Inner-Gameplay.mp4)
+
+[![Duo inner-display gameplay](docs/showcase/duo-inner-gameplay.jpg)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Inner-Gameplay.mp4)
+
+[Duo inner-display Workshop demo (0:50, with audio)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Workshop-Demo.mp4)
+
+[![Duo inner-display Workshop demo](docs/showcase/duo-inner-demo.jpg)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.3/Tiberian-Dawn-Duo-Workshop-Demo.mp4)
+
+Recorded on the physical Duo cover and inner displays. An iPad showcase will be added when available.
 
 ## Release 0.2.8
 

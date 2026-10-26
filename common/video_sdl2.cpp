@@ -1747,7 +1747,7 @@ public:
             }
         }
         if (software_cursor) {
-            const float cursor_scale = Settings.Video.LargeCursor ? 7.5f : 1.0f;
+            const float cursor_scale = Settings.Video.LargeCursor ? 2.5f : 1.0f;
             const int game_x = cursor_x - static_cast<int>(hwcursor.HotX * cursor_scale);
             const int game_y = cursor_y - static_cast<int>(hwcursor.HotY * cursor_scale);
             metal_cursor.pixels = hwcursor.Surface->pixels;
@@ -1851,7 +1851,7 @@ public:
 
                 Get_Video_Mouse(x, y);
 
-                const float cursor_scale = Settings.Video.LargeCursor ? 7.5f : 1.0f;
+                const float cursor_scale = Settings.Video.LargeCursor ? 2.5f : 1.0f;
                 dst.x = x - static_cast<int>(hwcursor.HotX * cursor_scale);
                 dst.y = y - static_cast<int>(hwcursor.HotY * cursor_scale);
                 dst.w = static_cast<int>(hwcursor.Surface->w * cursor_scale);
@@ -1908,7 +1908,9 @@ public:
             const float scale_y = render_dst.h / static_cast<float>(hwcursor.GameH);
             const int center_x = render_dst.x + static_cast<int>(touch_feedback.x * scale_x);
             const int center_y = render_dst.y + static_cast<int>(touch_feedback.y * scale_y);
-            const int radius = (touch_feedback.pencil ? 10 : 16) * Settings.Video.TouchUIScale / 100;
+            // Touch feedback is separate from the legacy game cursor.
+            // Increase its visible ring without shifting the actual touch position.
+            const int radius = (touch_feedback.pencil ? 30 : 48) * Settings.Video.TouchUIScale / 100;
             SDL_Point ring[33];
             for (int i = 0; i <= 32; ++i) {
                 const float angle = static_cast<float>(i) * 6.28318530718f / 32.0f;

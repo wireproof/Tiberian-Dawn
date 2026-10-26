@@ -4,13 +4,13 @@ EA has not endorsed and does not support this product.
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Release 0.2.7
+## Release 0.2.8
 
 - Native touch controls and adaptable display layout.
 - Mod Workshop with readable unit/building/weapon names, Stock and three custom presets.
 - Health, cost, weapons, armor, faction availability, cloaking, combat immunity, building power/storage and more.
-- Large Cursor is 3 times the size used in Wireproof 0.2.6. Its hotspot remains aligned with the pointer.
-- Bundle identifier: `com.wireproof.tiberiandawn`; title label: `wireproof v0.2.7`.
+- Touch feedback circles are 3 times their previous diameter; the game cursor is restored to its 0.2.6 size. Touch coordinates remain unchanged.
+- Bundle identifier: `com.wireproof.tiberiandawn`; title label: `wireproof v0.2.8`.
 
 Download the IPA from this repository's Releases and install/resign with your sideloading tool or LiveContainer. Preserve the existing data container when updating. Workshop changes apply after restarting and beginning a new mission. Shared type edits also affect enemies; custom rules disable multiplayer. Selecting Stock restores compiled rules on restart.
 
@@ -28,7 +28,13 @@ Use the `macos-universal` configure/build presets for macOS. This release was bu
 
 ## Validation and limits
 
-Both Apple Release builds and all 25 host tests passed. Workshop persistence/validation tests passed in 0.2.5. The owner reports good gameplay in 0.2.6 on their Duo; the larger cursor in 0.2.7 still needs device confirmation. macOS is an ad-hoc-signed local build, not notarized. Vision Pro and arbitrary workshop combinations are not certified by this fork.
+Both Apple Release builds and all 25 host tests passed. Workshop persistence/validation tests passed in 0.2.5. The owner reports good gameplay in 0.2.6 on their Duo; the corrected touch indicator in 0.2.8 still needs device confirmation. macOS is an ad-hoc-signed local build, not notarized. Vision Pro and arbitrary workshop combinations are not certified by this fork.
+
+## CnCGEdit credit
+
+The Mod Workshop incorporates settings and behavior learned by reverse-engineering **CnCGEdit 1.2b (C&C Gold Editor)**, created by **BioHazard / Roe Yun Song (1998)**. Its unit categories, editable attributes, weapon/faction choices and reset workflow informed this native implementation.
+
+CnCGEdit's executable and original source code are not included. The workshop is newly implemented against the game engine's native types, with presets and validation. Misleading or unsafe legacy behaviors were deliberately not reproduced. See [the reverse-engineering findings](docs/CNCGEDIT-RESEARCH.txt) for the mapping and differences. CnCGEdit remains copyright its original author; this credit does not imply endorsement.
 
 ## Licensing and assets
 

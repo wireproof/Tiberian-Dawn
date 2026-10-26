@@ -4,6 +4,17 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.10 — 2026-10-26
+
+- Compact landscape Game into a single 1–9 row and a single action row, with
+  the title and tabs sharing the header. Preserve portrait grouping.
+- Place Cheats speed sliders together across the bottom in landscape, with
+  money/power and toggles grouped above.
+- Restore full-height landscape sidebar and anchor its arrows at the bottom.
+- Increase portrait gameplay presentation by 25 percent for more readable
+  sidebar controls, preserving the shortened portrait sidebar policy.
+- Both Apple builds and 26 host tests pass; device layout confirmation pending.
+
 ## 0.4.9 — 2026-10-26
 
 - Regroup controller tabs: money and power together, two number columns in

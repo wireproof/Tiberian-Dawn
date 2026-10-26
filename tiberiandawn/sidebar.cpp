@@ -2714,7 +2714,7 @@ void SidebarClass::Resize_Apple_Viewport()
         StripClass::OBJECT_HEIGHT*scale,StripClass::BUTTON_HEIGHT*scale,StripClass::MAX_VISIBLE_CAPACITY);
     const int portraitSlots=WPCamera::PortraitSidebarSlots(presentationWidth,sidebarHeight);
     if(portraitSlots)MaxVisible=MIN(MaxVisible,portraitSlots);
-    const int sidebarBottom=SideY+TopHeight+1+MaxVisible*StripClass::OBJECT_HEIGHT*scale+StripClass::BUTTON_HEIGHT*scale;
+    const int sidebarBottom=portraitSlots?SideY+TopHeight+1+MaxVisible*StripClass::OBJECT_HEIGHT*scale+StripClass::BUTTON_HEIGHT*scale:sidebarHeight;
     SideHeight=sidebarBottom-SideY;
     Background.Height=SideHeight-1;
     Resize_Apple_Power(sidebarBottom);
@@ -2726,7 +2726,9 @@ void SidebarClass::Resize_Apple_Viewport()
     for(int i=0;i<COLUMNS;++i){
         Column[i].X=SideX+PowWidth+spacing+i*(StripClass::STRIP_WIDTH*scale+spacing-1);
         Column[i].Y=SideY+TopHeight+1;
-        Column[i].Init_IO(i);Column[i].Flag_To_Redraw();
+        Column[i].Init_IO(i);
+        if(!portraitSlots){StripClass::UpButton[i].Y=StripClass::DownButton[i].Y=sidebarBottom-StripClass::BUTTON_HEIGHT*scale-1;}
+        Column[i].Flag_To_Redraw();
         if(relink[i] && IsSidebarActive)Column[i].Activate();
     }
     Set_View_Dimensions(0,Map.Get_Tab_Height(),

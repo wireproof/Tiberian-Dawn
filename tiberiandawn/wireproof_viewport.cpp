@@ -22,11 +22,12 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu)
     int width = 640, height = 400;
     const bool adaptive=active || menu || (InMainLoop && GameActive);
     if (adaptive) Video_Adaptive_Size(width, height);
+    if(active && height>width){width=(int)std::lround(width/1.25);height=(int)std::lround(height/1.25);}
     const int right = width - (Map.IsSidebarActive ? Map.SideBarWidth : 0);
     const int view_height=height;
     const int slots=WPCamera::PortraitSidebarSlots(width,height);
     const int visibleSlots=WPCamera::SidebarSlots(height,182,48,24,24);
-    const int bottom=Map.IsSidebarActive?std::min(height,182+(slots?std::min(slots,visibleSlots):visibleSlots)*48+24):height;
+    const int bottom=Map.IsSidebarActive && slots?std::min(height,182+std::min(slots,visibleSlots)*48+24):height;
     const int worldRight=bottom<height?width:right;
     const float zoom=active?WPOrders::Shared().zoomQuarters()/4.0f:1.0f;
     Video_Set_Battlefield(adaptive, right, Map.Get_Tab_Height(), width, height, zoom,bottom);

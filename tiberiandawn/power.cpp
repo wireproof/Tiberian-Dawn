@@ -165,6 +165,18 @@ void PowerClass::One_Time(void)
  *   12/20/1994 JLB : Created.                                                                 *
  *   12/27/1994 JLB : Changes power bar color depending on amount of power.                    *
  *=============================================================================================*/
+void PowerClass::Resize_Apple_Power(int bottom)
+{
+    PowHeight=MAX(2,bottom-PowY);
+    PowerButton.X=PowX;PowerButton.Y=PowY;PowerButton.Height=PowHeight;
+    if(PlayerPtr) {
+        PowerHeight=DesiredPowerHeight=Power_Height(PlayerPtr->Power);
+        DrainHeight=DesiredDrainHeight=Power_Height(PlayerPtr->Drain);
+    }
+    PowerBounce=DrainBounce=0;
+    IsToRedraw=true;
+}
+
 void PowerClass::Draw_It(bool complete)
 {
     static int _modtable[] = {0, -1, 0, 1, 0, -1, -2, -1, 0, 1, 2, 1, 0};
@@ -205,8 +217,9 @@ void PowerClass::Draw_It(bool complete)
                 */
                 if (factor) {
 
-                    CC_Draw_Shape(PowerBarShape, 0, PowX, PowY, WINDOW_CUSTOM, SHAPE_WIN_REL);
-                    CC_Draw_Shape(PowerBarShape, 1, PowX, PowY + 100, WINDOW_CUSTOM, SHAPE_WIN_REL);
+                    for(int offset=0;offset<MAX(0,PowHeight-100);offset+=100)
+                        CC_Draw_Shape(PowerBarShape,0,PowX,PowY+offset,WINDOW_CUSTOM,SHAPE_WIN_REL);
+                    CC_Draw_Shape(PowerBarShape,1,PowX,PowY+MAX(0,PowHeight-100),WINDOW_CUSTOM,SHAPE_WIN_REL);
                 } else {
                     /* Draw MS-DOS power gauge. */
                     int top_y = PowY + 1;
@@ -252,19 +265,11 @@ void PowerClass::Draw_It(bool complete)
                     ** Draw the filled section
                     */
                     if (Get_Resolution_Factor()) {
-                        CC_Draw_Shape(PowerBarShape,
-                                      2 + power_color,
-                                      PowX,
-                                      PowY - WindowList[WINDOW_CUSTOM][WINDOWY],
-                                      WINDOW_CUSTOM,
-                                      SHAPE_WIN_REL);
-
-                        CC_Draw_Shape(PowerBarShape,
-                                      3 + power_color,
-                                      PowX,
-                                      PowY - WindowList[WINDOW_CUSTOM][WINDOWY] + 100,
-                                      WINDOW_CUSTOM,
-                                      SHAPE_WIN_REL);
+                        for(int offset=0;offset<MAX(0,PowHeight-100);offset+=100)
+                            CC_Draw_Shape(PowerBarShape,2+power_color,PowX,
+                                PowY-WindowList[WINDOW_CUSTOM][WINDOWY]+offset,WINDOW_CUSTOM,SHAPE_WIN_REL);
+                        CC_Draw_Shape(PowerBarShape,3+power_color,PowX,
+                            PowY-WindowList[WINDOW_CUSTOM][WINDOWY]+MAX(0,PowHeight-100),WINDOW_CUSTOM,SHAPE_WIN_REL);
                     } else {
                         LogicPage->Fill_Rect(PowX + 2, bottom - power_height + 1, PowX + 5, bottom - 1, power_color);
                     }

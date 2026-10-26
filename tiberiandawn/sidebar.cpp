@@ -2712,6 +2712,7 @@ void SidebarClass::Resize_Apple_Viewport()
 #endif
     MaxVisible=WPCamera::SidebarSlots(sidebarHeight,SideY+TopHeight+1,
         StripClass::OBJECT_HEIGHT*scale,StripClass::BUTTON_HEIGHT*scale,StripClass::MAX_VISIBLE_CAPACITY);
+    Resize_Apple_Power(sidebarHeight);
     WindowList[WINDOW_SIDEBAR][WINDOWX]=SideX+PowWidth;
     WindowList[WINDOW_SIDEBAR][WINDOWY]=SideY+TopHeight+(scale==1?1:0);
     WindowList[WINDOW_SIDEBAR][WINDOWWIDTH]=SideWidth-PowWidth;

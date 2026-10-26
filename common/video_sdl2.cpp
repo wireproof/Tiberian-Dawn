@@ -563,7 +563,7 @@ static void Update_HWCursor_Settings(bool geometry_only = false)
                                         Presentation_Width(),
                                         Presentation_Height(),
                                         {safe_left, safe_top, safe_right, safe_bottom},
-                                        !battlefield_active && Settings.Video.PresentationMode == 1,
+                                        false, // Fractional fit avoids menu shrinkage after returning from gameplay.
                                         !battlefield_active && Settings.Video.PresentationMode == 3);
     render_dst.x = ipad_layout.viewport.x;
     render_dst.y = ipad_layout.viewport.y;

@@ -4,6 +4,16 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.6 — 2026-10-25
+
+- Extend the power gauge artwork, fill and hit area to match the tall sidebar.
+- Keep the adaptive battlefield dimensions while Options and mission dialogs are open.
+- Reflow the main menu to the current display, with proportional logo artwork and
+  a cropped background instead of a small centered classic canvas.
+- Use fractional presentation scaling for legacy menus to avoid extra integer-scale margins.
+- Validate menu bounds across landscape, portrait and wide displays. Both Apple
+  builds and all 26 host tests pass; physical-device layout confirmation remains pending.
+
 ## 0.4.5 — 2026-10-25
 
 - Restore the draggable floating gamepad icon and expandable Orders & Groups

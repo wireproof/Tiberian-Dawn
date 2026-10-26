@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-void WP_Update_Battlefield_Viewport(bool active)
+void WP_Update_Battlefield_Viewport(bool active, bool menu)
 {
 #ifdef IPADOS_PORT
     static bool icons_published = false;
@@ -19,11 +19,12 @@ void WP_Update_Battlefield_Viewport(bool active)
     }
 #endif
     int width = 640, height = 400;
-    if (active) Video_Adaptive_Size(width, height);
+    const bool adaptive=active || menu || (InMainLoop && GameActive);
+    if (adaptive) Video_Adaptive_Size(width, height);
     const int right = width - (Map.IsSidebarActive ? Map.SideBarWidth : 0);
     const int view_height=height;
     const float zoom=active?WPOrders::Shared().zoomQuarters()/4.0f:1.0f;
-    Video_Set_Battlefield(active, right, Map.Get_Tab_Height(), width, height, zoom);
+    Video_Set_Battlefield(adaptive, right, Map.Get_Tab_Height(), width, height, zoom);
     static float previous_zoom = 1.0f;
     // Below 1x, render additional world pixels into a larger backing surface;
     // the presentation keeps the sidebar/top bar at their normal size.

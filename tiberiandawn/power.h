@@ -59,6 +59,7 @@ public:
     /*
     ** Initialization
     */
+    void Resize_Apple_Power(int bottom);
     virtual void One_Time(void); // One-time inits
 
     virtual void Init_Clear(void); // Clears all to known state

@@ -1,9 +1,16 @@
+#include "common/wireproof_menu_layout.h"
 #include "common/wireproof_camera.h"
 #include <climits>
 #include "common/wireproof_orders.h"
 #include <cassert>
 #include "common/wireproof_cheats.h"
 int main() {
+    for(const auto size : {std::pair<int,int>{640,400},{640,910},{1100,400}}) {
+        auto menu=WPMenu::Calculate(size.first,size.second,6);
+        assert(menu.x>=0 && menu.x+menu.width<=size.first);
+        assert(menu.y+menu.height<=size.second-menu.footerHeight);
+        assert(menu.y+20+5*menu.step+menu.buttonHeight<menu.y+menu.height);
+    }
     assert(WPCamera::SidebarSlots(400,182,48,24,24)==4);
     assert(WPCamera::SidebarSlots(910,182,48,24,24)==14);
     assert(WPCamera::SidebarSlots(200,182,48,24,24)==1);

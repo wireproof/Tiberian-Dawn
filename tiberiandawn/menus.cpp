@@ -36,6 +36,8 @@
 
 #include "function.h"
 #include "common/framelimit.h"
+#include "common/wireproof_viewport.h"
+#include "common/wireproof_menu_layout.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #ifdef IPADOS_PORT
 #include "platform/apple/ipados_platform.h"
@@ -852,9 +854,29 @@ int Main_Menu(unsigned int timeout)
     /*
     **	Main Processing Loop.
     */
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    int menuWidth=0,menuHeight=0;
+    WPMenu::Layout menuLayout{};
+#endif
     bool display = true;
     bool process = true;
     while (process) {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        WP_Update_Battlefield_Viewport(false,true);
+        if(menuWidth!=ScreenWidth || menuHeight!=ScreenHeight) {
+            menuWidth=ScreenWidth;menuHeight=ScreenHeight;
+            menuLayout=WPMenu::Calculate(menuWidth,menuHeight,last_menu_button-first_menu_button+1);
+            D_DIALOG_X=menuLayout.x;D_DIALOG_Y=menuLayout.y;
+            D_DIALOG_W=menuLayout.width;D_DIALOG_H=menuLayout.height;
+            for(int i=first_menu_button;i<=last_menu_button;++i) {
+                buttons[i]->X=D_DIALOG_X+16;buttons[i]->Width=D_DIALOG_W-32;
+                buttons[i]->Y=D_DIALOG_Y+20+(i-first_menu_button)*menuLayout.step;
+                buttons[i]->Height=menuLayout.buttonHeight;
+            }
+            display=true;
+        }
+#endif
+
 
         /*
         ** If we have just received input focus again after running in the background then
@@ -888,7 +910,22 @@ int Main_Menu(unsigned int timeout)
             /*
             **	Load the background picture.
             */
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+            // Use the original flame art as an aspect-preserving backdrop and
+            // keep the logo/footer proportional beneath the responsive menu.
+            GraphicBufferClass title(640,400,nullptr,0);
+            Load_Title_Screen(TitlePicture,&title,Palette);
+            const double aspect=double(ScreenWidth)/ScreenHeight;
+            int cropW=160,cropH=270;
+            if(double(cropW)/cropH>aspect)cropW=MAX(1,int(cropH*aspect));
+            else cropH=MAX(1,int(cropW/aspect));
+            title.Scale(HidPage,(160-cropW)/2,(270-cropH)/2,0,0,cropW,cropH,ScreenWidth,ScreenHeight);
+            const int logoW=menuLayout.footerHeight*640/130;
+            title.Scale(HidPage,0,270,(ScreenWidth-logoW)/2,ScreenHeight-menuLayout.footerHeight,
+                        640,130,logoW,menuLayout.footerHeight);
+#else
             Load_Title_Screen(TitlePicture, &HidPage, Palette);
+#endif
             Blit_Hid_Page_To_Seen_Buff();
 
             /*
@@ -1085,5 +1122,8 @@ int Main_Menu(unsigned int timeout)
 
         Frame_Limiter();
     }
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    WP_Update_Battlefield_Viewport(false);
+#endif
     return (retval);
 }

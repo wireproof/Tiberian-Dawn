@@ -23,6 +23,9 @@
 #include "settings.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #include "wireproof_orders.h"
+#ifdef MACOS_PORT
+extern "C" void WP_ShowLiveCheats(void);
+#endif
 #endif
 #include <algorithm>
 #include <cmath>
@@ -620,6 +623,12 @@ void WWKeyboardClassSDL2::Fill_Buffer_From_System(void)
             exit(0);
             break;
         case SDL_KEYDOWN:
+#ifdef MACOS_PORT
+            if (!SDL_IsTextInputActive() && (event.key.keysym.mod & KMOD_ALT)
+                && event.key.keysym.scancode==SDL_SCANCODE_C && WPOrders::Shared().snapshot().active) {
+                WP_ShowLiveCheats(); break;
+            }
+#endif
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
             // Keyboard equivalent of the UIKit zoom control on desktop.
             if (!SDL_IsTextInputActive() && (event.key.keysym.mod & KMOD_ALT)

@@ -45,6 +45,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#endif
 #include "common/framelimit.h"
 
 extern int PreserveVQAScreen;
@@ -107,6 +110,9 @@ bool Start_Scenario(char* root, bool briefing)
         CCDebugString("C&C95 - Failed to read scenario.\n");
         return (false);
     }
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    WP_ResetLiveCheats();
+#endif
     CCDebugString("C&C95 - Scenario read OK.\n");
 
     if (Is_Demo()) {

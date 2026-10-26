@@ -53,6 +53,12 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#define WP_PLAYER_SPEED(value) WP_ScalePlayerSpeed(House,(value),1)
+#else
+#define WP_PLAYER_SPEED(value) (value)
+#endif
 
 DriveClass::DriveClass(void)
     : Class(0)
@@ -597,7 +603,7 @@ bool DriveClass::While_Moving(void)
     **	visibly move on the map, then process accordingly.
     ** Slow the unit down if he's carrying a flag.
     */
-    MPHType maxspeed = MPHType(min((int)(Class->MaxSpeed * House->GroundspeedBias), (int)MPH_LIGHT_SPEED));
+    MPHType maxspeed = MPHType(min((int)(WP_PLAYER_SPEED(Class->MaxSpeed * House->GroundspeedBias)), (int)MPH_LIGHT_SPEED));
     if (((UnitClass*)this)->Flagged != HOUSE_NONE) {
         actual = SpeedAccum + Fixed_To_Cardinal(maxspeed / 2, Speed);
     } else {

@@ -4,6 +4,25 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.3.9 — 2026-10-25
+
+- Add a Cheats page to the floating controller: +1,000/+10,000 credits,
+  invincibility, shroud on/off, +100/+1,000 power, and infantry/vehicle/aircraft
+  speed sliders from 0.25x to 3x. These affect the player in single-player only.
+- Add the equivalent macOS panel on Option-C, applying changes on close.
+- Live toggles and speed reset on mission start/load. Added credits and power
+  are part of the saved game. Shroud On restores the pre-reveal exploration
+  snapshot plus current unit sight; saving while revealed saves that map state.
+
+- Make iOS Edge scroll OFF suppress legacy cursor-edge/autoscroll as well as
+  touch-edge scrolling, and clear residual scrolling inertia. Manual panning
+  and controller directional input remain available.
+- Open Save Mission without focusing the filename field or opening the iOS
+  keyboard. Tapping the field starts text entry; desktop autofocus is retained.
+- Rename UI scale to Touch size: this setting controls touch targets/feedback,
+  not the size of the entire classic interface.
+- Physical-device confirmation of these fixes remains pending.
+
 ## 0.3.8 — 2026-10-25
 
 - Add a controller-menu zoom slider with minus/plus ends and eleven exact

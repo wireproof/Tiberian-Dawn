@@ -36,6 +36,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "common/settings.h"
 
 #define SCROLL_DELAY 1
 
@@ -87,6 +88,13 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
 #ifndef REMASTER_BUILD
     static DirType direction;
     bool player_scrolled = false;
+    bool cursor_edge_enabled = true;
+#if defined(IPADOS_PORT) && !defined(VISIONOS_PORT)
+    // The visual-menu switch must also govern legacy mouse-edge/autoscroll.
+    // Manual pan and controller scrolling are independent, deliberate inputs.
+    cursor_edge_enabled = Settings.Touch.EdgeScroll;
+    if (!cursor_edge_enabled) Inertia = 0;
+#endif
 
     /* Analog input is allowed to keep moving the map while a selection box is
     ** active. This is required for spatial pinch-drag selection and also makes
@@ -120,7 +128,7 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
         }
 #endif
 
-        if (!noscroll && !analog_scroll_active && !IsRubberBand) {
+        if (cursor_edge_enabled && !noscroll && !analog_scroll_active && !IsRubberBand) {
 
             /*
 			**	Verify that the mouse is over a scroll region.

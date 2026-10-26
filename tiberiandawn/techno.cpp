@@ -115,6 +115,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#endif
 
 /***************************************************************************
 **	Cloaking control values.
@@ -3098,6 +3101,9 @@ bool TechnoClass::Captured(HouseClass* newowner)
  *=============================================================================================*/
 ResultType TechnoClass::Take_Damage(int& damage, int distance, WarheadType warhead, TechnoClass* source)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    if(damage>0 && WP_PlayerInvincible(House)) {damage=0;return RESULT_NONE;}
+#endif
     /*
     **	Adjust damage according to house override armor value.
     */

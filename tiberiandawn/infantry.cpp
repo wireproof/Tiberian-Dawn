@@ -79,6 +79,12 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#define WP_PLAYER_SPEED(value) WP_ScalePlayerSpeed(House,(value),0)
+#else
+#define WP_PLAYER_SPEED(value) (value)
+#endif
 #include "ccini.h"
 
 int const InfantryClass::HumanShape[32] = {0, 0, 7, 7, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 5, 4,
@@ -1555,7 +1561,7 @@ void InfantryClass::AI(void)
                 /*
                 **	Advance the infantry as far as it should go.
                 */
-                MPHType maxspeed = MPHType(min((unsigned)(Class->MaxSpeed * House->GroundspeedBias), MPH_LIGHT_SPEED));
+                MPHType maxspeed = MPHType(min((unsigned)(WP_PLAYER_SPEED(Class->MaxSpeed * House->GroundspeedBias)), MPH_LIGHT_SPEED));
                 Coord = Coord_Move(Coord, Direction(Head_To_Coord()), Fixed_To_Cardinal(maxspeed, movespeed));
             }
             Mark(MARK_DOWN);

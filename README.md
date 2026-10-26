@@ -2,9 +2,21 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.3.8
+## Latest release: v0.3.9
 
-[Download v0.3.8](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.3.8).
+[Download v0.3.9](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.3.9).
+Open the floating controller and tap **Cheats** for money, invincibility,
+shroud on/off, extra power, and separate infantry/vehicle/aircraft speed sliders
+(0.25–3x). On Mac, use **Option-C** and Apply. Cheats affect your side in
+single-player only. Speed and live toggles reset on mission start/load; money
+and power remain in saves. Shroud On restores prior exploration plus current
+unit sight. Saving while revealed saves that revealed map state.
+
+Edge scroll OFF now blocks both touch and legacy cursor-edge scrolling on iOS.
+Save Mission opens without the software keyboard; tap its filename field to type.
+The old UI scale label is now Touch size, reflecting its effect on touch targets
+and feedback rather than the entire interface.
+
 The controller menu includes a **− / zoom slider / +** control with quarter steps:
 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3.
 It defaults to 1.5x and saves your iOS choice. The map zooms while menus, the top

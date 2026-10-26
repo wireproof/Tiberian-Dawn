@@ -90,6 +90,7 @@ bool Main_Loop();
 void Keyboard_Process(KeyNumType& input);
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 #include "common/wireproof_orders.h"
+#include "common/wireproof_cheats.h"
 #include "common/wireproof_viewport.h"
 static void WP_ProcessOrders() {
     using namespace WPOrders;
@@ -101,6 +102,8 @@ static void WP_ProcessOrders() {
     if (Shared().snapshot().active && GameToPlay==GAME_NORMAL && SDL_IsTextInputActive())
         SDL_StopTextInput();
 #endif
+    WPCheats::Shared().publish(Shared().snapshot().active && GameToPlay==GAME_NORMAL && PlayerPtr,
+        PlayerPtr?PlayerPtr->Available_Money():0,PlayerPtr?PlayerPtr->Power:0,PlayerPtr?PlayerPtr->Drain:0);
     Command command;
     while (Shared().take(command)) {
         if (command.kind==Attack || command.kind==Move) {

@@ -88,6 +88,12 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#define WP_PLAYER_SPEED(value) WP_ScalePlayerSpeed(House,(value),2)
+#else
+#define WP_PLAYER_SPEED(value) (value)
+#endif
 #include "ccini.h"
 
 /***********************************************************************************************
@@ -3182,7 +3188,7 @@ TARGET AircraftClass::Good_LZ(void) const
 void AircraftClass::Set_Speed(int speed)
 {
     Validate();
-    MPHType sp = MPHType(min((unsigned)(Class->MaxSpeed * House->AirspeedBias), MPH_LIGHT_SPEED));
+    MPHType sp = MPHType(min((unsigned)(WP_PLAYER_SPEED(Class->MaxSpeed * House->AirspeedBias)), MPH_LIGHT_SPEED));
     Fly_Speed(speed, sp);
 }
 

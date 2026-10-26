@@ -44,6 +44,9 @@
 #include "common/file.h"
 #include "common/framelimit.h"
 #include "common/paths.h"
+#ifdef IPADOS_PORT
+#include <SDL.h>
+#endif
 
 /***********************************************************************************************
  * LoadOptionsClass::LoadOptionsClass -- class constructor                                     *
@@ -267,7 +270,12 @@ int LoadOptionsClass::Process(void)
     listbtn.Add_Tail(*commands);
     if (Style == SAVE) {
         editbtn.Add_Tail(*commands);
+#ifdef IPADOS_PORT
+        // Touch users opt into text entry by tapping the filename field.
+        SDL_StopTextInput();
+#else
         editbtn.Set_Focus();
+#endif
     }
 
     /*
@@ -359,7 +367,9 @@ int LoadOptionsClass::Process(void)
         */
         if (firsttime && Style == SAVE) {
             firsttime = false;
+#ifndef IPADOS_PORT
             editbtn.Set_Focus();
+#endif
             editbtn.Flag_To_Redraw();
         }
 

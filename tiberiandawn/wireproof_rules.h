@@ -4,6 +4,9 @@ extern "C" {
 #endif
 void WP_InitRules(void);
 void WP_TickCheats(void);
+void WP_ResetLiveCheats(void);
+int WP_PlayerInvincible(const void* house);
+int WP_ScalePlayerSpeed(const void* house,int base,int category);
 int WP_RuleCount(void);
 const char* WP_RuleName(int index);
 const char* WP_RuleKey(int index);

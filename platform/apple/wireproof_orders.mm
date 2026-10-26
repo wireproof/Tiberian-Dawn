@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 #include "common/wireproof_orders.h"
+#include "common/wireproof_cheats.h"
 #include "third_party/SDL2/include/SDL.h"
 #include "third_party/SDL2/include/SDL_syswm.h"
 
@@ -19,6 +20,14 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 
 @interface WPOrdersPanel : UIView
+@property(nonatomic,strong) UIStackView *cheatStack;
+@property(nonatomic,strong) UIButton *cheatButton;
+@property(nonatomic,strong) UILabel *cheatStatus;
+@property(nonatomic,strong) UISwitch *invincibleSwitch;
+@property(nonatomic,strong) UISwitch *shroudSwitch;
+@property(nonatomic,strong) NSArray<UISlider*> *speedSliders;
+@property(nonatomic,strong) NSArray<UILabel*> *speedLabels;
+@property(nonatomic) BOOL cheatsOpen;
 @property(nonatomic,strong) UISlider *zoomSlider;
 @property(nonatomic,strong) UILabel *zoomLabel;
 @property(nonatomic,strong) UIButton *zoomMinus;
@@ -128,8 +137,41 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         [self.zoomPlus.widthAnchor constraintEqualToConstant:44].active=YES;
         UIStackView *zoomRow=[[UIStackView alloc] initWithArrangedSubviews:@[self.zoomMinus,self.zoomSlider,self.zoomPlus]];
         zoomRow.axis=UILayoutConstraintAxisHorizontal; zoomRow.spacing=8;
+        self.cheatButton=[self button:@"Cheats" tag:500];
+        self.cheatStatus=[UILabel new];self.cheatStatus.textColor=UIColor.whiteColor;
+        self.cheatStatus.font=[UIFont systemFontOfSize:12];self.cheatStatus.numberOfLines=3;
+        self.invincibleSwitch=[UISwitch new];self.invincibleSwitch.tag=0;
+        self.shroudSwitch=[UISwitch new];self.shroudSwitch.tag=1;
+        NSMutableArray *cheatRows=[NSMutableArray arrayWithObject:self.cheatStatus];
+        [cheatRows addObject:[self gridRow:@[[self button:@"+$1,000" tag:510],[self button:@"+$10,000" tag:511]]]];
+        NSArray *switchNames=@[@"Invincibility",@"Shroud"];
+        NSArray *switches=@[self.invincibleSwitch,self.shroudSwitch];
+        for(int i=0;i<2;++i) {
+            UILabel *label=[UILabel new];label.text=switchNames[i];label.textColor=UIColor.whiteColor;
+            UISwitch *control=switches[i];control.accessibilityLabel=switchNames[i];
+            [control addTarget:self action:@selector(cheatSwitchChanged:) forControlEvents:UIControlEventValueChanged];
+            UIStackView *row=[[UIStackView alloc] initWithArrangedSubviews:@[label,control]];
+            row.axis=UILayoutConstraintAxisHorizontal;row.alignment=UIStackViewAlignmentCenter;
+            [row.heightAnchor constraintEqualToConstant:44].active=YES;[cheatRows addObject:row];
+        }
+        [cheatRows addObject:[self gridRow:@[[self button:@"+100 power" tag:512],[self button:@"+1,000 power" tag:513]]]];
+        NSMutableArray *speedSliders=[NSMutableArray array],*speedLabels=[NSMutableArray array];
+        for(int i=0;i<3;++i) {
+            UILabel *label=[UILabel new];label.textColor=UIColor.whiteColor;label.font=[UIFont systemFontOfSize:13];
+            UISlider *slider=[UISlider new];slider.minimumValue=1;slider.maximumValue=12;slider.value=4;slider.tag=i;
+            slider.accessibilityLabel=@[@"Infantry speed",@"Vehicle speed",@"Aircraft speed"][i];
+            [slider addTarget:self action:@selector(speedChanged:) forControlEvents:UIControlEventValueChanged];
+            [slider.heightAnchor constraintEqualToConstant:44].active=YES;
+            [speedLabels addObject:label];[speedSliders addObject:slider];[cheatRows addObject:label];[cheatRows addObject:slider];
+        }
+        self.speedSliders=speedSliders;self.speedLabels=speedLabels;
+        UILabel *help=[UILabel new];help.numberOfLines=0;help.font=[UIFont systemFontOfSize:11];help.textColor=UIColor.lightGrayColor;
+        help.text=@"Player only • Single player\nShroud on restores the earlier explored area and current unit sight. Toggles/speed reset on mission load.";
+        [cheatRows addObject:help];
+        self.cheatStack=[[UIStackView alloc] initWithArrangedSubviews:cheatRows];
+        self.cheatStack.axis=UILayoutConstraintAxisVertical;self.cheatStack.spacing=6;
         self.stack=[[UIStackView alloc] initWithArrangedSubviews:@[
-            self.toggle,self.zoomLabel,zoomRow,
+            self.toggle,self.cheatButton,self.cheatStack,self.zoomLabel,zoomRow,
             [self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],
             [self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]],
             [self gridRow:@[modes[0],modes[1]]], [self gridRow:@[modes[2],modes[3]]],
@@ -192,6 +234,14 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }
 }
 - (void)pageChanged:(id)sender { [self refresh]; }
+- (void)cheatSwitchChanged:(UISwitch*)control {
+    if(control.tag==0)WPCheats::Shared().invincible(control.on);
+    else WPCheats::Shared().reveal(!control.on);
+    [self refresh];
+}
+- (void)speedChanged:(UISlider*)slider {
+    WPCheats::Shared().speed((int)slider.tag,(int)lroundf(slider.value));[self refresh];
+}
 - (void)saveZoom {
     int quarters=WPOrders::Shared().zoomQuarters();
     [[NSUserDefaults standardUserDefaults] setInteger:quarters forKey:@"Wireproof.ZoomQuarters"];
@@ -203,6 +253,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self saveZoom];
 }
 - (void)pressed:(UIButton*)button {
+    if(button.tag==500){self.cheatsOpen=!self.cheatsOpen;[self refresh];return;}
+    if(button.tag>=510&&button.tag<=513){
+        if(button.tag<512)WPCheats::Shared().addMoney(button.tag==510?1000:10000);
+        else WPCheats::Shared().addPower(button.tag==512?100:1000);
+        return;
+    }
     if (button.tag==400 || button.tag==401) {
         WPOrders::Shared().stepZoom(button.tag==400?-1:1); [self saveZoom]; return;
     }
@@ -216,6 +272,19 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 - (void)refresh {
     auto s=WPOrders::Shared().snapshot();
+    auto cheats=WPCheats::Shared().snapshot();
+    self.cheatButton.enabled=cheats.available;
+    [self.cheatButton setTitle:self.cheatsOpen?@"Back to orders":@"Cheats" forState:UIControlStateNormal];
+    for(UIView *row in self.stack.arrangedSubviews) {
+        if(row==self.toggle||row==self.cheatButton)continue;
+        row.hidden=row==self.cheatStack?!self.cheatsOpen:self.cheatsOpen;
+    }
+    self.cheatStack.userInteractionEnabled=cheats.available;
+    self.cheatStatus.text=[NSString stringWithFormat:@"Credits: %d\nPower: %d / %d",cheats.money,cheats.power,cheats.drain];
+    self.invincibleSwitch.on=cheats.invincible;self.shroudSwitch.on=!cheats.reveal;
+    int speeds[]={cheats.infantry,cheats.vehicles,cheats.aircraft};
+    for(int i=0;i<3;++i){self.speedSliders[i].value=speeds[i];self.speedLabels[i].text=[NSString stringWithFormat:@"%@: %.2f×",@[@"Infantry",@"Vehicles",@"Aircraft"][i],speeds[i]/4.0];}
+
     int quarters=WPOrders::Shared().zoomQuarters();
     self.zoomLabel.text=[NSString stringWithFormat:@"Zoom %.2f×",quarters/4.0];
     self.zoomSlider.value=quarters; self.zoomSlider.accessibilityValue=self.zoomLabel.text;

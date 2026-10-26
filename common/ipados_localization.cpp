@@ -41,7 +41,7 @@ const Translation Translations[] = {
      "Sprache gespeichert. Klassische Menues wechseln nach Exit Game und erneutem Oeffnen der App. Deutsche Originaltexte werden verwendet, wenn sie vorhanden sind; sonst bleibt Englisch aktiv."},
     {"visual_image_format", "Image: %s", "Bild: %s"},
     {"visual_artwork_format", "Style: %s", "Stil: %s"},
-    {"visual_ui_format", "UI scale: %d%%", "UI-Skalierung: %d%%"},
+    {"visual_ui_format", "Touch size: %d%%", "Touch-Groesse: %d%%"},
     {"visual_readability_format", "Readability: %s", "Lesbarkeit: %s"},
     {"visual_mode_sharp", "Sharp", "Scharf"},
     {"visual_mode_pixel", "Pixel-perfect", "Pixelgenau"},

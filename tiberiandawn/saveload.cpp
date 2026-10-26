@@ -45,6 +45,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#endif
 
 extern bool DLLSave(FileClass& file);
 extern bool DLLLoad(FileClass& file);
@@ -531,6 +534,9 @@ bool Load_Game(const char* file_name)
     }
 #endif
 
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    WP_ResetLiveCheats();
+#endif
     Call_Back();
     return (true);
 }

@@ -1,3 +1,4 @@
+#include "common/wireproof_cheats.h"
 #include "function.h"
 #include "wireproof_rules.h"
 #include <vector>
@@ -129,7 +130,9 @@ int WP_RuleValueValid(int i,int v){
     return 0;
 }
 
+static void WP_ApplyLiveCheats();
 void WP_TickCheats(void) {
+    WP_ApplyLiveCheats();
     if (GameToPlay != GAME_NORMAL || !PlayerPtr) return;
     if (creditFloor && PlayerPtr->Credits < creditFloor) PlayerPtr->Credits=creditFloor;
     if (!autoHeal) return;
@@ -137,4 +140,48 @@ void WP_TickCheats(void) {
     for(int i=0;i<Infantry.Count();++i) { auto* u=Infantry.Ptr(i); if(u && u->House==PlayerPtr && u->Strength>0) u->Strength=u->Class->MaxStrength; }
     for(int i=0;i<Aircraft.Count();++i) { auto* u=Aircraft.Ptr(i); if(u && u->House==PlayerPtr && u->Strength>0) u->Strength=u->Class->MaxStrength; }
     for(int i=0;i<Buildings.Count();++i) { auto* u=Buildings.Ptr(i); if(u && u->House==PlayerPtr && u->Strength>0) u->Strength=u->Class->MaxStrength; }
+}
+
+namespace {
+WPCheats::Snapshot liveCheats;
+std::vector<unsigned char> savedShroud;
+bool mapRevealed=false;
+template<class Pool> void RestoreSight(Pool& pool) {
+    for(int i=0;i<pool.Count();++i) {auto* u=pool.Ptr(i);
+        if(u&&u->House==PlayerPtr&&!u->IsInLimbo&&u->Strength>0)
+            Map.Sight_From(PlayerPtr,Coord_Cell(u->Center_Coord()),u->Class->SightRange,false);
+    }
+}
+}
+void WP_ResetLiveCheats(void) {
+    WPCheats::Shared().reset(); liveCheats={}; savedShroud.clear();mapRevealed=false;
+}
+int WP_PlayerInvincible(const void* house) {
+    return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.invincible;
+}
+int WP_ScalePlayerSpeed(const void* house,int base,int category) {
+    if(PlaybackGame || GameToPlay!=GAME_NORMAL || house!=PlayerPtr)return base;
+    int quarters=category==0?liveCheats.infantry:category==1?liveCheats.vehicles:liveCheats.aircraft;
+    return base*quarters/4;
+}
+static void WP_ApplyLiveCheats() {
+    if(GameToPlay!=GAME_NORMAL || !PlayerPtr || PlaybackGame) return;
+    liveCheats=WPCheats::Shared().snapshot();
+    auto actions=WPCheats::Shared().take();
+    if(actions.money) PlayerPtr->Refund_Money(actions.money);
+    if(actions.power) {PlayerPtr->Adjust_Power(actions.power);Map.Flag_To_Redraw(true);}
+    if(liveCheats.reveal!=mapRevealed) {
+        if(liveCheats.reveal) {
+            savedShroud.resize(MAP_CELL_TOTAL);
+            for(int i=0;i<MAP_CELL_TOTAL;++i) savedShroud[i]=(Map[i].IsMapped?1:0)|(Map[i].IsVisible?2:0);
+            for(int i=0;i<MAP_CELL_TOTAL;++i) {Map[i].IsMapped=true;Map[i].IsVisible=true;Map[i].Redraw_Objects();}
+        } else if(savedShroud.size()==MAP_CELL_TOTAL) {
+            for(int i=0;i<MAP_CELL_TOTAL;++i) {Map[i].IsMapped=savedShroud[i]&1;Map[i].IsVisible=(savedShroud[i]&2)!=0;Map[i].Redraw_Objects();}
+            // Restore the explored snapshot plus the sight of current player objects.
+            RestoreSight(Units);RestoreSight(Infantry);RestoreSight(Aircraft);RestoreSight(Buildings);
+            savedShroud.clear();
+        }
+        mapRevealed=liveCheats.reveal;Map.Flag_To_Redraw(true);
+    }
+    WPCheats::Shared().publish(true,PlayerPtr->Available_Money(),PlayerPtr->Power,PlayerPtr->Drain);
 }

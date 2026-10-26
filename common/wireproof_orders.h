@@ -12,6 +12,7 @@ class State {
     std::deque<Command> pending;
     Snapshot state = {false,0,0};
     bool pan_held = false;
+    int zoom_quarters = 6;
 public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
@@ -19,6 +20,9 @@ public:
         if (!active) { pending.clear(); state.force=0; pan_held=false; }
         if (!selected) state.force=0;
     }
+    void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
+    int zoomQuarters() { std::lock_guard<std::mutex> lock(mutex); return zoom_quarters; }
+    void stepZoom(int delta) { std::lock_guard<std::mutex> lock(mutex); int value=zoom_quarters+delta; zoom_quarters=value<2?2:value>12?12:value; }
     void hold_pan(bool held) { std::lock_guard<std::mutex> lock(mutex); pan_held=held && state.active; }
     bool panHeld() { std::lock_guard<std::mutex> lock(mutex); return pan_held; }
     Snapshot snapshot() { std::lock_guard<std::mutex> lock(mutex); return state; }

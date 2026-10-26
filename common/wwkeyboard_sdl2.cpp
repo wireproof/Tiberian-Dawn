@@ -21,7 +21,7 @@
 #include "video.h"
 #include "sdl_keymap.h"
 #include "settings.h"
-#ifdef IPADOS_PORT
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #include "wireproof_orders.h"
 #endif
 #include <algorithm>
@@ -620,6 +620,15 @@ void WWKeyboardClassSDL2::Fill_Buffer_From_System(void)
             exit(0);
             break;
         case SDL_KEYDOWN:
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+            // Keyboard equivalent of the UIKit zoom control on desktop.
+            if (!SDL_IsTextInputActive() && (event.key.keysym.mod & KMOD_ALT)
+                && WPOrders::Shared().snapshot().active
+                && (event.key.keysym.scancode==SDL_SCANCODE_EQUALS || event.key.keysym.scancode==SDL_SCANCODE_MINUS)) {
+                WPOrders::Shared().stepZoom(event.key.keysym.scancode==SDL_SCANCODE_MINUS?-1:1);
+                break;
+            }
+#endif
             if (!SDL_IsTextInputActive() || !Is_Text_Producing_Scancode(event.key.keysym.scancode)) {
                 Put_Key_Message(event.key.keysym.scancode, false);
             }

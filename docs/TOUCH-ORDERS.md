@@ -1,3 +1,11 @@
+# v0.3.8 zoom slider
+
+The controller menu has minus and plus buttons at the ends of a slider. The
+slider and buttons use exactly 0.5–3.0 in 0.25 steps, with the current value above.
+The iOS preference persists between launches; default is 1.5x. Top bar, build
+sidebar and controller size stay fixed. Option-minus and Option-plus adjust the
+same scale with a keyboard on macOS/iOS. Pinch zoom stays disabled.
+
 # v0.3.7 scale adjustment
 
 Fixed gameplay scale is now 1.5x. The hold-to-pan control is unchanged.

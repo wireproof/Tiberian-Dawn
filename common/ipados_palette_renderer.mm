@@ -161,15 +161,19 @@ static float4 modernized_color(texture2d<uint, access::read> indices,
 fragment float4 TiberianDawnPaletteFragment(PaletteVertexOutput input [[stage_in]],
                                          constant PaletteParameters& parameters [[buffer(0)]],
                                          constant float4& scene [[buffer(1)]],
+                                         constant float2& view_size [[buffer(2)]],
                                          texture2d<uint, access::read> indices [[texture(0)]],
                                          texture2d<float, access::read> palette [[texture(1)]])
 {
     const float2 source_size = float2(parameters.source_size);
     const int2 integer_source_size = int2(source_size);
-    float2 point = input.uv * source_size;
+    float2 point = input.uv * view_size;
     if (scene.y > 0 && point.x < scene.y && point.y >= scene.z) {
         point.x /= scene.x;
         point.y = scene.z + (point.y - scene.z) / scene.x;
+    }
+    else if (scene.y>0 && ((point.y>=scene.z && point.x>=scene.y) || (point.y<scene.z && point.x>=view_size.x-320))) {
+        point.x+=source_size.x-view_size.x;
     }
     const float2 uv = point / source_size;
     const float2 source_position = point - 0.5;
@@ -874,7 +878,7 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
                          int infantry_count,
                          const IPadSelectionOverlay* selections,
                          int selection_count,
-                         IPadPaletteCursor cursor, float map_zoom, int map_right, int map_top)
+                         IPadPaletteCursor cursor, float map_zoom, int map_right, int map_top, int view_width, int view_height)
 {
     TiberianDawnPaletteRendererState* state = State(renderer);
     if (!state || !sdl_renderer || !indexed_pixels || indexed_pitch < state->Width || !rgb6_palette
@@ -927,6 +931,8 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
                                           static_cast<float>(viewport.height),
                                           static_cast<std::uint32_t>(presentation_mode),
                                           static_cast<std::uint32_t>(artwork_mode)};
+    const float view_size[2]={float(view_width),float(view_height)};
+    [encoder setFragmentBytes:view_size length:sizeof(view_size) atIndex:2];
     const float scene[4] = {map_zoom, float(map_right), float(map_top), 0};
     [encoder setFragmentBytes:scene length:sizeof(scene) atIndex:1];
     SetViewport(encoder, viewport);

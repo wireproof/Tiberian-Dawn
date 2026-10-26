@@ -67,8 +67,9 @@ void Move_Video_Mouse(float xrel, float yrel);
 void Get_Video_Mouse(int& x, int& y);
 void Refresh_Video_Layout();
 float Video_Battlefield_Zoom();
+void Video_Presentation_Size(int& width, int& height);
 void Video_Publish_Order_Icon(int kind);
-void Video_Set_Battlefield(bool active, int right, int top);
+void Video_Set_Battlefield(bool active, int right, int top, int view_width, int view_height, float zoom);
 void Video_Adaptive_Size(int& width, int& height);
 void Video_Set_Logical_Size(int width, int height);
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)

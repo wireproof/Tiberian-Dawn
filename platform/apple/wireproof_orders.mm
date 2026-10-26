@@ -19,6 +19,10 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 
 @interface WPOrdersPanel : UIView
+@property(nonatomic,strong) UISlider *zoomSlider;
+@property(nonatomic,strong) UILabel *zoomLabel;
+@property(nonatomic,strong) UIButton *zoomMinus;
+@property(nonatomic,strong) UIButton *zoomPlus;
 @property(nonatomic,strong) UIStackView *stack;
 @property(nonatomic,strong) UIScrollView *body;
 @property(nonatomic,strong) NSArray<UIButton*> *modeButtons;
@@ -108,8 +112,24 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         NSArray *modeNames=@[@"Recall",@"Assign",@"Add",@"Center"];
         for (NSInteger i=0;i<4;i++) [modes addObject:[self button:modeNames[i] tag:300+i]];
         self.modeButtons=modes;
+        NSNumber *savedZoom=[[NSUserDefaults standardUserDefaults] objectForKey:@"Wireproof.ZoomQuarters"];
+        if (savedZoom) WPOrders::Shared().setZoomQuarters(savedZoom.intValue);
+        self.zoomLabel=[UILabel new]; self.zoomLabel.textColor=UIColor.whiteColor;
+        self.zoomLabel.font=[UIFont systemFontOfSize:14 weight:UIFontWeightSemibold];
+        self.zoomLabel.textAlignment=NSTextAlignmentCenter;
+        [self.zoomLabel.heightAnchor constraintEqualToConstant:24].active=YES;
+        self.zoomSlider=[UISlider new]; self.zoomSlider.minimumValue=2; self.zoomSlider.maximumValue=12;
+        self.zoomSlider.value=WPOrders::Shared().zoomQuarters();
+        self.zoomSlider.accessibilityLabel=@"Battlefield zoom";
+        [self.zoomSlider addTarget:self action:@selector(zoomChanged:) forControlEvents:UIControlEventValueChanged];
+        self.zoomMinus=[self button:@"−" tag:400]; self.zoomPlus=[self button:@"+" tag:401];
+        self.zoomMinus.accessibilityLabel=@"Zoom out by 0.25"; self.zoomPlus.accessibilityLabel=@"Zoom in by 0.25";
+        [self.zoomMinus.widthAnchor constraintEqualToConstant:44].active=YES;
+        [self.zoomPlus.widthAnchor constraintEqualToConstant:44].active=YES;
+        UIStackView *zoomRow=[[UIStackView alloc] initWithArrangedSubviews:@[self.zoomMinus,self.zoomSlider,self.zoomPlus]];
+        zoomRow.axis=UILayoutConstraintAxisHorizontal; zoomRow.spacing=8;
         self.stack=[[UIStackView alloc] initWithArrangedSubviews:@[
-            self.toggle,
+            self.toggle,self.zoomLabel,zoomRow,
             [self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],
             [self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]],
             [self gridRow:@[modes[0],modes[1]]], [self gridRow:@[modes[2],modes[3]]],
@@ -172,7 +192,20 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }
 }
 - (void)pageChanged:(id)sender { [self refresh]; }
+- (void)saveZoom {
+    int quarters=WPOrders::Shared().zoomQuarters();
+    [[NSUserDefaults standardUserDefaults] setInteger:quarters forKey:@"Wireproof.ZoomQuarters"];
+    self.zoomSlider.value=quarters;
+    [self refresh];
+}
+- (void)zoomChanged:(UISlider*)slider {
+    WPOrders::Shared().setZoomQuarters((int)lroundf(slider.value));
+    [self saveZoom];
+}
 - (void)pressed:(UIButton*)button {
+    if (button.tag==400 || button.tag==401) {
+        WPOrders::Shared().stepZoom(button.tag==400?-1:1); [self saveZoom]; return;
+    }
     if (button.tag==100) { self.expanded=!self.expanded; [self refresh]; return; }
     if (button.tag>=300) { self.groupMode.selectedSegmentIndex=button.tag-300; [self refresh]; return; }
     if (button.tag>=200) {
@@ -183,6 +216,10 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 - (void)refresh {
     auto s=WPOrders::Shared().snapshot();
+    int quarters=WPOrders::Shared().zoomQuarters();
+    self.zoomLabel.text=[NSString stringWithFormat:@"Zoom %.2f×",quarters/4.0];
+    self.zoomSlider.value=quarters; self.zoomSlider.accessibilityValue=self.zoomLabel.text;
+    self.zoomMinus.enabled=quarters>2; self.zoomPlus.enabled=quarters<12;
     self.hidden=!s.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
     if (self.hidden) WPOrders::Shared().hold_pan(false);
     if (!self.configured && self.window) { self.expanded=NO; self.configured=YES; }

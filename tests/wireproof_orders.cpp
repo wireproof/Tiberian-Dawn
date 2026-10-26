@@ -3,6 +3,14 @@
 int main() {
     using namespace WPOrders;
     State s; Command c;
+    assert(s.zoomQuarters()==6);
+    s.setZoomQuarters(-10); assert(s.zoomQuarters()==2);
+    for (int q=2;q<=12;++q) { assert(s.zoomQuarters()==q); s.stepZoom(1); }
+    assert(s.zoomQuarters()==12); s.stepZoom(1); assert(s.zoomQuarters()==12);
+    for (int q=12;q>=2;--q) { assert(s.zoomQuarters()==q); s.stepZoom(-1); }
+    assert(s.zoomQuarters()==2);
+    s.setZoomQuarters(7); s.publish(false,0); assert(s.zoomQuarters()==7); // retains preference between missions
+    s.setZoomQuarters(6);
     s.hold_pan(true); assert(!s.panHeld()); // cannot latch a modifier in menus
     s.publish(true,0); s.hold_pan(true); assert(s.panHeld()); // no selected units required
     s.hold_pan(false); assert(!s.panHeld());

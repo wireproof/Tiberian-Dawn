@@ -507,6 +507,12 @@ Uint32 SettingsPixelFormat()
 
 static void Update_HWCursor();
 
+#ifdef TIBERIAN_DAWN_APPLE_PORT
+static int battlefield_view_w = 0, battlefield_view_h = 0;
+static int Presentation_Width() { return battlefield_view_w>0?battlefield_view_w:hwcursor.GameW; }
+static int Presentation_Height() { return battlefield_view_h>0?battlefield_view_h:hwcursor.GameH; }
+#endif
+
 static void Update_HWCursor_Settings(bool geometry_only = false)
 {
     if (window == nullptr || renderer == nullptr || hwcursor.GameW <= 0 || hwcursor.GameH <= 0) {
@@ -553,8 +559,8 @@ static void Update_HWCursor_Settings(bool geometry_only = false)
                                         renderer_output_h,
                                         window_points_w,
                                         window_points_h,
-                                        hwcursor.GameW,
-                                        hwcursor.GameH,
+                                        Presentation_Width(),
+                                        Presentation_Height(),
                                         {safe_left, safe_top, safe_right, safe_bottom},
                                         Settings.Video.PresentationMode == 1, Settings.Video.PresentationMode == 3);
     render_dst.x = ipad_layout.viewport.x;
@@ -1023,8 +1029,8 @@ void Get_Video_Mouse(int& x, int& y)
 
 #ifdef TIBERIAN_DAWN_APPLE_PORT
 static bool battlefield_active = false;
-// Fixed gameplay magnification. Menus/UI remain 1x and gestures never change it.
-static constexpr float battlefield_zoom = 1.5f;
+// Updated only by the game thread between frames.
+static float battlefield_zoom = 1.5f;
 static int battlefield_right = 480, battlefield_top = 16;
 void Video_Publish_Order_Icon(int kind) {
 #ifdef IPADOS_PORT
@@ -1040,21 +1046,26 @@ void Video_Publish_Order_Icon(int kind) {
 #endif
 }
 float Video_Battlefield_Zoom() { return battlefield_active ? battlefield_zoom : 1.0f; }
-void Video_Set_Battlefield(bool active, int right, int top) {
-    if (battlefield_active != active || battlefield_right != right || battlefield_top != top) force_present = true;
+void Video_Set_Battlefield(bool active, int right, int top, int view_width, int view_height, float zoom) {
+    if (battlefield_active != active || battlefield_right != right || battlefield_top != top || battlefield_zoom!=zoom
+        || battlefield_view_w!=view_width || battlefield_view_h!=view_height) force_present = true;
     battlefield_active = active; battlefield_right = right; battlefield_top = top;
+    battlefield_view_w=view_width; battlefield_view_h=view_height; battlefield_zoom=zoom;
 }
 static void Unzoom_Battlefield_Point(int& x, int& y) {
-    if (battlefield_active) Unzoom_IPad_Battlefield_Point(x, y, battlefield_right, battlefield_top, battlefield_zoom);
+    if (!battlefield_active) return;
+    Map_Battlefield_Point(x,y,battlefield_right,battlefield_top,Presentation_Width(),hwcursor.GameW,battlefield_zoom);
 }
 static SDL_Rect Battlefield_Destination() {
     SDL_Rect result = render_dst;
     const float zoom = Video_Battlefield_Zoom();
-    result.y += (int)std::lround(battlefield_top * (render_dst.h / float(hwcursor.GameH)) * (1 - zoom));
-    result.w = (int)std::lround(result.w * zoom);
-    result.h = (int)std::lround(result.h * zoom);
+    result.y += (int)std::lround(battlefield_top * (render_dst.h / float(Presentation_Height())) * (1 - zoom));
+    result.w = (int)std::lround(result.w * zoom * hwcursor.GameW / Presentation_Width());
+    result.h = (int)std::lround(result.h * zoom * hwcursor.GameH / Presentation_Height());
     return result;
 }
+
+void Video_Presentation_Size(int& width, int& height) { width=Presentation_Width(); height=Presentation_Height(); }
 
 void Video_Adaptive_Size(int& width, int& height)
 {
@@ -1826,6 +1837,8 @@ public:
         render_dst = base_destination;
         if (software_cursor) {
             const float cursor_scale = Settings.Video.LargeCursor ? 2.5f : 1.0f;
+            const bool cursor_world=battlefield_active && cursor_y>=battlefield_top && cursor_x<(hwcursor.GameW-(Presentation_Width()-battlefield_right));
+            const int cursor_padding=battlefield_active && !cursor_world && cursor_x>=hwcursor.GameW-320 ? hwcursor.GameW-Presentation_Width():0;
             const int game_x = cursor_x - static_cast<int>(hwcursor.HotX * cursor_scale);
             const int game_y = cursor_y - static_cast<int>(hwcursor.HotY * cursor_scale);
             metal_cursor.pixels = hwcursor.Surface->pixels;
@@ -1835,11 +1848,11 @@ public:
             metal_cursor.hotspot_x = hwcursor.HotX;
             metal_cursor.hotspot_y = hwcursor.HotY;
             metal_cursor.kind = cursor_kind;
-            metal_cursor.destination.x = render_dst.x + static_cast<int>(game_x * hwcursor.ScaleX);
-            metal_cursor.destination.y = render_dst.y + static_cast<int>(game_y * hwcursor.ScaleY);
-            metal_cursor.destination.width = std::max(1, static_cast<int>(hwcursor.Surface->w * cursor_scale * hwcursor.ScaleX));
-            metal_cursor.destination.height = std::max(1, static_cast<int>(hwcursor.Surface->h * cursor_scale * hwcursor.ScaleY));
-            if (battlefield_active && cursor_x < battlefield_right / battlefield_zoom && cursor_y >= battlefield_top) {
+            metal_cursor.destination.x = render_dst.x + static_cast<int>((game_x-cursor_padding) * render_dst.w / float(Presentation_Width()));
+            metal_cursor.destination.y = render_dst.y + static_cast<int>(game_y * render_dst.h / float(Presentation_Height()));
+            metal_cursor.destination.width = std::max(1, static_cast<int>(hwcursor.Surface->w * cursor_scale * render_dst.w / float(Presentation_Width())));
+            metal_cursor.destination.height = std::max(1, static_cast<int>(hwcursor.Surface->h * cursor_scale * render_dst.h / float(Presentation_Height())));
+            if (cursor_world) {
                 const SDL_Rect world = Battlefield_Destination();
                 metal_cursor.destination.x = world.x + (int)std::lround(game_x * world.w / float(surface->w));
                 metal_cursor.destination.y = world.y + (int)std::lround(game_y * world.h / float(surface->h));
@@ -1878,7 +1891,7 @@ public:
                               std::max(0, clip_bottom - clip_top)};
             }
             if (battlefield_active) {
-                const float sx = render_dst.w / float(surface->w), sy = render_dst.h / float(surface->h);
+                const float sx = render_dst.w / float(Presentation_Width()), sy = render_dst.h / float(Presentation_Height());
                 world_clip = {render_dst.x, render_dst.y + (int)std::lround(battlefield_top * sy),
                     (int)std::lround(battlefield_right * sx), render_dst.h - (int)std::lround(battlefield_top * sy)};
             }
@@ -1905,7 +1918,7 @@ public:
                                                 metal_cursor,
                                                 Video_Battlefield_Zoom(),
                                                 battlefield_active ? battlefield_right : 0,
-                                                battlefield_top);
+                                                battlefield_top, Presentation_Width(), Presentation_Height());
         }
 #endif
 
@@ -1966,13 +1979,21 @@ public:
             SDL_RenderClear(renderer);
             SDL_RenderCopy(renderer, texture, NULL, &render_dst);
 #ifdef TIBERIAN_DAWN_APPLE_PORT
-            if (battlefield_active && battlefield_zoom > 1.0f) {
-                SDL_Rect src = {0, battlefield_top, (int)std::ceil(battlefield_right / battlefield_zoom),
-                    (int)std::ceil((surface->h - battlefield_top) / battlefield_zoom)};
-                SDL_Rect dst = {render_dst.x, render_dst.y + (int)std::lround(battlefield_top * render_dst.h / float(surface->h)),
-                    (int)std::lround(battlefield_right * render_dst.w / float(surface->w)),
-                    (int)std::lround((surface->h - battlefield_top) * render_dst.h / float(surface->h))};
-                SDL_RenderCopy(renderer, texture, &src, &dst);
+            if (battlefield_active) {
+                const float sx=render_dst.w/float(Presentation_Width()), sy=render_dst.h/float(Presentation_Height());
+                auto copyPiece=[&](SDL_Rect src,int x,int y,int w,int h) {
+                    SDL_Rect dst={render_dst.x+(int)std::lround(x*sx),render_dst.y+(int)std::lround(y*sy),
+                        (int)std::lround(w*sx),(int)std::lround(h*sy)};
+                    SDL_RenderCopy(renderer,texture,&src,&dst);
+                };
+                copyPiece({0,battlefield_top,(int)std::ceil(battlefield_right/battlefield_zoom),
+                    (int)std::ceil((Presentation_Height()-battlefield_top)/battlefield_zoom)},
+                    0,battlefield_top,battlefield_right,Presentation_Height()-battlefield_top);
+                const int sidebar=Presentation_Width()-battlefield_right;
+                if (sidebar) copyPiece({surface->w-sidebar,battlefield_top,sidebar,Presentation_Height()-battlefield_top},
+                    battlefield_right,battlefield_top,sidebar,Presentation_Height()-battlefield_top);
+                copyPiece({0,0,Presentation_Width()-320,battlefield_top},0,0,Presentation_Width()-320,battlefield_top);
+                copyPiece({surface->w-320,0,320,battlefield_top},Presentation_Width()-320,0,320,battlefield_top);
             }
 #endif
         }
@@ -1994,9 +2015,9 @@ public:
             };
             SDL_Rect selection_clip=feedback_base;
             if (battlefield_active) {
-                selection_clip.y += (int)std::lround(battlefield_top * feedback_base.h / float(surface->h));
+                selection_clip.y += (int)std::lround(battlefield_top * feedback_base.h / float(Presentation_Height()));
                 selection_clip.h -= selection_clip.y-feedback_base.y;
-                selection_clip.w = (int)std::lround(battlefield_right * feedback_base.w / float(surface->w));
+                selection_clip.w = (int)std::lround(battlefield_right * feedback_base.w / float(Presentation_Width()));
             }
             SDL_RenderSetClipRect(renderer, &selection_clip);
             SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -2018,9 +2039,11 @@ public:
         if (touch_feedback.active) {
             if (battlefield_active && touch_feedback.x < battlefield_right / battlefield_zoom && touch_feedback.y >= battlefield_top)
                 render_dst = Battlefield_Destination();
-            const float scale_x = render_dst.w / static_cast<float>(hwcursor.GameW);
-            const float scale_y = render_dst.h / static_cast<float>(hwcursor.GameH);
-            const int center_x = render_dst.x + static_cast<int>(touch_feedback.x * scale_x);
+            const bool on_world=battlefield_active && touch_feedback.x < battlefield_right/battlefield_zoom && touch_feedback.y>=battlefield_top;
+            const float scale_x = render_dst.w / float(on_world?hwcursor.GameW:Presentation_Width());
+            const float scale_y = render_dst.h / float(on_world?hwcursor.GameH:Presentation_Height());
+            const int padding=battlefield_active && !on_world && touch_feedback.x>=hwcursor.GameW-320 ? hwcursor.GameW-Presentation_Width():0;
+            const int center_x = render_dst.x + static_cast<int>((touch_feedback.x-padding) * scale_x);
             const int center_y = render_dst.y + static_cast<int>(touch_feedback.y * scale_y);
             // Touch feedback is separate from the legacy game cursor.
             // Increase its visible ring without shifting the actual touch position.
@@ -2270,8 +2293,6 @@ void Video_Set_HD_World_Artwork_Visible(bool visible)
     hd_world_artwork_visible = visible;
     if (!visible) {
         Video_Clear_HD_Artwork();
-        const SDL_Rect feedback_base = render_dst;
-        render_dst = Battlefield_Destination();
         if (touch_selection_box.active) {
             touch_selection_box.active = false;
             ++touch_selection_box.generation;

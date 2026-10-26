@@ -1685,6 +1685,8 @@ bool Main_Loop()
     float touch_pan_x = 0.0f;
     float touch_pan_y = 0.0f;
     if (Consume_IPadOS_Touch_Pan(touch_pan_x, touch_pan_y)) {
+        int pan_view_width, pan_view_height;
+        Video_Presentation_Size(pan_view_width, pan_view_height);
 #if defined(VISIONOS_PORT)
         const float touch_pan_speed = 1.0f;
 #else
@@ -1693,9 +1695,9 @@ bool Main_Loop()
                                           : (Settings.Touch.ScrollSpeed == 2 ? 1.40f : 1.0f);
 #endif
         const int map_delta_x = -static_cast<int>(
-            std::round(touch_pan_x * SeenBuff.Get_Width() * touch_pan_speed / Video_Battlefield_Zoom()));
+            std::round(touch_pan_x * pan_view_width * touch_pan_speed / Video_Battlefield_Zoom()));
         const int map_delta_y = -static_cast<int>(
-            std::round(touch_pan_y * SeenBuff.Get_Height() * touch_pan_speed / Video_Battlefield_Zoom()));
+            std::round(touch_pan_y * pan_view_height * touch_pan_speed / Video_Battlefield_Zoom()));
         Scroll_Apple_Touch_Map(map_delta_x, map_delta_y);
     }
 #ifdef VISIONOS_PORT

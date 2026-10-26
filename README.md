@@ -2,15 +2,15 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.3.7
+## Latest release: v0.3.8
 
-[Download v0.3.7](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.3.7)
-starts gameplay at a fixed 1.5x battlefield scale. Units and terrain are larger;
-menus, the top bar, sidebar and toolbar keep their existing size. The v0.3.5
-gestures and compact Orders panel (groups 1–5 and 6–9) are unchanged. Pinch
-and Control+wheel zoom remain disabled. Hold the floating controller button to
-pan the map with your other finger; release to restore selection. Physical-device
-confirmation is pending.
+[Download v0.3.8](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.3.8).
+The controller menu includes a **− / zoom slider / +** control with quarter steps:
+0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3.
+It defaults to 1.5x and saves your iOS choice. The map zooms while menus, the top
+bar, sidebar and compact toolbar retain their size. Option-minus/Option-plus
+provide keyboard equivalents. Pinch zoom remains disabled; hold the floating
+controller button to pan with your other finger. Device confirmation pending.
 
 ## Release 0.2.8
 

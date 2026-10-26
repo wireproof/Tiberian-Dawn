@@ -136,7 +136,14 @@ void Calculate_Adaptive_Game_Size(int available_width, int available_height, int
 
 void Unzoom_IPad_Battlefield_Point(int& x, int& y, int right, int top, float zoom)
 {
-    if (!std::isfinite(zoom) || zoom < 1.0f || x >= right || y < top) return;
+    if (!std::isfinite(zoom) || zoom <= 0.0f || x >= right || y < top) return;
     x = (int)(x / zoom);
     y = top + (int)((y - top) / zoom);
+}
+
+void Map_Battlefield_Point(int& x, int& y, int right, int top, int view_width, int backing_width, float zoom)
+{
+    if ((y<top && x>=view_width-320) || (y>=top && x>=right))
+        x+=backing_width-view_width;
+    else Unzoom_IPad_Battlefield_Point(x,y,right,top,zoom);
 }

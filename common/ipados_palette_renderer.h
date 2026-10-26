@@ -124,6 +124,6 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
                          int infantry_count,
                          const IPadSelectionOverlay* selections,
                          int selection_count,
-                         IPadPaletteCursor cursor, float map_zoom, int map_right, int map_top);
+                         IPadPaletteCursor cursor, float map_zoom, int map_right, int map_top, int view_width, int view_height);
 
 #endif

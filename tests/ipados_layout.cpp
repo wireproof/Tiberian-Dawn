@@ -62,6 +62,31 @@ int main()
     Unzoom_IPad_Battlefield_Point(x,y,480,16,3.0f);
     assert(x==300 && y==8); // top bar remains fixed
 
+    // Zoom-out must reveal more map, not reject scales below 1x.
+    x=300;y=216; Unzoom_IPad_Battlefield_Point(x,y,480,16,0.5f);
+    assert(x==600 && y==416);
+    x=300;y=216; Unzoom_IPad_Battlefield_Point(x,y,480,16,0.75f);
+    assert(x==400 && y==282);
+    for (int q=2;q<=12;++q) {
+        x=500;y=216; Unzoom_IPad_Battlefield_Point(x,y,480,16,q/4.0f);
+        assert(x==500 && y==216);
+        x=300;y=8; Unzoom_IPad_Battlefield_Point(x,y,480,16,q/4.0f);
+        assert(x==300 && y==8);
+    }
+
+    for (int q=2;q<=12;++q) {
+        const float z=q/4.0f;
+        const int backing=std::max(640,(int)std::ceil(480/z)+160);
+        x=500;y=100; Map_Battlefield_Point(x,y,480,16,640,backing,z);
+        assert(x==backing-140 && y==100); // build bar hit targets follow backing storage
+        x=400;y=8; Map_Battlefield_Point(x,y,480,16,640,backing,z);
+        assert(x==backing-240 && y==8); // credits/top-right UI remains fixed
+        x=20;y=8; Map_Battlefield_Point(x,y,480,16,640,backing,z);
+        assert(x==20 && y==8); // Options remains left anchored
+        x=300;y=216; Map_Battlefield_Point(x,y,480,16,640,backing,z);
+        assert(x==(int)(300/z) && y==16+(int)(200/z));
+    }
+
     IPadLayout landscape = Calculate_IPad_Layout(2420, 1668, 1210, 834, 640, 400, {0, 0, 0, 0}, false);
     assert(landscape.viewport.width == 2420);
     assert(landscape.viewport.height == 1513);

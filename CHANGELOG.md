@@ -4,6 +4,16 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.3.8 — 2026-10-25
+
+- Add a controller-menu zoom slider with minus/plus ends and eleven exact
+  quarter steps from 0.5x through 3x. Default is 1.5x; the iOS preference is saved.
+- Zoom-out renders additional map area while keeping the top bar, sidebar and
+  controller at their normal sizes. Preserve the map center across zoom changes.
+- Add Option-minus/Option-plus keyboard equivalents on both Apple targets.
+- Keep pinch zoom disabled and retain hold-to-pan and groups 1–5 / 6–9.
+- Physical-device confirmation of the slider remains pending.
+
 ## 0.3.7 — 2026-10-25
 
 - Reduce fixed battlefield magnification from 2x to 1.5x after device feedback.

@@ -21,12 +21,46 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     });
 }
 
+// Independent normalized positions for each display and orientation. Keep the
+// old shared preference as the initial value for profiles not yet customized.
+@interface WPControlPositionStore : NSObject
+@property(nonatomic,copy) NSString *base;
+@property(nonatomic,copy) NSString *profile;
+@property(nonatomic,copy) NSString *pending;
+@property(nonatomic) CFTimeInterval since;
+- (CGPoint)update:(CGPoint)position window:(UIWindow*)window;
+- (void)save:(CGPoint)position;
+@end
+@implementation WPControlPositionStore
+- (CGPoint)update:(CGPoint)position window:(UIWindow*)window {
+    if(!window)return position;
+    CGSize size=window.bounds.size;UIEdgeInsets inset=window.safeAreaInsets;
+    BOOL cover=WPCamera::CoverDisplay(size.width,size.height,inset.left,inset.top,inset.right,inset.bottom);
+    NSString *key=[NSString stringWithFormat:@"%@.%@.%@",self.base,cover?@"Cover":@"Inner",size.width>size.height?@"Landscape":@"Portrait"];
+    if(![key isEqualToString:self.pending]) {self.pending=key;self.since=CACurrentMediaTime();}
+    if(![key isEqualToString:self.profile] && (!self.profile || CACurrentMediaTime()-self.since>=0.25)) {
+        NSUserDefaults *defaults=NSUserDefaults.standardUserDefaults;
+        if(self.profile)[defaults setObject:@[@(position.x),@(position.y)] forKey:self.profile];
+        NSArray *saved=[defaults arrayForKey:key]?:[defaults arrayForKey:self.base];
+        position=[self.base hasSuffix:@"JoystickPosition"]?CGPointMake(.15,.75):CGPointMake(0,1);
+        if(saved.count==2)position=CGPointMake(MIN(1,MAX(0,[saved[0] doubleValue])),MIN(1,MAX(0,[saved[1] doubleValue])));
+        self.profile=key;
+    }
+    return position;
+}
+- (void)save:(CGPoint)position {
+    if(self.profile && [self.profile isEqualToString:self.pending])
+        [NSUserDefaults.standardUserDefaults setObject:@[@(position.x),@(position.y)] forKey:self.profile];
+}
+@end
+
 // Separate touch joystick: drag the outer ring to reposition; drag its center
 // to scroll. Double tap toggles a compact persistent map-drag mode.
 @interface WPMapJoystick : UIView
 @property(nonatomic,strong) UIView *thumb;
 @property(nonatomic,strong) UIImageView *hand;
 @property(nonatomic) CGPoint position;
+@property(nonatomic,strong) WPControlPositionStore *positionStore;
 @property(nonatomic) BOOL repositioning;
 - (void)refresh;
 @end
@@ -37,6 +71,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.layer.borderWidth=2;self.layer.borderColor=UIColor.grayColor.CGColor;
         self.thumb=[UIView new];self.thumb.backgroundColor=UIColor.systemBlueColor;self.thumb.layer.cornerRadius=22;self.thumb.userInteractionEnabled=NO;[self addSubview:self.thumb];
         self.hand=[[UIImageView alloc] initWithImage:[UIImage systemImageNamed:@"hand.draw.fill"]];self.hand.tintColor=UIColor.systemBlueColor;self.hand.contentMode=UIViewContentModeScaleAspectFit;[self addSubview:self.hand];
+        self.positionStore=[WPControlPositionStore new];self.positionStore.base=@"Wireproof.JoystickPosition";
         self.position=CGPointMake(.15,.75);
         NSArray* saved=[[NSUserDefaults standardUserDefaults] arrayForKey:@"Wireproof.JoystickPosition"];
         if(saved.count==2)self.position=CGPointMake([saved[0] doubleValue],[saved[1] doubleValue]);
@@ -48,6 +83,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     WPOrders::Shared().setMapDrag(!WPOrders::Shared().mapDrag());[self refresh];
 }
 - (void)refresh {
+    self.position=[self.positionStore update:self.position window:self.window];
     self.hidden=!WPOrders::Shared().snapshot().active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
     if(self.hidden){WPOrders::Shared().setStick(0,0);return;}
     BOOL compact=WPOrders::Shared().mapDrag();
@@ -78,7 +114,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }
     if(pan.state==UIGestureRecognizerStateEnded || pan.state==UIGestureRecognizerStateCancelled || pan.state==UIGestureRecognizerStateFailed) {
         WPOrders::Shared().setStick(0,0);[self refresh];
-        [[NSUserDefaults standardUserDefaults] setObject:@[@(self.position.x),@(self.position.y)] forKey:@"Wireproof.JoystickPosition"];
+        [self.positionStore save:self.position];
     }
 }
 - (void)didMoveToWindow { [super didMoveToWindow];if(!self.window)WPOrders::Shared().setStick(0,0); }
@@ -127,6 +163,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic) BOOL configured;
 @property(nonatomic,strong) UIButton *bubble;
 @property(nonatomic) CGPoint position;
+@property(nonatomic,strong) WPControlPositionStore *positionStore;
 @end
 @implementation WPOrdersPanel
 - (UIButton*)button:(NSString*)title tag:(NSInteger)tag {
@@ -174,6 +211,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)];
             pan.maximumNumberOfTouches=1;[handle addGestureRecognizer:pan];
         }
+        self.positionStore=[WPControlPositionStore new];self.positionStore.base=@"Wireproof.OrdersPosition";
         self.position=CGPointMake(0,1);
         NSArray *saved=[[NSUserDefaults standardUserDefaults] arrayForKey:@"Wireproof.OrdersPosition"];
         if(saved.count==2)self.position=CGPointMake([saved[0] doubleValue],[saved[1] doubleValue]);
@@ -306,7 +344,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
                               dy?MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)):0);
     [pan setTranslation:CGPointZero inView:self.superview];[self refresh];
     if(pan.state==UIGestureRecognizerStateEnded)
-        [[NSUserDefaults standardUserDefaults] setObject:@[@(self.position.x),@(self.position.y)] forKey:@"Wireproof.OrdersPosition"];
+        [self.positionStore save:self.position];
 }
 - (void)didMoveToWindow {
     [super didMoveToWindow];
@@ -390,6 +428,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     } else WPOrders::Shared().enqueue((WPOrders::Kind)button.tag);
 }
 - (void)refresh {
+    self.position=[self.positionStore update:self.position window:self.window];
     if(self.window) {
         CGSize size=self.window.bounds.size;
         UIEdgeInsets insets=self.window.safeAreaInsets;

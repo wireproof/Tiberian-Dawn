@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.5
+
+- Remember joystick and controller positions independently for cover/inner displays and portrait/landscape. Existing shared positions seed uncustomized layouts; positions stay relative to the usable area.
+
+
 ## 0.5.4
 
 - Keep front-end Load Mission in the adaptive menu viewport, with a centered dialog and the same proportional flame background and logo as the main menu. Clamp dialog width on narrow screens.

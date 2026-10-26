@@ -2,15 +2,17 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.5.4
+## Latest release: v0.5.5
 
-[Download v0.5.4](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.4).
+[Download v0.5.5](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.5).
 
 The joystick is now independent: drag its center to scroll and its outer ring
 to reposition. **Double-tap** to shrink it into a hand button and switch from
 one-finger drag selection to map dragging. Ordinary taps still click.
 Double-tap again to return to normal selection and the full joystick.
 Map-drag mode resets when leaving gameplay.
+The joystick and controller each remember separate positions for cover portrait,
+cover landscape, inner portrait, and inner landscape.
 
 Workshop **Apply to…** copies chosen settings to selected compatible units.
 Portrait sidebars use five rows on all screens, with a larger 1.625× presentation

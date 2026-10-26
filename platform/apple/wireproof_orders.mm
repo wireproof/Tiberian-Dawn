@@ -100,6 +100,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UILabel *cheatStatus;
 @property(nonatomic,strong) UISwitch *invincibleSwitch;
 @property(nonatomic,strong) UISwitch *instantSwitch;
+@property(nonatomic,strong) UISwitch *weaponsSwitch;
+@property(nonatomic,strong) UISwitch *anywhereSwitch;
 @property(nonatomic,strong) UISwitch *freeSwitch;
 @property(nonatomic,strong) UISwitch *shroudSwitch;
 @property(nonatomic,strong) NSArray<UISlider*> *speedSliders;
@@ -222,10 +224,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         [cheatRows addObject:[self gridRow:@[[self button:@"+100 power" tag:512],[self button:@"+1,000 power" tag:513]]]];
         self.instantSwitch=[UISwitch new];self.instantSwitch.tag=2;
         self.freeSwitch=[UISwitch new];self.freeSwitch.tag=3;
-        NSArray *switchNames=@[@"Invincibility",@"Shroud",@"Instant Build",@"Zero Cost"];
-        NSArray *switches=@[self.invincibleSwitch,self.shroudSwitch,self.instantSwitch,self.freeSwitch];
-        for(int i=0;i<4;++i) {
-            UILabel *label=[UILabel new];label.text=switchNames[i];label.textColor=UIColor.whiteColor;
+        self.weaponsSwitch=[UISwitch new];self.weaponsSwitch.tag=4;
+        self.anywhereSwitch=[UISwitch new];self.anywhereSwitch.tag=5;
+        NSArray *switchNames=@[@"Invincibility",@"Shroud",@"Instant Build",@"Zero Cost",@"Instant Weapons",@"Build Anywhere"];
+        NSArray *switches=@[self.invincibleSwitch,self.shroudSwitch,self.instantSwitch,self.freeSwitch,self.weaponsSwitch,self.anywhereSwitch];
+        for(int i=0;i<6;++i) {
+            UILabel *label=[UILabel new];label.text=switchNames[i];label.font=[UIFont systemFontOfSize:13];label.numberOfLines=2;label.textColor=UIColor.whiteColor;
             UISwitch *control=switches[i];control.accessibilityLabel=switchNames[i];
             [control addTarget:self action:@selector(cheatSwitchChanged:) forControlEvents:UIControlEventValueChanged];
             UIStackView *row=[[UIStackView alloc] initWithArrangedSubviews:@[label,control]];
@@ -342,7 +346,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if(control.tag==0)WPCheats::Shared().invincible(control.on);
     else if(control.tag==1)WPCheats::Shared().reveal(!control.on);
     else if(control.tag==2)WPCheats::Shared().instant(control.on);
-    else WPCheats::Shared().free(control.on);
+    else if(control.tag==3)WPCheats::Shared().free(control.on);
+    else if(control.tag==4)WPCheats::Shared().weapons(control.on);
+    else WPCheats::Shared().anywhere(control.on);
     [self refresh];
 }
 - (void)speedChanged:(UISlider*)slider {
@@ -393,6 +399,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.optionsPage.hidden=self.tabs.selectedSegmentIndex!=2;
     self.cheatStack.userInteractionEnabled=cheats.available;
     self.cheatStatus.text=[NSString stringWithFormat:@"Credits: %d\nPower: %d / %d",cheats.money,cheats.power,cheats.drain];
+    self.weaponsSwitch.on=cheats.weapons;self.anywhereSwitch.on=cheats.anywhere;
     self.instantSwitch.on=cheats.instant;self.freeSwitch.on=cheats.free;
     self.invincibleSwitch.on=cheats.invincible;self.shroudSwitch.on=!cheats.reveal;
     int speeds[]={cheats.infantry,cheats.vehicles,cheats.aircraft};
@@ -431,8 +438,18 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         if(landscape) {
             [self.gamePage addArrangedSubview:[self gridRow:self.groupControls]];
             [self.gamePage addArrangedSubview:[self gridRow:@[m[0],m[1],m[2],m[3],o[0],o[1],o[2],o[5],o[3],o[4]]]];
-            UIStackView *top=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:@[self.cheatRows[1],self.cheatRows[2]]],[self gridRow:@[self.cheatRows[3],self.cheatRows[4],self.cheatRows[5],self.cheatRows[6]]]]];top.axis=UILayoutConstraintAxisVertical;top.spacing=6;
-            [self.cheatStack addArrangedSubview:self.cheatStatus];[self.cheatStack addArrangedSubview:top];
+            UIStackView *switchGrid=[[UIStackView alloc] initWithArrangedSubviews:@[
+                [self gridRow:@[self.cheatRows[3],self.cheatRows[4]]],
+                [self gridRow:@[self.cheatRows[5],self.cheatRows[6]]],
+                [self gridRow:@[self.cheatRows[7],self.cheatRows[8]]]]];
+            switchGrid.axis=UILayoutConstraintAxisVertical;switchGrid.spacing=6;
+            UIStackView *resources=[[UIStackView alloc] initWithArrangedSubviews:@[self.cheatRows[1],self.cheatRows[2]]];
+            resources.axis=UILayoutConstraintAxisVertical;resources.spacing=6;
+            UIStackView *top=[[UIStackView alloc] initWithArrangedSubviews:@[switchGrid,self.cheatStatus,resources]];
+            top.axis=UILayoutConstraintAxisHorizontal;top.spacing=12;top.alignment=UIStackViewAlignmentCenter;
+            [switchGrid.widthAnchor constraintEqualToAnchor:resources.widthAnchor].active=YES;
+            [self.cheatStatus setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+            [self.cheatStack addArrangedSubview:top];
             NSMutableArray *speeds=[NSMutableArray new];for(int i=0;i<3;i++){UIStackView *v=[[UIStackView alloc] initWithArrangedSubviews:@[self.speedLabels[i],self.speedSliders[i]]];v.axis=UILayoutConstraintAxisVertical;v.spacing=6;[speeds addObject:v];}
             [self.cheatStack addArrangedSubview:[self gridRow:speeds]];
         } else {

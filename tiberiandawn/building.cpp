@@ -1,3 +1,6 @@
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "wireproof_rules.h"
+#endif
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -5583,6 +5586,10 @@ bool BuildingClass::Can_Player_Move(void) const
  *=============================================================================================*/
 bool BuildingClass::Passes_Proximity_Check(CELL homecell)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if (WP_BuildAnywhere(House)) return true;
+#endif
+
     /*
     ** In editor mode, the proximity check always passes.
     */

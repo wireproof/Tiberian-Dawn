@@ -1784,6 +1784,23 @@ void SidebarClass::StripClass::Draw_It(bool complete)
         /*
         **	Redraw the scroll buttons.
         */
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        const int gapTop = Y - 1 + Map.MaxVisible * ObjectHeight;
+        const int gapHeight = UpButton[ID].Y - gapTop;
+        if (gapHeight > 0) {
+            const int oldY = WindowList[WINDOW_SIDEBAR][WINDOWY];
+            const int oldHeight = WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT];
+            WindowList[WINDOW_SIDEBAR][WINDOWY] = gapTop;
+            WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT] = gapHeight;
+            IsTheaterShape = (bool)factor;
+            CC_Draw_Shape(LogoShapes, SB_BLANK,
+                          X - WindowList[WINDOW_SIDEBAR][WINDOWX] + LeftEdgeOffset,
+                          0, WINDOW_SIDEBAR, SHAPE_NORMAL | SHAPE_WIN_REL, 0);
+            IsTheaterShape = false;
+            WindowList[WINDOW_SIDEBAR][WINDOWY] = oldY;
+            WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT] = oldHeight;
+        }
+#endif
         UpButton[ID].Draw_Me(true);
         DownButton[ID].Draw_Me(true);
 

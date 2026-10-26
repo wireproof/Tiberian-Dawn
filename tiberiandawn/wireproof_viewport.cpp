@@ -22,7 +22,7 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu)
     int width = 640, height = 400;
     const bool adaptive=active || menu || (InMainLoop && GameActive);
     if (adaptive) Video_Adaptive_Size(width, height);
-    if(active && height>width){width=(int)std::lround(width/1.25);height=(int)std::lround(height/1.25);}
+    if(active && height>width){width=(int)std::lround(width/1.5);height=(int)std::lround(height/1.5);}
     const int right = width - (Map.IsSidebarActive ? Map.SideBarWidth : 0);
     const int view_height=height;
     const int slots=WPCamera::PortraitSidebarSlots(width,height);

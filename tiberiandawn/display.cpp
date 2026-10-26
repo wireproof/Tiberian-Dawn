@@ -1,3 +1,6 @@
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "wireproof_rules.h"
+#endif
 #include "common/wireproof_camera.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 #include "common/wireproof_orders.h"
@@ -797,6 +800,10 @@ void DisplayClass::Set_Cursor_Shape(short const* list)
  *=============================================================================================*/
 bool DisplayClass::Passes_Proximity_Check(ObjectTypeClass const* object)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if (WP_BuildAnywhere(HouseClass::As_Pointer(PendingHouse))) return true;
+#endif
+
 #ifdef USE_RA_AI
 
     return Passes_Proximity_Check(object, PendingHouse, CursorSize, ZoneCell + ZoneOffset);
@@ -891,6 +898,10 @@ bool DisplayClass::Passes_Proximity_Check(ObjectTypeClass const* object,
                                           short const* list,
                                           CELL trycell) const
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if (WP_BuildAnywhere(HouseClass::As_Pointer(house))) return true;
+#endif
+
     short const* ptr;
 
     /*

@@ -4,6 +4,18 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.5.0 — 2026-10-26
+
+- Add Instant Weapons (Ion Cannon and repeatable nuke with required buildings)
+  and Build Anywhere (base distance only) to iOS and macOS single-player cheats.
+- Paint the partial sidebar row above landscape arrows with the blank slot art,
+  eliminating the black or transparent strip.
+- Use five build rows for every portrait display and increase portrait scale
+  from 1.25× to 1.5×.
+- Group landscape switches in two columns beneath Orders & Groups, credits and
+  power in the middle, and money/power buttons in a 2×2 block beneath the tabs.
+  Keep all three speed sliders along the bottom.
+
 ## 0.4.10 — 2026-10-26
 
 - Compact landscape Game into a single 1–9 row and a single action row, with

@@ -6,6 +6,7 @@ void WP_InitRules(void);
 void WP_TickCheats(void);
 void WP_ResetLiveCheats(void);
 int WP_InstantBuild(const void* house);
+int WP_BuildAnywhere(const void* house);
 int WP_ZeroCost(const void* house);
 int WP_PlayerInvincible(const void* house);
 int WP_ScalePlayerSpeed(const void* house,int base,int category);

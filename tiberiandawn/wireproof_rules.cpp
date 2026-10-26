@@ -157,6 +157,7 @@ void WP_ResetLiveCheats(void) {
     WPCheats::Shared().reset(); liveCheats={}; savedShroud.clear();mapRevealed=false;
 }
 int WP_InstantBuild(const void* house) { return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.instant; }
+int WP_BuildAnywhere(const void* house) { return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.anywhere; }
 int WP_ZeroCost(const void* house) { return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.free; }
 int WP_PlayerInvincible(const void* house) {
     return !PlaybackGame && GameToPlay==GAME_NORMAL && house==PlayerPtr && liveCheats.invincible;
@@ -169,6 +170,16 @@ int WP_ScalePlayerSpeed(const void* house,int base,int category) {
 static void WP_ApplyLiveCheats() {
     if(GameToPlay!=GAME_NORMAL || !PlayerPtr || PlaybackGame) return;
     liveCheats=WPCheats::Shared().snapshot();
+    if(liveCheats.weapons) {
+        // Let the normal house logic grant weapons and add sidebar cameos.
+        if(PlayerPtr->ActiveBScan & STRUCTF_TEMPLE) PlayerPtr->NukePieces=7;
+        if(PlayerPtr->IonCannon.Is_Present() && !PlayerPtr->IonCannon.Is_Ready()) {
+            PlayerPtr->IonCannon.Forced_Charge(); Map.Flag_To_Redraw(true);
+        }
+        if(PlayerPtr->NukeStrike.Is_Present() && !PlayerPtr->NukeStrike.Is_Ready()) {
+            PlayerPtr->NukeStrike.Forced_Charge(); Map.Flag_To_Redraw(true);
+        }
+    }
     auto actions=WPCheats::Shared().take();
     if(actions.money) PlayerPtr->Refund_Money(actions.money);
     if(actions.power) {PlayerPtr->Adjust_Power(actions.power);Map.Flag_To_Redraw(true);}

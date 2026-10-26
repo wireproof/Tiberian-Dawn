@@ -20,6 +20,9 @@ int main() {
     assert(WPCamera::SidebarSlots(910,182,48,24,24)==14);
     assert(WPCamera::SidebarSlots(200,182,48,24,24)==1);
     assert(WPCamera::SidebarSlots(4096,182,48,24,24)==24);
+    assert(WPCamera::PortraitSidebarSlots(640,910)==5);
+    assert(WPCamera::PortraitSidebarSlots(400,910)==5);
+    assert(WPCamera::PortraitSidebarSlots(910,640)==0);
     using WPCamera::ClampAxis;
     // Large drags across every edge, nonzero map origins, and oversized views.
     assert(ClampAxis(256,-4096,256,8192,2048)==256);
@@ -43,6 +46,9 @@ int main() {
     auto snapshot=cheats.snapshot();assert(snapshot.invincible && snapshot.reveal && snapshot.infantry==1 && snapshot.vehicles==12 && snapshot.aircraft==7);
     cheats.addMoney(1000);cheats.publish(false,0,0,0);assert(cheats.take().money==0);
     cheats.publish(true,0,0,0);cheats.instant(true);cheats.free(true);assert(cheats.snapshot().instant && cheats.snapshot().free);
+    cheats.weapons(true);cheats.anywhere(true);assert(cheats.snapshot().weapons && cheats.snapshot().anywhere);
+    cheats.reset();assert(!cheats.snapshot().weapons && !cheats.snapshot().anywhere);
+    cheats.weapons(true);cheats.anywhere(true);assert(!cheats.snapshot().weapons && !cheats.snapshot().anywhere);
     cheats.reset();assert(!cheats.snapshot().instant && !cheats.snapshot().free);snapshot=cheats.snapshot();assert(!snapshot.available && !snapshot.invincible && !snapshot.reveal && snapshot.infantry==4 && snapshot.vehicles==4 && snapshot.aircraft==4);
     using namespace WPOrders;
     State s; Command c;

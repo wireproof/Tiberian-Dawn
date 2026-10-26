@@ -19,6 +19,8 @@ All 26 host tests, Apple parity checks, iOS Release compilation, and Universal 2
 
 **LiveContainer / Duo compatibility:** the app is built with the iOS 27.1 SDK and hinge detection requires iOS 27.1 or later. LiveContainer must expose UIKit hinge updates to the hosted app; this still needs device verification. If no hinge is reported, the standard Zoom profile is used. A requirement to rebuild LiveContainer itself with SDK 27.1 has not been established.
 
+For the Duo host, use [Wireproof LiveContainer 3.8.11 + SideStore — Duo SDK 27.1](https://github.com/wireproof/LiveContainer/releases/tag/v3.8.11-duo-sdk27.1). This custom LiveContainer host was rebuilt with SDK 27.1 and was reported to fix the Duo compatibility layout; the bundled SideStore was not rebuilt. Hinge forwarding to this game remains unverified. Update with the same signing account and app identity, preserving existing app data—do not uninstall first.
+
 ## Gameplay showcase
 
 Watch in your browser with sound, seeking, and fullscreen controls—no MOV download required.

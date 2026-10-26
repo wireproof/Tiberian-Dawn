@@ -372,11 +372,16 @@ void Handle_Touch_Motion(WWKeyboardClassSDL2& keyboard, const SDL_TouchFingerEve
 
     // The modifier finger belongs to UIKit's floating button; SDL sees only
     // the map finger. Never turn its release into a selection or right-click.
+    // Persistent map-drag mode changes drags only; ordinary taps still click.
+    if (WPOrders::Shared().mapDrag() && Active_Finger_Count()==1 && event.fingerId==TouchGesture.primary_id) {
+        Set_Video_Mouse_Normalized(event.x,event.y,TouchGesture.current_x,TouchGesture.current_y);
+        if (Gesture_Moved_Beyond_Threshold()) TouchGesture.modifier_pan=true;
+    }
     if (TouchGesture.modifier_pan || WPOrders::Shared().panHeld()) {
         Release_Touch_Left_Button(keyboard);
         TouchGesture.modifier_pan=true;
         TouchGesture.long_press_sent=true;
-        if (WPOrders::Shared().panHeld()) {
+        if (WPOrders::Shared().panHeld() || WPOrders::Shared().mapDrag()) {
             PendingPanX += event.x-previous_x;
             PendingPanY += event.y-previous_y;
             PendingPanAt=SDL_GetTicks();
@@ -507,7 +512,7 @@ int SDLCALL Capture_Lifecycle_Event(void*, SDL_Event* event)
 
 bool Consume_IPadOS_Touch_Pan(float& delta_x, float& delta_y)
 {
-    if ((TouchGesture.modifier_pan && !WPOrders::Shared().panHeld()) || PendingPanAt == 0 || SDL_GetTicks() - PendingPanAt > 100) {
+    if ((TouchGesture.modifier_pan && !WPOrders::Shared().panHeld() && !WPOrders::Shared().mapDrag()) || PendingPanAt == 0 || SDL_GetTicks() - PendingPanAt > 100) {
         Discard_IPadOS_Touch_Pan();
         return false;
     }

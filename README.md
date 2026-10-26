@@ -2,44 +2,20 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.4.3
+## Latest release: v0.4.4
 
-[Download v0.4.3](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.3).
-Repairs sidebar button and build-icon clipping coordinates after mission loads
-and resizing, preserving production and build lists. Device confirmation pending.
-Camera scrolling now rebuilds the frame to address black patches and sidebar
-smearing. Device confirmation and scrolling-performance feedback are pending.
-**Double-tap the floating controller** to open a larger circular map joystick.
-Drag farther from the center to scroll faster; release to stop. Double-tap
-again to return to the normal button. Single-tap still opens Orders & Groups;
-drag the normal button to reposition it. Joystick scrolling works even when
-Edge scroll is OFF. Physical-device gesture confirmation is pending.
+[Download v0.4.4](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.4.4).
 
-Previous update:
-Adds **Instant Build** and **Zero Cost**, fixes battlefield shroud removal,
-enlarges radar terrain within its panel, and reduces the touch cursor to 2x.
-Instant Build charges the remaining cost when affordable; enable Zero Cost
-as well for free instant production. Zero Cost waives remaining construction
-costs, not repair charges; classic tooltip prices remain the stock prices.
-The larger radar follows the battlefield when the whole map does not fit.
-Open the floating controller and tap **Cheats** for money, invincibility,
-shroud on/off, extra power, and separate infantry/vehicle/aircraft speed sliders
-(0.25–3x). On Mac, use **Option-C** and Apply. Cheats affect your side in
-single-player only. Speed and live toggles reset on mission start/load; money
-and power remain in saves. Shroud On restores prior exploration plus current
-unit sight. Saving while revealed saves that revealed map state.
+The joystick is now independent: drag its center to scroll and its outer ring
+to reposition. **Double-tap** to shrink it into a hand button and switch from
+one-finger drag selection to map dragging. Ordinary taps still click.
+Double-tap again to return to normal selection and the full joystick.
+Map-drag mode resets when leaving gameplay.
 
-Edge scroll OFF now blocks both touch and legacy cursor-edge scrolling on iOS.
-Save Mission opens without the software keyboard; tap its filename field to type.
-The old UI scale label is now Touch size, reflecting its effect on touch targets
-and feedback rather than the entire interface.
-
-The controller menu includes a **− / zoom slider / +** control with quarter steps:
-0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3.
-It defaults to 1.5x and saves your iOS choice. The map zooms while menus, the top
-bar, sidebar and compact toolbar retain their size. Option-minus/Option-plus
-provide keyboard equivalents. Pinch zoom remains disabled; hold the floating
-controller button to pan with your other finger. Device confirmation pending.
+The **gamepad tab on the left edge** opens the Orders, Groups, Zoom and Cheats
+drawer. Tap its header or swipe left to close it. Group buttons, the 0.5–3×
+zoom slider and single-player cheats are retained. Mac uses keyboard/controller
+camera controls and Option-C for cheats. Device gesture confirmation pending.
 
 ## Release 0.2.8
 

@@ -21,6 +21,10 @@ int main() {
     s.setStick(1,1);auto diagonal=s.stick();assert(diagonal.intensity==1 && std::fabs(diagonal.x-diagonal.y)<.001f);
     s.setStick(NAN,1);assert(s.stick().intensity==0);
     s.setStick(1,0);s.publish(false,0);assert(s.stick().intensity==0); // pause/focus loss stops movement
+    s.setMapDrag(true);assert(!s.mapDrag());
+    s.publish(true,0);s.setMapDrag(true);assert(s.mapDrag() && !s.panHeld());
+    s.setMapDrag(false);assert(!s.mapDrag());
+    s.setMapDrag(true);s.publish(false,0);assert(!s.mapDrag());
     assert(s.zoomQuarters()==6);
     s.setZoomQuarters(-10); assert(s.zoomQuarters()==2);
     for (int q=2;q<=12;++q) { assert(s.zoomQuarters()==q); s.stepZoom(1); }

@@ -14,19 +14,22 @@ class State {
     std::deque<Command> pending;
     Snapshot state = {false,0,0};
     bool pan_held = false;
+    bool map_drag = false;
     Stick joystick;
     int zoom_quarters = 6;
 public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); state.force=0; pan_held=false; joystick={}; }
+        if (!active) { pending.clear(); state.force=0; pan_held=false; map_drag=false; joystick={}; }
         if (!selected) state.force=0;
     }
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
     int zoomQuarters() { std::lock_guard<std::mutex> lock(mutex); return zoom_quarters; }
     void stepZoom(int delta) { std::lock_guard<std::mutex> lock(mutex); int value=zoom_quarters+delta; zoom_quarters=value<2?2:value>12?12:value; }
     void hold_pan(bool held) { std::lock_guard<std::mutex> lock(mutex); pan_held=held && state.active; }
+    void setMapDrag(bool value) { std::lock_guard<std::mutex> lock(mutex);map_drag=value && state.active;joystick={}; }
+    bool mapDrag() { std::lock_guard<std::mutex> lock(mutex);return map_drag; }
     bool panHeld() { std::lock_guard<std::mutex> lock(mutex); return pan_held; }
     void setStick(float x,float y) {
         std::lock_guard<std::mutex> lock(mutex);

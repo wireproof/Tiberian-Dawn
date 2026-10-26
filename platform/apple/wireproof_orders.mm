@@ -1,4 +1,5 @@
 #import <UIKit/UIKit.h>
+#import <QuartzCore/QuartzCore.h>
 #include "common/wireproof_orders.h"
 #include "common/wireproof_cheats.h"
 #include "third_party/SDL2/include/SDL.h"
@@ -18,6 +19,69 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         CGImageRelease(image); CGColorSpaceRelease(space); CGDataProviderRelease(provider);
     });
 }
+
+// Separate touch joystick: drag the outer ring to reposition; drag its center
+// to scroll. Double tap toggles a compact persistent map-drag mode.
+@interface WPMapJoystick : UIView
+@property(nonatomic,strong) UIView *thumb;
+@property(nonatomic,strong) UIImageView *hand;
+@property(nonatomic) CGPoint position;
+@property(nonatomic) BOOL repositioning;
+- (void)refresh;
+@end
+@implementation WPMapJoystick
+- (instancetype)initWithFrame:(CGRect)frame {
+    if((self=[super initWithFrame:frame])) {
+        self.backgroundColor=[UIColor colorWithWhite:.10 alpha:.90];
+        self.layer.borderWidth=2;self.layer.borderColor=UIColor.grayColor.CGColor;
+        self.thumb=[UIView new];self.thumb.backgroundColor=UIColor.systemBlueColor;self.thumb.layer.cornerRadius=22;self.thumb.userInteractionEnabled=NO;[self addSubview:self.thumb];
+        self.hand=[[UIImageView alloc] initWithImage:[UIImage systemImageNamed:@"hand.draw.fill"]];self.hand.tintColor=UIColor.systemBlueColor;self.hand.contentMode=UIViewContentModeScaleAspectFit;[self addSubview:self.hand];
+        self.position=CGPointMake(.15,.75);
+        NSArray* saved=[[NSUserDefaults standardUserDefaults] arrayForKey:@"Wireproof.JoystickPosition"];
+        if(saved.count==2)self.position=CGPointMake([saved[0] doubleValue],[saved[1] doubleValue]);
+        UITapGestureRecognizer* tap=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleMode:)];tap.numberOfTapsRequired=2;[self addGestureRecognizer:tap];
+        UIPanGestureRecognizer* pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)];pan.maximumNumberOfTouches=1;[self addGestureRecognizer:pan];
+    }return self;
+}
+- (void)toggleMode:(UITapGestureRecognizer*)tap {
+    WPOrders::Shared().setMapDrag(!WPOrders::Shared().mapDrag());[self refresh];
+}
+- (void)refresh {
+    self.hidden=!WPOrders::Shared().snapshot().active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
+    if(self.hidden){WPOrders::Shared().setStick(0,0);return;}
+    BOOL compact=WPOrders::Shared().mapDrag();
+    CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+    CGFloat size=MIN(compact?56:144,MIN(safe.size.width,safe.size.height));
+    self.frame=CGRectMake(safe.origin.x+self.position.x*MAX(0,safe.size.width-size),safe.origin.y+self.position.y*MAX(0,safe.size.height-size),size,size);
+    self.layer.cornerRadius=size/2;self.thumb.hidden=compact;self.hand.hidden=!compact;
+    self.hand.frame=CGRectInset(self.bounds,14,14);self.thumb.bounds=CGRectMake(0,0,44,44);
+    if(WPOrders::Shared().stick().intensity<=0)self.thumb.center=CGPointMake(size/2,size/2);
+    self.accessibilityLabel=compact?@"Map drag mode. Drag this button to reposition. Double tap to restore selection.":@"Map joystick. Drag center to scroll, outer ring to reposition. Double tap for one-finger map dragging.";
+}
+- (void)drag:(UIPanGestureRecognizer*)pan {
+    CGPoint p=[pan locationInView:self];CGFloat size=self.bounds.size.width;
+    if(pan.state==UIGestureRecognizerStateBegan) {
+        CGPoint delta=[pan translationInView:self];
+        self.repositioning=WPOrders::Shared().mapDrag() || hypot(p.x-delta.x-size/2,p.y-delta.y-size/2)>size/2-20;
+    }
+    if(self.repositioning) {
+        WPOrders::Shared().setStick(0,0);
+        CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+        CGPoint delta=[pan translationInView:self.superview];CGFloat dx=MAX(0,safe.size.width-size),dy=MAX(0,safe.size.height-size);
+        self.position=CGPointMake(dx?MIN(1,MAX(0,(self.frame.origin.x+delta.x-safe.origin.x)/dx)):0,dy?MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)):0);
+        [pan setTranslation:CGPointZero inView:self.superview];[self refresh];
+    } else {
+        CGFloat radius=MAX(1,size/2-28);CGFloat x=(p.x-size/2)/radius,y=(p.y-size/2)/radius;CGFloat length=hypot(x,y);
+        if(length>1){x/=length;y/=length;}WPOrders::Shared().setStick(x,y);
+        self.thumb.center=CGPointMake(size/2+x*radius,size/2+y*radius);
+    }
+    if(pan.state==UIGestureRecognizerStateEnded || pan.state==UIGestureRecognizerStateCancelled || pan.state==UIGestureRecognizerStateFailed) {
+        WPOrders::Shared().setStick(0,0);[self refresh];
+        [[NSUserDefaults standardUserDefaults] setObject:@[@(self.position.x),@(self.position.y)] forKey:@"Wireproof.JoystickPosition"];
+    }
+}
+- (void)didMoveToWindow { [super didMoveToWindow];if(!self.window)WPOrders::Shared().setStick(0,0); }
+@end
 
 @interface WPOrdersPanel : UIView
 @property(nonatomic,strong) UIStackView *cheatStack;
@@ -46,9 +110,6 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic) BOOL configured;
 @property(nonatomic,strong) UIButton *bubble;
 @property(nonatomic) CGPoint position;
-@property(nonatomic) BOOL joystickMode;
-@property(nonatomic,strong) UIView *joystickBase;
-@property(nonatomic,strong) UIView *joystickThumb;
 @end
 @implementation WPOrdersPanel
 - (UIButton*)button:(NSString*)title tag:(NSInteger)tag {
@@ -89,34 +150,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.bubble=[UIButton buttonWithType:UIButtonTypeSystem];
         [self.bubble setImage:[UIImage systemImageNamed:@"gamecontroller.fill"] forState:UIControlStateNormal];
         self.bubble.tintColor=UIColor.whiteColor;
-        self.bubble.accessibilityLabel=@"Tap for Orders and Groups. Double tap for map joystick. Drag to reposition. Hold to pan the map with your other finger.";
-        UITapGestureRecognizer *single=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(openOrders:)];
-        UITapGestureRecognizer *doubleTap=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleJoystick:)];
-        doubleTap.numberOfTapsRequired=2;
-        [single requireGestureRecognizerToFail:doubleTap];
-        [self.bubble addGestureRecognizer:single];[self.bubble addGestureRecognizer:doubleTap];
-        self.joystickBase=[UIView new];self.joystickBase.backgroundColor=[UIColor colorWithWhite:0.12 alpha:0.85];
-        self.joystickBase.layer.borderWidth=2;self.joystickBase.layer.borderColor=[UIColor colorWithWhite:0.7 alpha:0.7].CGColor;
-        self.joystickBase.accessibilityLabel=@"Map joystick. Drag farther to scroll faster. Double tap to close.";
-        self.joystickThumb=[UIView new];self.joystickThumb.userInteractionEnabled=NO;
-        self.joystickThumb.backgroundColor=UIColor.systemBlueColor;self.joystickThumb.layer.cornerRadius=22;
-        [self.joystickBase addSubview:self.joystickThumb];[self addSubview:self.joystickBase];
-        UIPanGestureRecognizer *stickPan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(moveJoystick:)];
-        stickPan.maximumNumberOfTouches=1;[self.joystickBase addGestureRecognizer:stickPan];
-        UITapGestureRecognizer *closeStick=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleJoystick:)];
-        closeStick.numberOfTapsRequired=2;[self.joystickBase addGestureRecognizer:closeStick];
+        self.bubble.accessibilityLabel=@"Open the left Orders and Groups drawer";
         self.bubble.tag=100;
-        for (UIView *handle in @[self.toggle,self.bubble]) {
-            UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)];
-            [handle addGestureRecognizer:pan];
-        }
-        UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdMap:)];
-        hold.minimumPressDuration=0.25;
-        hold.allowableMovement=10;
-        [self.bubble addGestureRecognizer:hold];
-        self.position=CGPointMake(0,1);
-        NSArray *saved=[[NSUserDefaults standardUserDefaults] arrayForKey:@"Wireproof.OrdersPosition"];
-        if (saved.count==2) self.position=CGPointMake([saved[0] doubleValue],[saved[1] doubleValue]);
+        [self.bubble addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];
+        UISwipeGestureRecognizer* open=[[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(openOrders:)];open.direction=UISwipeGestureRecognizerDirectionRight;[self.bubble addGestureRecognizer:open];
+        UISwipeGestureRecognizer* close=[[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(closeOrders:)];close.direction=UISwipeGestureRecognizerDirectionLeft;[self.toggle addGestureRecognizer:close];
         NSMutableArray *orders=[NSMutableArray array];
         NSArray *names=@[@"Stop",@"Guard",@"Scatter",@"Force Attack",@"Force Move",@"Cancel"];
         for (NSInteger i=0;i<names.count;i++) [orders addObject:[self button:names[i] tag:i]];
@@ -206,25 +244,13 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         [self addSubview:self.bubble];
     } return self;
 }
-- (void)openOrders:(UITapGestureRecognizer*)tap {
-    self.expanded=YES;[self refresh];
+- (void)animateDrawer {
+    CATransition* animation=[CATransition animation];animation.duration=.2;animation.type=kCATransitionPush;
+    animation.subtype=self.expanded?kCATransitionFromLeft:kCATransitionFromRight;
+    [self.layer addAnimation:animation forKey:@"drawer"];[self refresh];
 }
-- (void)toggleJoystick:(UITapGestureRecognizer*)tap {
-    WPOrders::Shared().setStick(0,0);WPOrders::Shared().hold_pan(false);
-    self.joystickMode=!self.joystickMode;self.expanded=NO;[self refresh];
-}
-- (void)moveJoystick:(UIPanGestureRecognizer*)pan {
-    if(pan.state==UIGestureRecognizerStateEnded || pan.state==UIGestureRecognizerStateCancelled || pan.state==UIGestureRecognizerStateFailed) {
-        WPOrders::Shared().setStick(0,0);self.joystickThumb.center=CGPointMake(self.bounds.size.width/2,self.bounds.size.height/2);return;
-    }
-    CGPoint p=[pan locationInView:self.joystickBase];
-    CGFloat radius=MAX(1,(self.joystickBase.bounds.size.width-44)/2-6);
-    CGFloat x=(p.x-self.joystickBase.bounds.size.width/2)/radius;
-    CGFloat y=(p.y-self.joystickBase.bounds.size.height/2)/radius;
-    CGFloat length=hypot(x,y);if(length>1){x/=length;y/=length;}
-    WPOrders::Shared().setStick(x,y);
-    self.joystickThumb.center=CGPointMake(self.joystickBase.bounds.size.width/2+x*radius,self.joystickBase.bounds.size.height/2+y*radius);
-}
+- (void)openOrders:(UIGestureRecognizer*)gesture { self.expanded=YES;[self animateDrawer]; }
+- (void)closeOrders:(UIGestureRecognizer*)gesture { self.expanded=NO;[self animateDrawer]; }
 - (void)didMoveToWindow {
     [super didMoveToWindow];
     if (!self.window) {WPOrders::Shared().hold_pan(false);WPOrders::Shared().setStick(0,0);}
@@ -254,26 +280,6 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (CGRect)availableRect {
     return CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
 }
-- (void)holdMap:(UILongPressGestureRecognizer*)hold {
-    BOOL held=hold.state==UIGestureRecognizerStateBegan || hold.state==UIGestureRecognizerStateChanged;
-    WPOrders::Shared().hold_pan(held);
-    [self refresh];
-}
-- (void)drag:(UIPanGestureRecognizer*)pan {
-    CGRect safe=[self availableRect];
-    CGPoint delta=[pan translationInView:self.superview];
-    CGFloat dx=MAX(0,CGRectGetWidth(safe)-self.bounds.size.width);
-    CGFloat dy=MAX(0,CGRectGetHeight(safe)-self.bounds.size.height);
-    CGFloat x=MIN(MAX(self.frame.origin.x+delta.x-safe.origin.x,0),dx);
-    CGFloat y=MIN(MAX(self.frame.origin.y+delta.y-safe.origin.y,0),dy);
-    self.position=CGPointMake(dx>0?x/dx:0,dy>0?y/dy:0);
-    [pan setTranslation:CGPointZero inView:self.superview];
-    [self refresh];
-    if (pan.state==UIGestureRecognizerStateEnded) {
-        [[NSUserDefaults standardUserDefaults] setObject:@[@(self.position.x),@(self.position.y)] forKey:@"Wireproof.OrdersPosition"];
-    }
-}
-- (void)pageChanged:(id)sender { [self refresh]; }
 - (void)cheatSwitchChanged:(UISwitch*)control {
     if(control.tag==0)WPCheats::Shared().invincible(control.on);
     else if(control.tag==1)WPCheats::Shared().reveal(!control.on);
@@ -304,7 +310,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if (button.tag==400 || button.tag==401) {
         WPOrders::Shared().stepZoom(button.tag==400?-1:1); [self saveZoom]; return;
     }
-    if (button.tag==100) { self.expanded=!self.expanded; [self refresh]; return; }
+    if (button.tag==100) { self.expanded=!self.expanded; [self animateDrawer]; return; }
     if (button.tag>=300) { self.groupMode.selectedSegmentIndex=button.tag-300; [self refresh]; return; }
     if (button.tag>=200) {
         const WPOrders::Kind kinds[]={WPOrders::Recall,WPOrders::Assign,WPOrders::Add,WPOrders::Center};
@@ -337,15 +343,14 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if (!self.configured && self.window) { self.expanded=NO; self.configured=YES; }
     NSString *title=s.force==1?@"Force Attack: tap target • Cancel below":s.force==2?@"Force Move: tap destination • Cancel below":[NSString stringWithFormat:@"Orders & Groups %@ · %d selected",self.expanded?@"▾":@"▸",s.selected];
     [self.toggle setTitle:title forState:UIControlStateNormal];
-    self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded || self.joystickMode;
-    self.joystickBase.hidden=!self.joystickMode;
+    self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded;
     BOOL panHeld=WPOrders::Shared().panHeld();
     self.bubble.tintColor=panHeld?UIColor.systemBlueColor:(s.force?UIColor.systemOrangeColor:UIColor.whiteColor);
     [self.bubble setImage:[UIImage systemImageNamed:panHeld?@"hand.draw.fill":@"gamecontroller.fill"] forState:UIControlStateNormal];
-    self.layer.cornerRadius=self.joystickMode?72:self.expanded?12:28;
+    self.layer.cornerRadius=12;
     CGRect safe=[self availableRect];
-    CGFloat width=self.joystickMode?MIN(144,MIN(safe.size.width,safe.size.height)):self.expanded?MIN(256,MAX(56,safe.size.width)):56;
-    CGFloat height=self.joystickMode?width:56;
+    CGFloat width=self.expanded?MIN(256,MAX(56,safe.size.width)):44;
+    CGFloat height=56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {
         CGSize fit=[self.stack systemLayoutSizeFittingSize:CGSizeMake(width-12,0)
@@ -353,14 +358,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         contentHeight=fit.height;
         height=MIN(safe.size.height,fit.height+12);
     }
-    CGFloat x=safe.origin.x+MIN(1,MAX(0,self.position.x))*MAX(0,safe.size.width-width);
-    CGFloat y=safe.origin.y+MIN(1,MAX(0,self.position.y))*MAX(0,safe.size.height-height);
+    CGFloat x=safe.origin.x;
+    CGFloat y=safe.origin.y+MAX(0,safe.size.height-height)/2;
     [UIView performWithoutAnimation:^{
         self.frame=CGRectMake(x,y,width,height);
         self.bubble.frame=self.bounds;
-        self.joystickBase.frame=self.bounds;self.joystickBase.layer.cornerRadius=width/2;
-        self.joystickThumb.bounds=CGRectMake(0,0,44,44);
-        if(WPOrders::Shared().stick().intensity<=0)self.joystickThumb.center=CGPointMake(width/2,height/2);
         if (self.expanded) {
             self.body.frame=CGRectInset(self.bounds,6,6);
             self.stack.frame=CGRectMake(0,0,width-12,contentHeight);
@@ -392,8 +394,9 @@ extern "C" void WP_InstallOrdersPanel(void) {
     dispatch_once(&once, ^{
         NSTimer *timer=[NSTimer timerWithTimeInterval:0.15 repeats:YES block:^(NSTimer*) {
             static WPOrdersPanel *panel;
+            static WPMapJoystick *joystick;
             if (UIApplication.sharedApplication.applicationState!=UIApplicationStateActive) {
-                WPOrders::Shared().publish(false,0); panel.hidden=YES; return;
+                WPOrders::Shared().publish(false,0); panel.hidden=YES;joystick.hidden=YES; return;
             }
             static Uint32 gameWindowID=0;
             SDL_Window *sdl=gameWindowID?SDL_GetWindowFromID(gameWindowID):nullptr;
@@ -409,6 +412,8 @@ extern "C" void WP_InstallOrdersPanel(void) {
                 [panel removeFromSuperview]; panel=[WPOrdersPanel new];
                 [window addSubview:panel];
             }
+            if(!joystick || joystick.superview!=window){[joystick removeFromSuperview];joystick=[WPMapJoystick new];[window addSubview:joystick];}
+            [joystick refresh];[window bringSubviewToFront:joystick];
             [panel refresh];
             // The root view can be reordered during keyboard/window changes.
             // Only raise inside this game window; never steal key-window focus.

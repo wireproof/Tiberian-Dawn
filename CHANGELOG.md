@@ -4,6 +4,18 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.4.4 — 2026-10-25
+
+- Separate the map joystick from the Orders & Groups gamepad control.
+- Drag the joystick outer ring to reposition it; its center retains proportional
+  map scrolling. Double-tap switches to a compact hand button and persistent
+  one-finger map dragging. Double-tap again restores drag selection and joystick.
+- Map-drag mode preserves ordinary taps and resets when leaving gameplay.
+- Move Orders, Groups, Zoom and Cheats into a left-edge slide-out drawer.
+  Tap/swipe the gamepad tab to open; tap its header or swipe left to close.
+- Touch-specific interface; Mac keyboard/controller camera controls remain.
+- Physical-device gesture and layout confirmation remains pending.
+
 ## 0.4.3 — 2026-10-25
 
 - Reconstruct sidebar button, build-column and clipping coordinates from the

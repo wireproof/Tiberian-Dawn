@@ -11,13 +11,16 @@ class State {
     std::mutex mutex;
     std::deque<Command> pending;
     Snapshot state = {false,0,0};
+    bool pan_held = false;
 public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); state.force=0; }
+        if (!active) { pending.clear(); state.force=0; pan_held=false; }
         if (!selected) state.force=0;
     }
+    void hold_pan(bool held) { std::lock_guard<std::mutex> lock(mutex); pan_held=held && state.active; }
+    bool panHeld() { std::lock_guard<std::mutex> lock(mutex); return pan_held; }
     Snapshot snapshot() { std::lock_guard<std::mutex> lock(mutex); return state; }
     bool enqueue(Kind kind, int group=0) {
         std::lock_guard<std::mutex> lock(mutex);

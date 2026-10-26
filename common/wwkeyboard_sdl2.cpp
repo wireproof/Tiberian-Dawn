@@ -21,6 +21,9 @@
 #include "video.h"
 #include "sdl_keymap.h"
 #include "settings.h"
+#ifdef IPADOS_PORT
+#include "wireproof_orders.h"
+#endif
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -150,6 +153,7 @@ struct TouchGestureState
     bool suppress_until_all_released = false;
     bool two_finger_tap_sent = false;
     bool primary_pencil = false;
+    bool modifier_pan = false;
 };
 
 TouchGestureState TouchGesture;
@@ -295,7 +299,8 @@ void Begin_Primary_Touch(const SDL_TouchFingerEvent& event)
 {
     TouchGesture.primary_id = event.fingerId;
     TouchGesture.started_at = SDL_GetTicks();
-    TouchGesture.long_press_sent = false;
+    TouchGesture.modifier_pan = WPOrders::Shared().panHeld();
+    TouchGesture.long_press_sent = TouchGesture.modifier_pan;
     TouchGesture.panning = false;
     TouchGesture.suppress_until_all_released = false;
     TouchFingerState* primary = Find_Finger(event.fingerId);
@@ -354,10 +359,28 @@ void Handle_Touch_Motion(WWKeyboardClassSDL2& keyboard, const SDL_TouchFingerEve
         return;
     }
 
+    const float previous_x=finger->normalized_x, previous_y=finger->normalized_y;
     finger->normalized_x = event.x;
     finger->normalized_y = event.y;
 
     if (TouchGesture.suppress_until_all_released) {
+        return;
+    }
+
+    // The modifier finger belongs to UIKit's floating button; SDL sees only
+    // the map finger. Never turn its release into a selection or right-click.
+    if (TouchGesture.modifier_pan || WPOrders::Shared().panHeld()) {
+        Release_Touch_Left_Button(keyboard);
+        TouchGesture.modifier_pan=true;
+        TouchGesture.long_press_sent=true;
+        if (WPOrders::Shared().panHeld()) {
+            PendingPanX += event.x-previous_x;
+            PendingPanY += event.y-previous_y;
+            PendingPanAt=SDL_GetTicks();
+        } else {
+            PendingPanX=PendingPanY=0;
+            TouchGesture.suppress_until_all_released=true;
+        }
         return;
     }
 
@@ -403,7 +426,7 @@ void Handle_Touch_Up(WWKeyboardClassSDL2& keyboard, const SDL_TouchFingerEvent& 
         Cancel_Touch_Gesture(keyboard);
     }
 
-    if (!cancelled && TouchGesture.panning && !TouchGesture.two_finger_tap_sent
+    if (!cancelled && !TouchGesture.modifier_pan && TouchGesture.panning && !TouchGesture.two_finger_tap_sent
         && TouchGesture.pan_travel < 0.012f
         && SDL_GetTicks() - TouchGesture.two_finger_started_at <= TwoFingerTapMilliseconds) {
         int x = 0;
@@ -412,7 +435,7 @@ void Handle_Touch_Up(WWKeyboardClassSDL2& keyboard, const SDL_TouchFingerEvent& 
         keyboard.Put_Touch_Mouse_Message(VK_RBUTTON, x, y, false);
         keyboard.Put_Touch_Mouse_Message(VK_RBUTTON, x, y, true);
         TouchGesture.two_finger_tap_sent = true;
-    } else if (!cancelled && !TouchGesture.panning && !TouchGesture.suppress_until_all_released
+    } else if (!cancelled && !TouchGesture.modifier_pan && !TouchGesture.panning && !TouchGesture.suppress_until_all_released
                && event.fingerId == TouchGesture.primary_id) {
         Set_Video_Mouse_Normalized(event.x, event.y, TouchGesture.current_x, TouchGesture.current_y);
         if (TouchGesture.left_button_down) {
@@ -481,7 +504,7 @@ int SDLCALL Capture_Lifecycle_Event(void*, SDL_Event* event)
 
 bool Consume_IPadOS_Touch_Pan(float& delta_x, float& delta_y)
 {
-    if (PendingPanAt == 0 || SDL_GetTicks() - PendingPanAt > 100) {
+    if ((TouchGesture.modifier_pan && !WPOrders::Shared().panHeld()) || PendingPanAt == 0 || SDL_GetTicks() - PendingPanAt > 100) {
         Discard_IPadOS_Touch_Pan();
         return false;
     }

@@ -8,7 +8,9 @@ Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple po
 starts gameplay at a fixed 2x battlefield scale. Units and terrain are larger;
 menus, the top bar, sidebar and toolbar keep their existing size. The v0.3.5
 gestures and compact Orders panel (groups 1–5 and 6–9) are unchanged. Pinch
-and Control+wheel zoom remain disabled. Physical-device confirmation is pending.
+and Control+wheel zoom remain disabled. Hold the floating controller button to
+pan the map with your other finger; release to restore selection. Physical-device
+confirmation is pending.
 
 ## Release 0.2.8
 

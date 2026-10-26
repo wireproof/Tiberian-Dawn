@@ -3,6 +3,10 @@
 int main() {
     using namespace WPOrders;
     State s; Command c;
+    s.hold_pan(true); assert(!s.panHeld()); // cannot latch a modifier in menus
+    s.publish(true,0); s.hold_pan(true); assert(s.panHeld()); // no selected units required
+    s.hold_pan(false); assert(!s.panHeld());
+    s.hold_pan(true); s.publish(false,0); assert(!s.panHeld()); // leaving gameplay cancels hold
     assert(!s.enqueue(Stop)); // menus cannot queue delayed battlefield commands
     s.publish(true,0);
     assert(!s.enqueue(Assign,2)); // cannot erase a group accidentally with no selection

@@ -1,3 +1,12 @@
+# v0.3.6 held map modifier
+
+Hold the floating controller button for a quarter second (it turns blue), then
+drag on the map with your other finger. Release the controller to stop panning;
+lift the map finger before starting a normal selection. A quick drag of the
+controller still repositions it, and a tap still expands the panel. Backgrounding
+or leaving gameplay cancels the hold. Gameplay has a fixed 2x scale; pinch zoom
+is disabled. Physical-device confirmation pending.
+
 # v0.3.5 control update
 
 Interactive pinch and Control+wheel zoom were reverted after device feedback.

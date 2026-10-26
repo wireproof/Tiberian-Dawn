@@ -71,13 +71,17 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.bubble=[UIButton buttonWithType:UIButtonTypeSystem];
         [self.bubble setImage:[UIImage systemImageNamed:@"gamecontroller.fill"] forState:UIControlStateNormal];
         self.bubble.tintColor=UIColor.whiteColor;
-        self.bubble.accessibilityLabel=@"Expand Orders and Groups. Drag to reposition.";
+        self.bubble.accessibilityLabel=@"Tap for Orders and Groups. Drag to reposition. Hold to pan the map with your other finger.";
         [self.bubble addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];
         self.bubble.tag=100;
         for (UIView *handle in @[self.toggle,self.bubble]) {
             UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)];
             [handle addGestureRecognizer:pan];
         }
+        UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdMap:)];
+        hold.minimumPressDuration=0.25;
+        hold.allowableMovement=10;
+        [self.bubble addGestureRecognizer:hold];
         self.position=CGPointMake(0,1);
         NSArray *saved=[[NSUserDefaults standardUserDefaults] arrayForKey:@"Wireproof.OrdersPosition"];
         if (saved.count==2) self.position=CGPointMake([saved[0] doubleValue],[saved[1] doubleValue]);
@@ -121,11 +125,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 - (void)didMoveToWindow {
     [super didMoveToWindow];
+    if (!self.window) WPOrders::Shared().hold_pan(false);
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidHideNotification object:nil];
     if (self.window) [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardClosed:)
         name:UIKeyboardDidHideNotification object:nil];
 }
-- (void)dealloc { [[NSNotificationCenter defaultCenter] removeObserver:self]; }
+- (void)dealloc { WPOrders::Shared().hold_pan(false); [[NSNotificationCenter defaultCenter] removeObserver:self]; }
 - (void)keyboardClosed:(NSNotification*)notification {
     // Keyboard animations may replace/reorder the window's root content. Keep
     // our overlay above it and clear any cancelled drag from the transition.
@@ -146,6 +151,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 - (CGRect)availableRect {
     return CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+}
+- (void)holdMap:(UILongPressGestureRecognizer*)hold {
+    BOOL held=hold.state==UIGestureRecognizerStateBegan || hold.state==UIGestureRecognizerStateChanged;
+    WPOrders::Shared().hold_pan(held);
+    [self refresh];
 }
 - (void)drag:(UIPanGestureRecognizer*)pan {
     CGRect safe=[self availableRect];
@@ -174,11 +184,14 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (void)refresh {
     auto s=WPOrders::Shared().snapshot();
     self.hidden=!s.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
+    if (self.hidden) WPOrders::Shared().hold_pan(false);
     if (!self.configured && self.window) { self.expanded=NO; self.configured=YES; }
     NSString *title=s.force==1?@"Force Attack: tap target • Cancel below":s.force==2?@"Force Move: tap destination • Cancel below":[NSString stringWithFormat:@"Orders & Groups %@ · %d selected",self.expanded?@"▾":@"▸",s.selected];
     [self.toggle setTitle:title forState:UIControlStateNormal];
     self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded;
-    self.bubble.tintColor=s.force?UIColor.systemOrangeColor:UIColor.whiteColor;
+    BOOL panHeld=WPOrders::Shared().panHeld();
+    self.bubble.tintColor=panHeld?UIColor.systemBlueColor:(s.force?UIColor.systemOrangeColor:UIColor.whiteColor);
+    [self.bubble setImage:[UIImage systemImageNamed:panHeld?@"hand.draw.fill":@"gamecontroller.fill"] forState:UIControlStateNormal];
     self.layer.cornerRadius=self.expanded?12:28;
     CGRect safe=[self availableRect];
     CGFloat width=self.expanded?MIN(256,MAX(56,safe.size.width)):56;

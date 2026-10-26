@@ -9,6 +9,8 @@ baseline wherever the operating systems permit it.
 - Start gameplay at a fixed 2x battlefield magnification so units and terrain
   are larger. Keep menus, the top bar, sidebar and Orders panel at normal size.
 - Preserve v0.3.5 gestures; pinch and Control+wheel zoom remain disabled.
+- Hold the floating controller button to temporarily pan the map with your
+  other finger. Release to return to normal selection.
 - Physical-device confirmation of the larger battlefield remains pending.
 
 ## 0.3.5 — 2026-10-25

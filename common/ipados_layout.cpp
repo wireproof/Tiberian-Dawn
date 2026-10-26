@@ -44,7 +44,7 @@ IPadLayout Calculate_IPad_Layout(int output_width,
                                  int game_width,
                                  int game_height,
                                  IPadLayoutInsets safe_area,
-                                 bool integer_scaling, bool fill_display)
+                                 bool integer_scaling, bool fill_display, bool center_full_width)
 {
     IPadLayout layout = {};
     layout.output_width = std::max(1, output_width);
@@ -55,6 +55,10 @@ IPadLayout Calculate_IPad_Layout(int output_width,
     layout.game_height = std::max(1, game_height);
     layout.compact = window_width < game_width || window_height < game_height;
 
+    // Cinematics and campaign artwork use the full horizontal window.
+    // A reserved Duo edge strip must not shift or narrow the presentation.
+    // Keep vertical safe areas and the original uniform aspect fit.
+    if (center_full_width) { safe_area.left = 0; safe_area.right = 0; }
     layout.safe_area.left = Clamp(safe_area.left, 0, layout.output_width - 1);
     layout.safe_area.top = Clamp(safe_area.top, 0, layout.output_height - 1);
     layout.safe_area.right = Clamp(safe_area.right, 0, layout.output_width - layout.safe_area.left - 1);

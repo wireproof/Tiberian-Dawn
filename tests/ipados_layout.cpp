@@ -228,6 +228,17 @@ int main()
         assert(dims.height-fitted.viewport.height<=2);
         Assert_Center_Maps_To_Game_Center(fitted);
     }
+    // Duo cover screenshots: the reserved right strip previously left movies
+    // and campaign screens at x=0 with an unused 180-pixel strip on the right.
+    for (const auto dims : {IPadViewport{0,0,900,1280}, IPadViewport{0,0,1280,900}}) {
+        auto fitted = Calculate_IPad_Layout(dims.width,dims.height,dims.width,dims.height,
+            640,400,{160,0,180,64},false,false,true);
+        Assert_Contained(fitted);
+        Assert_Classic_Aspect(fitted);
+        assert(std::abs(2*fitted.viewport.x+fitted.viewport.width-dims.width)<=1);
+        assert(fitted.viewport.width==dims.width);
+        Assert_Center_Maps_To_Game_Center(fitted);
+    }
     std::cout << "iPad layout hardening matrix passed\n";
     return 0;
 }

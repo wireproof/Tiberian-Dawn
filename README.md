@@ -2,9 +2,9 @@
 
 Native community port for iPhone, iPad and macOS, based on [Cesarus85's Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and Electronic Arts' released source.
 
-## Latest release: v0.5.2
+## Latest release: v0.5.3
 
-[Download v0.5.2](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.2).
+[Download v0.5.3](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.3).
 
 The joystick is now independent: drag its center to scroll and its outer ring
 to reposition. **Double-tap** to shrink it into a hand button and switch from
@@ -39,6 +39,14 @@ buttons in 0.25 steps. The portrait menu uses compact button spacing.
 The power gauge follows the extended sidebar. Opening Options keeps the adaptive
 battlefield size, and the main menu reflows to the available screen with proportional
 logo artwork. Physical-device layout confirmation remains pending.
+
+## Gameplay showcase
+
+[Duo cover-screen gameplay — v0.5.2 (2:03, with audio)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.2/Tiberian-Dawn-v0.5.2-Duo-Cover-Gameplay.mp4)
+
+[![Duo cover-screen gameplay](docs/showcase/duo-cover-v0.5.2.jpg)](https://github.com/wireproof/Tiberian-Dawn/releases/download/v0.5.2/Tiberian-Dawn-v0.5.2-Duo-Cover-Gameplay.mp4)
+
+Recorded on the physical Duo cover display. Inner-display and iPad showcases will be added when available.
 
 ## Release 0.2.8
 

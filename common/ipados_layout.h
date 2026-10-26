@@ -37,7 +37,8 @@ IPadLayout Calculate_IPad_Layout(int output_width,
                                  int game_width,
                                  int game_height,
                                  IPadLayoutInsets safe_area,
-                                 bool integer_scaling, bool fill_display = false);
+                                 bool integer_scaling, bool fill_display = false,
+                                 bool center_full_width = false);
 
 void Map_IPad_Output_Point(const IPadLayout& layout, float output_x, float output_y, int& game_x, int& game_y);
 void Map_IPad_Window_Point(const IPadLayout& layout, float window_x, float window_y, int& game_x, int& game_y);

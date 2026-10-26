@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.3
+
+- Center campaign scores, maps, and videos across the full display width, including Duo cover windows with a reserved side strip. Preserve aspect ratio and vertical letterboxing.
+- Cover-screen showcase recording remains associated with v0.5.2, the recorded build.
+
+
 All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.

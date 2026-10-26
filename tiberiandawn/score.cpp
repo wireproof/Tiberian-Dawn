@@ -1,3 +1,6 @@
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "common/wireproof_viewport.h"
+#endif
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -586,6 +589,9 @@ void Enable_Uncompressed_Shapes(void);
  *=============================================================================================*/
 void ScoreClass::Presentation(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WP_Begin_Campaign_Presentation();
+#endif
     // static char const _redpal[]={0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28,0x29,0x2A,0x2B,0x2C,0x2D,0x21,0x2F};
     static char const _redpal[] = {
         0x20, 0x22, 0x24, 0x26, 0x28, 0x28, 0x28, 0x28, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x21, 0x2F};
@@ -2019,6 +2025,9 @@ char* Int_Print(int a)
  *=============================================================================================*/
 void Multi_Score_Presentation(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WP_Begin_Campaign_Presentation();
+#endif
     static unsigned char const _cycleyellowpal[] = {
         0x0, 0xec, 0xEb, 0xea, 0xE9, 0xe9, 0xE9, 0x0, 0xE9, 0x0, 0x0, 0x0, 0x0, 0x0, 0xED, 0x0};
 

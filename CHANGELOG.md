@@ -4,6 +4,16 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.5.2 — 2026-10-26
+
+- Reset the gameplay viewport before score screens, campaign progression maps,
+  ending sequences and movies, including transitions inside the mission loop.
+- Fit fixed 640×400 campaign artwork without cropping or stretching, and hide
+  battlefield controls and selection overlays during these screens.
+- Preserve the cover/inner gameplay zoom preferences for the next mission.
+- Detect hosted cover layouts using usable display geometry and reserved edge
+  strips, debounce fold transitions, and label the active zoom profile.
+
 ## 0.5.1 — 2026-10-26
 
 - Corrected IPA metadata: restore the missing Tiberian Dawn display name.

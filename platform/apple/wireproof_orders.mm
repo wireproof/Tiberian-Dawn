@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 #include "common/wireproof_orders.h"
+#include "common/wireproof_camera.h"
 #include "common/wireproof_cheats.h"
 #include "third_party/SDL2/include/SDL.h"
 #include "third_party/SDL2/include/SDL_syswm.h"
@@ -117,6 +118,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UIScrollView *body;
 @property(nonatomic,strong) UIButton *toggle;
 @property(nonatomic,copy) NSString *zoomProfile;
+@property(nonatomic,copy) NSString *pendingZoomProfile;
+@property(nonatomic) CFTimeInterval zoomProfileSince;
 @property(nonatomic,strong) UISegmentedControl *page;
 @property(nonatomic,strong) NSArray<UIButton*> *orderButtons;
 @property(nonatomic,strong) NSArray<UIButton*> *groupButtons;
@@ -389,9 +392,14 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (void)refresh {
     if(self.window) {
         CGSize size=self.window.bounds.size;
-        // Aspect class is orientation-independent: narrow cover vs wide inner display.
-        NSString *profile=MAX(size.width,size.height)/MAX(1,MIN(size.width,size.height))>=1.65?@"Wireproof.Zoom.Cover":@"Wireproof.Zoom.Inner";
-        if(![profile isEqualToString:self.zoomProfile]) {
+        UIEdgeInsets insets=self.window.safeAreaInsets;
+        NSString *profile=WPCamera::CoverDisplay(size.width,size.height,insets.left,insets.top,insets.right,insets.bottom)?@"Wireproof.Zoom.Cover":@"Wireproof.Zoom.Inner";
+        if(![profile isEqualToString:self.pendingZoomProfile]) {
+            self.pendingZoomProfile=profile;self.zoomProfileSince=CACurrentMediaTime();
+        }
+        // Fold/rotation geometry settles over multiple callbacks. Never save a
+        // transient intermediate frame into the other display's preferences.
+        if(![profile isEqualToString:self.zoomProfile] && (!self.zoomProfile || CACurrentMediaTime()-self.zoomProfileSince>=0.25)) {
             NSUserDefaults *defaults=NSUserDefaults.standardUserDefaults;
             if(self.zoomProfile)[defaults setInteger:WPOrders::Shared().zoomQuarters() forKey:self.zoomProfile];
             NSNumber *saved=[defaults objectForKey:profile]?:[defaults objectForKey:@"Wireproof.ZoomQuarters"];
@@ -414,7 +422,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 
     int quarters=WPOrders::Shared().zoomQuarters();
     for(int i=0;i<2;i++){int value=WPOrders::Shared().joystickSetting(i);self.joystickSliders[i].value=value;self.joystickLabels[i].text=[NSString stringWithFormat:@"Joystick %@ %.2f×",i?@"speed":@"size",value/4.0];}
-    self.zoomLabel.text=[NSString stringWithFormat:@"Zoom %.2f×",quarters/4.0];
+    self.zoomLabel.text=[NSString stringWithFormat:@"%@ zoom %.2f×",[self.zoomProfile hasSuffix:@"Cover"]?@"Cover":@"Inner",quarters/4.0];
     self.zoomSlider.value=quarters; self.zoomSlider.accessibilityValue=self.zoomLabel.text;
     self.zoomMinus.enabled=quarters>2; self.zoomPlus.enabled=quarters<12;
     self.hidden=!s.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;

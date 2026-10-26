@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cmath>
 
-void WP_Update_Battlefield_Viewport(bool active, bool menu)
+void WP_Update_Battlefield_Viewport(bool active, bool menu, bool classic)
 {
 #ifdef IPADOS_PORT
     static bool icons_published = false;
@@ -20,7 +20,7 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu)
     }
 #endif
     int width = 640, height = 400;
-    const bool adaptive=active || menu || (InMainLoop && GameActive);
+    const bool adaptive=!classic && (active || menu || (InMainLoop && GameActive));
     if (adaptive) Video_Adaptive_Size(width, height);
     if(active && height>width){width=(int)std::lround(width/1.625);height=(int)std::lround(height/1.625);}
     const int right = width - (Map.IsSidebarActive ? Map.SideBarWidth : 0);
@@ -83,4 +83,14 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu)
     SeenBuff.Clear();
     Map.Flag_To_Redraw(true);
     Show_Mouse();
+}
+
+// Fixed-resolution score, movie and campaign-map art must not inherit a
+// battlefield crop/zoom just because the enclosing mission loop is still active.
+void WP_Begin_Campaign_Presentation()
+{
+    WPOrders::Shared().publish(false,0);
+    WP_Update_Battlefield_Viewport(false,false,true);
+    Video_Clear_HD_Artwork();
+    Video_Set_Touch_Selection_Box(false,0,0,0,0);
 }

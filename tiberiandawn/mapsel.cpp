@@ -1,3 +1,6 @@
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "common/wireproof_viewport.h"
+#endif
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -416,6 +419,9 @@ const char* GetMapSelString(unsigned int index)
  *=============================================================================================*/
 void Map_Selection(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WP_Begin_Campaign_Presentation();
+#endif
     void *anim, *progress, *oldfont, *greyearth, *greyearth2;
     unsigned char localpalette[768];
     int scenario, lastscenario;

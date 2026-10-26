@@ -564,7 +564,7 @@ static void Update_HWCursor_Settings(bool geometry_only = false)
                                         Presentation_Height(),
                                         battlefield_active ? IPadLayoutInsets{0,0,0,0} : IPadLayoutInsets{safe_left, safe_top, safe_right, safe_bottom},
                                         false, // Fractional fit avoids menu shrinkage after returning from gameplay.
-                                        !battlefield_active && Settings.Video.PresentationMode == 3);
+                                        false); // Fixed campaign artwork always fits without stretching.
     render_dst.x = ipad_layout.viewport.x;
     render_dst.y = ipad_layout.viewport.y;
     render_dst.w = ipad_layout.viewport.width;

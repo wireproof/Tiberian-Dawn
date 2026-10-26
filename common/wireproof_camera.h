@@ -9,6 +9,14 @@ inline int ClampAxis(int position, int delta, int minimum, int extent, int viewp
     const long long desired=static_cast<long long>(position)+delta;
     return static_cast<int>(std::max(static_cast<long long>(minimum),std::min(maximum,desired)));
 }
+// A hosted cover can retain the inner window bounds and reserve a substantial
+// edge strip instead. Normalize by dimension so rotation preserves the profile.
+inline bool CoverDisplay(double width,double height,double left,double top,double right,double bottom) {
+    const double usableW=std::max(1.0,width-left-right), usableH=std::max(1.0,height-top-bottom);
+    return std::max(usableW,usableH)/std::min(usableW,usableH)>=1.65
+        || std::max(left,right)/std::max(1.0,width)>=0.10
+        || std::max(top,bottom)/std::max(1.0,height)>=0.10;
+}
 inline int PortraitSidebarSlots(int width,int height) { return height>width ? 5 : 0; }
 inline int SidebarSlots(int height,int top,int row,int arrows,int capacity) {
     return std::max(1,std::min(capacity,(height-top-arrows)/std::max(1,row)));

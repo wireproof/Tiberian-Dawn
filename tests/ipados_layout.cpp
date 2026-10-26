@@ -65,6 +65,15 @@ int main()
         assert(std::abs(fit.viewport.height-size.second)<=2);
         assert(w>=640 && h>=400 && w<=2048 && h<=2048);
     }
+    // Campaign score/map artwork must remain wholly visible with uniform scale.
+    for(const auto size : {std::pair<int,int>{900,1280},{1280,900},{2400,1080}}) {
+        const auto fit=Calculate_IPad_Layout(size.first,size.second,size.first,size.second,640,400,{0,0,0,0},false,false);
+        Assert_Contained(fit);
+        assert(std::abs(fit.viewport.width/640.0-fit.viewport.height/400.0)<0.003);
+        int x,y;
+        Map_IPad_Output_Point(fit,fit.viewport.x+fit.viewport.width-1,fit.viewport.y+fit.viewport.height-1,x,y);
+        assert(x>=638 && y>=398);
+    }
     int underX=550,underY=600;
     Map_Battlefield_Point(underX,underY,480,16,640,800,1.0f,446);
     assert(underX==550 && underY==600);

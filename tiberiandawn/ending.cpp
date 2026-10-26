@@ -1,3 +1,6 @@
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "common/wireproof_viewport.h"
+#endif
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -38,6 +41,9 @@
 
 void GDI_Ending(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WP_Begin_Campaign_Presentation();
+#endif
     if (Is_Demo()) {
         Fade_Palette_To(BlackPalette, FADE_PALETTE_MEDIUM, Call_Back);
         Load_Title_Screen("DEMOPIC.CPS", &HidPage, Palette);
@@ -110,6 +116,9 @@ void GDI_Ending(void)
  *=============================================================================================*/
 void Nod_Ending(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WP_Begin_Campaign_Presentation();
+#endif
     static unsigned char const _tanpal[] = {
         0x0, 0xED, 0xED, 0x2C, 0x2C, 0xFB, 0xFB, 0xFD, 0xFD, 0x0, 0x0, 0x0, 0x0, 0x0, 0x52, 0x0};
 

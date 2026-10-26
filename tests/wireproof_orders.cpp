@@ -11,6 +11,14 @@ int main() {
         assert(menu.y+menu.height<=size.second-menu.footerHeight);
         assert(menu.y+20+5*menu.step+menu.buttonHeight<menu.y+menu.height);
     }
+    // Duo cover hosting can keep the inner window dimensions and reserve an
+    // edge strip. Both orientations must choose cover; normal inner insets do not.
+    assert(WPCamera::CoverDisplay(900,1280,0,0,180,64));
+    assert(WPCamera::CoverDisplay(1280,900,160,0,0,84));
+    assert(!WPCamera::CoverDisplay(900,1280,0,0,0,46));
+    assert(!WPCamera::CoverDisplay(1280,900,0,0,0,46));
+    assert(WPCamera::CoverDisplay(720,1216,0,0,0,0));
+    assert(WPCamera::CoverDisplay(1216,720,0,0,0,0));
     WPOrders::State settings;
     assert(settings.joystickSetting(false)==4 && settings.joystickSetting(true)==4);
     settings.setJoystickSetting(false,99);assert(settings.joystickSetting(false)==8);

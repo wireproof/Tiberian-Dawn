@@ -10,6 +10,20 @@
 #import <AppKit/AppKit.h>
 #include "macos_platform.h"
 #endif
+// Store only reusable choices, never mission balances or queued actions.
+namespace WPCheats {
+Snapshot LoadPreferences() {
+    Snapshot s;
+    NSDictionary *values=[NSUserDefaults.standardUserDefaults dictionaryForKey:@"Wireproof.CheatPreferences.v1"];
+    auto flag=[&](NSString *key) { id v=values[key];return [v isKindOfClass:NSNumber.class] && [v boolValue]; };
+    auto speed=[&](NSString *key) { id v=values[key];if(![v isKindOfClass:NSNumber.class])return 4;double n=[v doubleValue];return std::isfinite(n)&&n==std::floor(n)&&n>=1&&n<=12?(int)n:4; };
+    s.invincible=flag(@"invincible");s.reveal=flag(@"reveal");s.instant=flag(@"instant");s.free=flag(@"free");s.weapons=flag(@"weapons");s.anywhere=flag(@"anywhere");
+    s.infantry=speed(@"infantry");s.vehicles=speed(@"vehicles");s.aircraft=speed(@"aircraft");return s;
+}
+void SavePreferences(const Snapshot& s) {
+    [NSUserDefaults.standardUserDefaults setObject:@{@"invincible":@(s.invincible),@"reveal":@(s.reveal),@"instant":@(s.instant),@"free":@(s.free),@"weapons":@(s.weapons),@"anywhere":@(s.anywhere),@"infantry":@(s.infantry),@"vehicles":@(s.vehicles),@"aircraft":@(s.aircraft)} forKey:@"Wireproof.CheatPreferences.v1"];
+}
+}
 static NSString* Profile(void) { return [[NSUserDefaults standardUserDefaults] stringForKey:@"WPActiveRules"] ?: @"Stock"; }
 static NSString* StoreKey(void) { return [@"WPRules." stringByAppendingString:Profile()]; }
 static NSDictionary* Values(void) { return [[NSUserDefaults standardUserDefaults] dictionaryForKey:StoreKey()] ?: @{}; }

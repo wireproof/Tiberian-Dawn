@@ -6,6 +6,18 @@
 #include "third_party/SDL2/include/SDL.h"
 #include "third_party/SDL2/include/SDL_syswm.h"
 
+// Hinge capability identifies Duo; window aspect ratio alone also matches iPads.
+// Keep the positive observation during temporary hierarchy transitions (nil hinge).
+static BOOL WPHasHinge=NO;
+static void WPObserveHinge(UIView *view) {
+    if (@available(iOS 27.1, *)) {
+        UIHingeInteraction *interaction=[[UIHingeInteraction alloc] initWithUpdateHandler:^(UIHingeInteraction *sender, UIHingeInteractionUpdate *update) {
+            if(update.hinge)WPHasHinge=YES;
+        }];
+        [view addInteraction:interaction];
+    }
+}
+
 // Copy actual decoded MOUSE.SHP frames, using the active game palette.
 static UIImage *WPAttackIcon, *WPMoveIcon;
 void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int height) {
@@ -199,6 +211,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self=[super initWithFrame:frame])) {
+        WPObserveHinge(self);
         self.backgroundColor=[UIColor colorWithWhite:0.05 alpha:0.92]; self.layer.cornerRadius=12;
         self.toggle=[self button:@"Orders & Groups ▸" tag:100];
         self.bubble=[UIButton buttonWithType:UIButtonTypeSystem];
@@ -282,7 +295,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         }
         self.speedSliders=speedSliders;self.speedLabels=speedLabels;
         UILabel *help=[UILabel new];help.numberOfLines=0;help.font=[UIFont systemFontOfSize:11];help.textColor=UIColor.lightGrayColor;
-        help.text=@"Player only • Single player\nShroud on restores the earlier explored area and current unit sight. Toggles/speed reset on mission load.";
+        help.text=@"Player only • Single player\nShroud on restores the earlier explored area and current unit sight. Toggles and speed are saved between missions and app launches.";
         [cheatRows addObject:help];
         self.cheatRows=cheatRows;
         NSMutableArray *cheatColumns=[NSMutableArray new];
@@ -432,7 +445,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if(self.window) {
         CGSize size=self.window.bounds.size;
         UIEdgeInsets insets=self.window.safeAreaInsets;
-        NSString *profile=WPCamera::CoverDisplay(size.width,size.height,insets.left,insets.top,insets.right,insets.bottom)?@"Wireproof.Zoom.Cover":@"Wireproof.Zoom.Inner";
+        BOOL cover=WPCamera::CoverDisplay(size.width,size.height,insets.left,insets.top,insets.right,insets.bottom);
+        NSString *legacy=cover?@"Wireproof.Zoom.Cover":@"Wireproof.Zoom.Inner";
+        NSString *profile=WPHasHinge?legacy:@"Wireproof.Zoom.Standard";
         if(![profile isEqualToString:self.pendingZoomProfile]) {
             self.pendingZoomProfile=profile;self.zoomProfileSince=CACurrentMediaTime();
         }
@@ -441,7 +456,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         if(![profile isEqualToString:self.zoomProfile] && (!self.zoomProfile || CACurrentMediaTime()-self.zoomProfileSince>=0.25)) {
             NSUserDefaults *defaults=NSUserDefaults.standardUserDefaults;
             if(self.zoomProfile)[defaults setInteger:WPOrders::Shared().zoomQuarters() forKey:self.zoomProfile];
-            NSNumber *saved=[defaults objectForKey:profile]?:[defaults objectForKey:@"Wireproof.ZoomQuarters"];
+            NSNumber *saved=[defaults objectForKey:profile]?:[defaults objectForKey:legacy]?:[defaults objectForKey:@"Wireproof.ZoomQuarters"];
             WPOrders::Shared().setZoomQuarters(saved?saved.intValue:6);
             self.zoomProfile=profile;
         }
@@ -461,7 +476,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 
     int quarters=WPOrders::Shared().zoomQuarters();
     for(int i=0;i<2;i++){int value=WPOrders::Shared().joystickSetting(i);self.joystickSliders[i].value=value;self.joystickLabels[i].text=[NSString stringWithFormat:@"Joystick %@ %.2f×",i?@"speed":@"size",value/4.0];}
-    self.zoomLabel.text=[NSString stringWithFormat:@"%@ zoom %.2f×",[self.zoomProfile hasSuffix:@"Cover"]?@"Cover":@"Inner",quarters/4.0];
+    NSString *zoomTitle=WPHasHinge?([self.zoomProfile hasSuffix:@"Cover"]?@"Cover zoom":@"Inner zoom"):@"Zoom";
+    self.zoomLabel.text=[NSString stringWithFormat:@"%@ %.2f×",zoomTitle,quarters/4.0];
     self.zoomSlider.value=quarters; self.zoomSlider.accessibilityValue=self.zoomLabel.text;
     self.zoomMinus.enabled=quarters>2; self.zoomPlus.enabled=quarters<12;
     self.hidden=!s.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;

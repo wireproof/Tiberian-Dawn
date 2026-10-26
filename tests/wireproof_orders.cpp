@@ -55,9 +55,19 @@ int main() {
     cheats.addMoney(1000);cheats.publish(false,0,0,0);assert(cheats.take().money==0);
     cheats.publish(true,0,0,0);cheats.instant(true);cheats.free(true);assert(cheats.snapshot().instant && cheats.snapshot().free);
     cheats.weapons(true);cheats.anywhere(true);assert(cheats.snapshot().weapons && cheats.snapshot().anywhere);
-    cheats.reset();assert(!cheats.snapshot().weapons && !cheats.snapshot().anywhere);
-    cheats.weapons(true);cheats.anywhere(true);assert(!cheats.snapshot().weapons && !cheats.snapshot().anywhere);
-    cheats.reset();assert(!cheats.snapshot().instant && !cheats.snapshot().free);snapshot=cheats.snapshot();assert(!snapshot.available && !snapshot.invincible && !snapshot.reveal && snapshot.infantry==4 && snapshot.vehicles==4 && snapshot.aircraft==4);
+    cheats.addMoney(1000);cheats.addPower(100);
+    cheats.reset();snapshot=cheats.snapshot();
+    assert(!snapshot.available && snapshot.money==0 && snapshot.power==0 && cheats.take().money==0 && cheats.take().power==0);
+    assert(snapshot.weapons && snapshot.anywhere && snapshot.instant && snapshot.free && snapshot.invincible && snapshot.reveal);
+    assert(snapshot.infantry==1 && snapshot.vehicles==12 && snapshot.aircraft==7);
+    cheats.weapons(false);assert(cheats.snapshot().weapons); // inactive settings cannot change
+    cheats.publish(true,20,30,40);assert(cheats.snapshot().weapons);
+    static WPCheats::Snapshot disk;
+    WPCheats::State persisted({},[](const WPCheats::Snapshot& value){disk=value;});
+    persisted.publish(true,999,100,50);persisted.weapons(true);persisted.reveal(true);persisted.speed(2,9);persisted.addMoney(1000);
+    WPCheats::State relaunched(disk);auto loaded=relaunched.snapshot();
+    assert(loaded.weapons && loaded.reveal && loaded.aircraft==9 && !loaded.available && loaded.money==0 && loaded.power==0 && relaunched.take().money==0);
+    persisted.weapons(false);WPCheats::State disabled(disk);assert(!disabled.snapshot().weapons);
     using namespace WPOrders;
     State s; Command c;
     s.setStick(1,0);assert(s.stick().intensity==0); // no commands outside gameplay

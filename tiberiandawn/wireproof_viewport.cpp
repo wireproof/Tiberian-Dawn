@@ -24,13 +24,15 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu, bool classic)
     const bool adaptive=!classic && (active || menu || (InMainLoop && GameActive));
     if (adaptive) Video_Adaptive_Size(width, height);
     if(active && height>width){width=(int)std::lround(width/1.625);height=(int)std::lround(height/1.625);}
+    const float uiScale=active?WPOrders::Shared().uiScale()/100.0f:1.0f;
+    if(active){width=(int)std::lround(width/uiScale);height=(int)std::lround(height/uiScale);}
     const int right = width - (Map.IsSidebarActive ? Map.SideBarWidth : 0);
     const int view_height=height;
     const int slots=WPCamera::PortraitSidebarSlots(width,height);
     const int visibleSlots=WPCamera::SidebarSlots(height,182,48,24,24);
     const int bottom=Map.IsSidebarActive && slots?std::min(height,182+std::min(slots,visibleSlots)*48+24):height;
     const int worldRight=bottom<height?width:right;
-    const float zoom=active?WPOrders::Shared().zoomQuarters()/4.0f:1.0f;
+    const float zoom=active?WPOrders::Shared().zoomQuarters()/4.0f/uiScale:1.0f;
     Video_Set_Battlefield(adaptive, right, Map.Get_Tab_Height(), width, height, zoom,bottom);
     static float previous_zoom = 1.0f;
     // Below 1x, render additional world pixels into a larger backing surface;
@@ -41,7 +43,9 @@ void WP_Update_Battlefield_Viewport(bool active, bool menu, bool classic)
     }
     // Keep three legacy 160px top tabs distinct before compact presentation.
     if(active)width=std::max(width,480);
-    if (ScreenWidth == width && ScreenHeight == height) {
+    static float previous_ui_scale=1.0f;
+    const bool ui_changed=uiScale!=previous_ui_scale;previous_ui_scale=uiScale;
+    if (ScreenWidth == width && ScreenHeight == height && !ui_changed) {
         const int target_w = (int)std::ceil(worldRight / zoom);
         const int target_h = (int)std::ceil((view_height - Map.Get_Tab_Height()) / zoom);
         if (Map.TacLeptonWidth != Pixel_To_Lepton(target_w) || Map.TacLeptonHeight != Pixel_To_Lepton(target_h)) {

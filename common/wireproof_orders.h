@@ -5,6 +5,9 @@
 #include <deque>
 #include <cmath>
 namespace WPOrders {
+#ifdef MACOS_PORT
+int LoadUIScale();
+#endif
 enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center };
 struct Stick { float x=0, y=0, intensity=0; };
 struct Command { Kind kind; int group; };
@@ -18,8 +21,14 @@ class State {
     bool map_drag = false;
     Stick joystick;
     int zoom_quarters = 6;
+    int ui_scale = 100;
     int joystick_size = 4, joystick_speed = 4;
 public:
+#ifdef MACOS_PORT
+    State() { ui_scale=std::max(75,std::min(150,LoadUIScale())); }
+#endif
+    int uiScale() { std::lock_guard<std::mutex> lock(mutex);return ui_scale; }
+    void setUIScale(int value) { std::lock_guard<std::mutex> lock(mutex);ui_scale=std::max(75,std::min(150,value)); }
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;

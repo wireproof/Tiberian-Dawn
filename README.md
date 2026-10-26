@@ -6,15 +6,16 @@ Classic Command & Conquer, adapted for touch on iPhone and iPad and native play 
 
 An unofficial, free, non-commercial community project. **EA has not endorsed and does not support this product.**
 
-## Current release — v0.5.5
+## Current release — v0.5.6
 
-**Saved Touch Control Layouts** · [Release notes and IPA](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.5)
+**UI Size & Saved Preferences** · [Release notes and IPA](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.6)
 
-The joystick and floating controller now save their positions independently for **cover portrait, cover landscape, inner portrait, and inner landscape**. Positions are stored relative to the usable display area. Existing positions seed each layout until you customize it, and a short settling delay avoids saving temporary geometry during folding or rotation.
+- **UI size:** 75–150% in Options, with a slider, 5% − / + steps, and Reset. Scales the top bar, production sidebar, and floating menu while keeping battlefield zoom and joystick size separate. Larger UI can show fewer production slots; scrolling remains available.
+- **Saved size profiles:** portrait and landscape settings, plus separate cover/inner profiles when UIKit reports a Duo hinge.
+- **Device-aware zoom:** ordinary iPhones and iPads show “Zoom.” Duo hinge detection enables “Cover zoom” and “Inner zoom,” preserving their existing saved values. Requires hinge reporting on iOS 27.1 or later; otherwise the standard profile is used.
+- **Persistent cheats:** toggles and unit-speed multipliers survive mission changes and app relaunches on iOS and macOS. Money/power buttons remain one-time actions.
 
-This release builds on recent improvements to compact controls, Workshop bulk editing, single-player cheats, separate cover/inner zoom settings, and front-end presentation. Those features are described below; they were not all introduced in v0.5.5.
-
-Host checks and both Apple builds passed for the release. Physical-device confirmation of position switching and persistence across relaunch is still pending.
+All 26 host tests, Apple parity checks, iOS Release compilation, and Universal 2 macOS packaging passed. Physical testing of UI-size extremes, LiveContainer hinge detection, and preference restoration remains pending. Update within the existing LiveContainer data container to preserve saves.
 
 ## Gameplay showcase
 
@@ -68,7 +69,8 @@ Landscape and portrait gameplay, menus, floating controls, and the Mod Workshop.
 
 - Independent floating joystick and gamepad. Drag the joystick center to scroll; drag its outer ring to reposition. Tap the gamepad to open the panel, drag the icon or panel header to move it, and tap the header to collapse it.
 - Double-tap the joystick to switch to a compact hand button and one-finger map dragging. Ordinary taps still click. Double-tap again to restore drag selection and the full joystick; map-drag mode resets when leaving gameplay.
-- Saved control positions for each display and orientation, plus separate **Cover zoom** and **Inner zoom** settings.
+- Saved control positions for each display and orientation. Standard devices show **Zoom**; hinge-enabled Duo devices retain **Cover zoom** and **Inner zoom**.
+- **UI size** adjusts from 75–150%, independently of battlefield zoom and joystick size. On macOS, use the UI-size slider in the Option-C panel.
 - Adjustable joystick size (0.5–2×) and speed (0.25–3×), with saved sliders and 0.25-step buttons.
 - Responsive Game, Cheats, and Options tabs. Landscape keeps groups 1–9 in one row; compact layouts leave more room for the battlefield.
 - Adaptive gameplay viewport and enlarged portrait sidebar with five visible production rows. Campaign screens and movies use separate presentation handling to preserve their artwork proportions.
@@ -88,7 +90,7 @@ Tap **1–9** to recall a group. Hold a number to replace that group with the cu
 | Build Anywhere | Remove base-proximity restrictions; terrain and occupancy rules still apply |
 | Unit speed | Separate infantry, vehicle, and aircraft multipliers |
 
-In-game cheats are intended for the player in single-player. Toggles and speed settings reset on mission load. Instant Weapons does not grant weapons unavailable to the player.
+In-game cheats are intended for the player in single-player. Toggles and speed settings are saved between missions and app launches. Instant Weapons does not grant weapons unavailable to the player.
 
 ### Mod Workshop
 
@@ -132,10 +134,10 @@ Keep SDL at its recorded submodule commit and apply the supplied patch through t
 
 | Area | Status |
 | --- | --- |
-| v0.5.5 host validation | All 26 host tests and Apple parity checks passed |
+| v0.5.6 host validation | All 26 host tests and Apple parity checks passed |
 | Apple builds | iOS Release compiled; Universal 2 macOS package signed and verified |
 | Duo gameplay | Owner-provided gameplay and screenshots are available above |
-| Latest layout changes | Fold/rotation switching and relaunch persistence still need physical-device confirmation |
+| Latest layout changes | UI-size extremes, LiveContainer hinge detection, fold/rotation switching, and relaunch persistence still need physical-device confirmation |
 | Display presentation | Cover/inner zoom separation and campaign/menu/movie alignment need continued real-device regression testing |
 | iPad Pro 11 | Two recordings and 11 screenshots available; broader device and lifecycle validation remains pending |
 | macOS distribution | Ad-hoc signed local build; not notarized |

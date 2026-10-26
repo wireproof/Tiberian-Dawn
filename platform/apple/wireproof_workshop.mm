@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #include <cmath>
 #include "common/wireproof_cheats.h"
+#include "common/wireproof_orders.h"
 #import <TargetConditionals.h>
 #include "tiberiandawn/wireproof_rules.h"
 #if TARGET_OS_IPHONE
@@ -24,6 +25,9 @@ void SavePreferences(const Snapshot& s) {
     [NSUserDefaults.standardUserDefaults setObject:@{@"invincible":@(s.invincible),@"reveal":@(s.reveal),@"instant":@(s.instant),@"free":@(s.free),@"weapons":@(s.weapons),@"anywhere":@(s.anywhere),@"infantry":@(s.infantry),@"vehicles":@(s.vehicles),@"aircraft":@(s.aircraft)} forKey:@"Wireproof.CheatPreferences.v1"];
 }
 }
+#if !TARGET_OS_IPHONE
+namespace WPOrders { int LoadUIScale() { NSNumber *v=[NSUserDefaults.standardUserDefaults objectForKey:@"Wireproof.UIScale.Mac"];return v?v.intValue:100; } }
+#endif
 static NSString* Profile(void) { return [[NSUserDefaults standardUserDefaults] stringForKey:@"WPActiveRules"] ?: @"Stock"; }
 static NSString* StoreKey(void) { return [@"WPRules." stringByAppendingString:Profile()]; }
 static NSDictionary* Values(void) { return [[NSUserDefaults standardUserDefaults] dictionaryForKey:StoreKey()] ?: @{}; }
@@ -293,8 +297,8 @@ extern "C" void WP_ShowLiveCheats(void) {
         auto state=WPCheats::Shared().snapshot(); if(!state.available)return;
         WPGameWindowRestore restore{NSApp.keyWindow};
         NSAlert* a=[NSAlert new];a.messageText=@"Battlefield Cheats";
-        a.informativeText=@"Player only, single-player. Changes apply after closing. Shroud On restores previous exploration plus current unit sight. Toggles and speed reset on load; money and power remain in saves.";
-        NSView* view=[[NSView alloc] initWithFrame:NSMakeRect(0,0,360,340)];
+        a.informativeText=@"Player only, single-player. Changes apply after closing. Shroud On restores previous exploration plus current unit sight. Toggles and speed persist across missions and launches. Money and power remain in saves. UI size: 75–150%, default 100%.";
+        NSView* view=[[NSView alloc] initWithFrame:NSMakeRect(0,0,360,385)];
         NSButton* inv=[NSButton checkboxWithTitle:@"Invincibility" target:nil action:nil];inv.frame=NSMakeRect(0,230,180,24);inv.state=state.invincible;[view addSubview:inv];
         NSButton* shroud=[NSButton checkboxWithTitle:@"Shroud On" target:nil action:nil];shroud.frame=NSMakeRect(180,230,180,24);shroud.state=!state.reveal;[view addSubview:shroud];
         NSButton* instant=[NSButton checkboxWithTitle:@"Instant Build" target:nil action:nil];instant.frame=NSMakeRect(0,270,180,24);instant.state=state.instant;[view addSubview:instant];
@@ -311,8 +315,12 @@ extern "C" void WP_ShowLiveCheats(void) {
         NSPopUpButton* money=[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0,50,175,30)];[money addItemsWithTitles:@[@"No added money",@"Add $1,000",@"Add $10,000"]];[view addSubview:money];
         NSPopUpButton* power=[[NSPopUpButton alloc] initWithFrame:NSMakeRect(180,50,175,30)];[power addItemsWithTitles:@[@"No added power",@"Add 100 power",@"Add 1,000 power"]];[view addSubview:power];
         NSTextField* status=[NSTextField labelWithString:[NSString stringWithFormat:@"Credits: %d   Power: %d / %d",state.money,state.power,state.drain]];status.frame=NSMakeRect(0,10,360,25);[view addSubview:status];
+        NSTextField *uiLabel=[NSTextField labelWithString:@"UI size (100% default)"];uiLabel.frame=NSMakeRect(0,350,180,24);[view addSubview:uiLabel];
+        NSSlider *uiScale=[NSSlider sliderWithValue:WPOrders::Shared().uiScale() minValue:75 maxValue:150 target:nil action:nil];uiScale.frame=NSMakeRect(180,350,180,24);uiScale.numberOfTickMarks=16;uiScale.allowsTickMarkValuesOnly=YES;[view addSubview:uiScale];
         a.accessoryView=view;[a addButtonWithTitle:@"Apply"];[a addButtonWithTitle:@"Cancel"];
         if([a runModal]==NSAlertFirstButtonReturn) {
+            WPOrders::Shared().setUIScale((int)lround(uiScale.doubleValue/5)*5);
+            [NSUserDefaults.standardUserDefaults setInteger:WPOrders::Shared().uiScale() forKey:@"Wireproof.UIScale.Mac"];
             WPCheats::Shared().weapons(weapons.state==NSControlStateValueOn);
             WPCheats::Shared().anywhere(anywhere.state==NSControlStateValueOn);
             WPCheats::Shared().instant(instant.state==NSControlStateValueOn);

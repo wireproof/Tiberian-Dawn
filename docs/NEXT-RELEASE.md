@@ -1,6 +1,6 @@
-# Next build: device-aware zoom and saved cheats
+# v0.5.6: device-aware zoom and saved cheats
 
-Prepared October 26, 2026. These changes are not in the published v0.5.5 IPA.
+Released with v0.5.6, October 26, 2026. See the README for UI-size controls added to this release.
 
 - Ordinary iPhones and iPads show **Zoom**, using one saved zoom preference across rotation. Existing geometry-based preferences seed the new standard preference.
 - On iOS 27.1 and later, a non-null UIKit hinge observation enables the Duo's **Cover zoom** and **Inner zoom** profiles. Existing Duo preference keys are preserved. Screen shape alone no longer identifies a device as Duo. Earlier systems without hinge reporting use standard Zoom.

@@ -165,6 +165,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UIStackView *stack;
 @property(nonatomic,strong) UIScrollView *body;
 @property(nonatomic,strong) UIButton *toggle;
+@property(nonatomic,strong) UISlider *uiScaleSlider;
+@property(nonatomic,strong) UILabel *uiScaleLabel;
+@property(nonatomic,copy) NSString *uiScaleProfile;
+@property(nonatomic,copy) NSString *pendingUIScaleProfile;
+@property(nonatomic) CFTimeInterval uiScaleSince;
 @property(nonatomic,copy) NSString *zoomProfile;
 @property(nonatomic,copy) NSString *pendingZoomProfile;
 @property(nonatomic) CFTimeInterval zoomProfileSince;
@@ -324,7 +329,13 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         UIStackView *zoomControls=[[UIStackView alloc] initWithArrangedSubviews:@[self.zoomLabel,zoomRow]];zoomControls.axis=UILayoutConstraintAxisVertical;zoomControls.spacing=6;
         UIStackView *sizeControls=[[UIStackView alloc] initWithArrangedSubviews:@[stickRows[0],stickRows[1]]];sizeControls.axis=UILayoutConstraintAxisVertical;sizeControls.spacing=6;
         UIStackView *speedControls=[[UIStackView alloc] initWithArrangedSubviews:@[stickRows[2],stickRows[3]]];speedControls.axis=UILayoutConstraintAxisVertical;speedControls.spacing=6;
-        self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,sizeControls,speedControls]];self.optionsPage.spacing=8;
+        self.uiScaleLabel=[UILabel new];self.uiScaleLabel.textColor=UIColor.whiteColor;self.uiScaleLabel.font=[UIFont systemFontOfSize:14];
+        self.uiScaleSlider=[UISlider new];self.uiScaleSlider.minimumValue=75;self.uiScaleSlider.maximumValue=150;
+        self.uiScaleSlider.accessibilityLabel=@"UI size";
+        [self.uiScaleSlider addTarget:self action:@selector(uiScaleChanged:) forControlEvents:UIControlEventValueChanged];
+        UIStackView *uiButtons=[[UIStackView alloc] initWithArrangedSubviews:@[[self button:@"−" tag:700],self.uiScaleSlider,[self button:@"+" tag:701]]];uiButtons.spacing=8;
+        UIStackView *uiControls=[[UIStackView alloc] initWithArrangedSubviews:@[self.uiScaleLabel,uiButtons,[self button:@"Reset UI size" tag:702]]];uiControls.axis=UILayoutConstraintAxisVertical;uiControls.spacing=6;
+        self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,uiControls,sizeControls,speedControls]];self.optionsPage.spacing=8;
         self.groupControls=groups;
         self.numberGrid=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],[self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]]]];
         self.numberGrid.spacing=6;self.numberGrid.distribution=UIStackViewDistributionFillEqually;
@@ -412,6 +423,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         UISelectionFeedbackGenerator *feedback=[UISelectionFeedbackGenerator new];[feedback selectionChanged];
     }
 }
+- (void)uiScaleChanged:(UISlider*)slider {
+    WPOrders::Shared().setUIScale((int)lroundf(slider.value/5)*5);
+    if(self.uiScaleProfile)[NSUserDefaults.standardUserDefaults setInteger:WPOrders::Shared().uiScale() forKey:self.uiScaleProfile];
+    [self refresh];
+}
 - (void)saveZoom {
     int quarters=WPOrders::Shared().zoomQuarters();
     [[NSUserDefaults standardUserDefaults] setInteger:quarters forKey:self.zoomProfile?:@"Wireproof.ZoomQuarters"];
@@ -423,6 +439,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self saveZoom];
 }
 - (void)pressed:(UIButton*)button {
+    if(button.tag>=700 && button.tag<=702){self.uiScaleSlider.value=button.tag==702?100:WPOrders::Shared().uiScale()+(button.tag==700?-5:5);[self uiScaleChanged:self.uiScaleSlider];return;}
     if(button.tag>=600 && button.tag<=603) {
         UISlider *slider=self.joystickSliders[(button.tag-600)/2];slider.value=WPOrders::Shared().joystickSetting(slider.tag)+(button.tag%2?1:-1);[self joystickChanged:slider];return;
     }
@@ -448,6 +465,15 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         BOOL cover=WPCamera::CoverDisplay(size.width,size.height,insets.left,insets.top,insets.right,insets.bottom);
         NSString *legacy=cover?@"Wireproof.Zoom.Cover":@"Wireproof.Zoom.Inner";
         NSString *profile=WPHasHinge?legacy:@"Wireproof.Zoom.Standard";
+        NSString *scaleProfile=[NSString stringWithFormat:@"Wireproof.UIScale.%@.%@",WPHasHinge?(cover?@"Cover":@"Inner"):@"Standard",size.width>size.height?@"Landscape":@"Portrait"];
+        if(![scaleProfile isEqualToString:self.pendingUIScaleProfile]){self.pendingUIScaleProfile=scaleProfile;self.uiScaleSince=CACurrentMediaTime();}
+        if(![scaleProfile isEqualToString:self.uiScaleProfile] && (!self.uiScaleProfile || CACurrentMediaTime()-self.uiScaleSince>=0.25)){
+            NSNumber *saved=[NSUserDefaults.standardUserDefaults objectForKey:scaleProfile];
+            WPOrders::Shared().setUIScale(saved?saved.intValue:100);self.uiScaleProfile=scaleProfile;
+        }
+        self.uiScaleSlider.value=WPOrders::Shared().uiScale();
+        self.uiScaleLabel.text=[NSString stringWithFormat:@"UI size %d%%",WPOrders::Shared().uiScale()];
+        self.uiScaleSlider.accessibilityValue=self.uiScaleLabel.text;
         if(![profile isEqualToString:self.pendingZoomProfile]) {
             self.pendingZoomProfile=profile;self.zoomProfileSince=CACurrentMediaTime();
         }
@@ -536,19 +562,22 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.optionsPage.axis=landscape?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
     self.optionsPage.distribution=landscape?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
     self.optionsPage.alignment=landscape?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
-    CGFloat width=self.expanded?MIN(landscape?820:256,MAX(56,safe.size.width)):56;
+    const CGFloat uiScale=WPOrders::Shared().uiScale()/100.0;
+    CGFloat width=self.expanded?MIN(landscape?(self.tabs.selectedSegmentIndex==2?1000:820):256,MAX(56,safe.size.width/uiScale)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {
         CGSize fit=[self.stack systemLayoutSizeFittingSize:CGSizeMake(width-12,0)
             withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel];
         contentHeight=fit.height;
-        height=MIN(safe.size.height,fit.height+12);
+        height=MIN(safe.size.height/uiScale,fit.height+12);
     }
-    CGFloat x=safe.origin.x+self.position.x*MAX(0,safe.size.width-width);
-    CGFloat y=safe.origin.y+self.position.y*MAX(0,safe.size.height-height);
+    CGFloat x=safe.origin.x+self.position.x*MAX(0,safe.size.width-width*uiScale);
+    CGFloat y=safe.origin.y+self.position.y*MAX(0,safe.size.height-height*uiScale);
     [UIView performWithoutAnimation:^{
-        self.frame=CGRectMake(x,y,width,height);
+        self.bounds=CGRectMake(0,0,width,height);
+        self.transform=CGAffineTransformMakeScale(uiScale,uiScale);
+        self.center=CGPointMake(x+width*uiScale/2,y+height*uiScale/2);
         self.bubble.frame=self.bounds;
         if (self.expanded) {
             self.body.frame=CGRectInset(self.bounds,6,6);

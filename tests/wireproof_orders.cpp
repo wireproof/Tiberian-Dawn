@@ -70,6 +70,9 @@ int main() {
     persisted.weapons(false);WPCheats::State disabled(disk);assert(!disabled.snapshot().weapons);
     using namespace WPOrders;
     State s; Command c;
+    assert(s.uiScale()==100);s.setUIScale(10);assert(s.uiScale()==75);s.setUIScale(200);assert(s.uiScale()==150);
+    for(int scale=75;scale<=150;scale+=5){s.setUIScale(scale);assert(s.uiScale()==scale);}
+    s.setUIScale(125);s.publish(false,0);assert(s.uiScale()==125);s.setUIScale(100);
     s.setStick(1,0);assert(s.stick().intensity==0); // no commands outside gameplay
     s.publish(true,0);s.setStick(.1f,0);assert(s.stick().intensity==0); // center dead zone
     s.setStick(.5f,0);float slow=s.stick().intensity;assert(slow>0 && slow<1);

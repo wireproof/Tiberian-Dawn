@@ -4,6 +4,12 @@ All notable changes to Tiberian Dawn for Apple platforms are documented here.
 The project keeps iPadOS, macOS, and visionOS on one shared engine and content
 baseline wherever the operating systems permit it.
 
+## 0.3.7 — 2026-10-25
+
+- Reduce fixed battlefield magnification from 2x to 1.5x after device feedback.
+- Keep hold-to-pan, the compact toolbar, menus and sidebar unchanged.
+- Physical-device confirmation of the revised scale remains pending.
+
 ## 0.3.6 — 2026-10-25
 
 - Start gameplay at a fixed 2x battlefield magnification so units and terrain

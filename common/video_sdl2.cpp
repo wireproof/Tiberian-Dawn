@@ -1024,7 +1024,7 @@ void Get_Video_Mouse(int& x, int& y)
 #ifdef TIBERIAN_DAWN_APPLE_PORT
 static bool battlefield_active = false;
 // Fixed gameplay magnification. Menus/UI remain 1x and gestures never change it.
-static constexpr float battlefield_zoom = 2.0f;
+static constexpr float battlefield_zoom = 1.5f;
 static int battlefield_right = 480, battlefield_top = 16;
 void Video_Publish_Order_Icon(int kind) {
 #ifdef IPADOS_PORT

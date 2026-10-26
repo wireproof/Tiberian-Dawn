@@ -1,3 +1,7 @@
+# v0.3.7 scale adjustment
+
+Fixed gameplay scale is now 1.5x. The hold-to-pan control is unchanged.
+
 # v0.3.6 held map modifier
 
 Hold the floating controller button for a quarter second (it turns blue), then

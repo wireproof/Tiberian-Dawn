@@ -49,23 +49,23 @@ fragment float4 rf(V v [[stage_in]],texture2d<float> tex [[texture(0)]],constant
  return c;
 })METAL";
 id<MTLRenderPipelineState> pipeline=nil;
-NSMutableDictionary<NSString*,id<MTLTexture>>*textures=nil;
-NSMutableDictionary<NSString*,id>*images=nil;
-size_t textureBytes=0;
+NSCache<NSString*,id<MTLTexture>>*textures=nil;
+NSCache<NSString*,id>*images=nil;
+void cacheTexture(NSString*key,id<MTLTexture>t){if(t)[textures setObject:t forKey:key cost:t.width*t.height*4];}
 id<MTLTexture> overlayTexture(id<MTLDevice>device,int w,int h,const std::vector<uint8_t>&rgba){
  uint64_t hash=1469598103934665603ull;for(uint8_t b:rgba){hash^=b;hash*=1099511628211ull;}
- NSString*k=[NSString stringWithFormat:@"overlay:%d:%d:%llu",w,h,(unsigned long long)hash];id<MTLTexture>t=textures[k];if(t)return t;
+ NSString*k=[NSString stringWithFormat:@"overlay:%d:%d:%llu",w,h,(unsigned long long)hash];id<MTLTexture>t=[textures objectForKey:k];if(t)return t;
  auto*d=[MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm width:w height:h mipmapped:NO];t=[device newTextureWithDescriptor:d];
- if(t){[t replaceRegion:MTLRegionMake2D(0,0,w,h) mipmapLevel:0 withBytes:rgba.data() bytesPerRow:w*4];textures[k]=t;textureBytes+=rgba.size();}return t;
+ if(t){[t replaceRegion:MTLRegionMake2D(0,0,w,h) mipmapLevel:0 withBytes:rgba.data() bytesPerRow:w*4];cacheTexture(k,t);}return t;
 }
 id<MTLTexture> texture(id<MTLDevice> device,const Frame&f){
- std::string k=f.page+":"+std::to_string(f.x)+":"+std::to_string(f.y)+":"+std::to_string(f.w)+":"+std::to_string(f.h);NSString*nk=[NSString stringWithUTF8String:k.c_str()];id<MTLTexture>result=textures[nk];if(result)return result;
- NSString*page=[NSString stringWithUTF8String:f.page.c_str()];CGImageRef full=(__bridge CGImageRef)images[page];
- if(!full){if(images.count>=2)[images removeAllObjects];NSString*path=[NSString stringWithUTF8String:(root+"/"+f.page).c_str()];CGImageSourceRef src=CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:path],nullptr);if(!src)return nil;full=CGImageSourceCreateImageAtIndex(src,0,nullptr);CFRelease(src);if(!full)return nil;images[page]=CFBridgingRelease(full);}
+ std::string k=f.page+":"+std::to_string(f.x)+":"+std::to_string(f.y)+":"+std::to_string(f.w)+":"+std::to_string(f.h);NSString*nk=[NSString stringWithUTF8String:k.c_str()];id<MTLTexture>result=[textures objectForKey:nk];if(result)return result;
+ NSString*page=[NSString stringWithUTF8String:f.page.c_str()];__attribute__((objc_precise_lifetime)) id fullOwner=[images objectForKey:page];CGImageRef full=(__bridge CGImageRef)fullOwner;
+ if(!full){NSString*path=[NSString stringWithUTF8String:(root+"/"+f.page).c_str()];CGImageSourceRef src=CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:path],nullptr);if(!src)return nil;full=CGImageSourceCreateImageAtIndex(src,0,(__bridge CFDictionaryRef)@{(id)kCGImageSourceShouldCacheImmediately:@YES});CFRelease(src);if(!full)return nil;fullOwner=CFBridgingRelease(full);[images setObject:fullOwner forKey:page cost:CGImageGetBytesPerRow(full)*CGImageGetHeight(full)];}
  if(f.x<0||f.y<0||size_t(f.x+f.w)>CGImageGetWidth(full)||size_t(f.y+f.h)>CGImageGetHeight(full))return nil;
  CGImageRef crop=CGImageCreateWithImageInRect(full,CGRectMake(f.x,f.y,f.w,f.h));if(!crop)return nil;
  MTKTextureLoader*loader=[[MTKTextureLoader alloc]initWithDevice:device];result=[loader newTextureWithCGImage:crop options:@{MTKTextureLoaderOptionSRGB:@NO} error:nil];CGImageRelease(crop);
- if(result){textures[nk]=result;textureBytes+=f.w*f.h*4;}return result;
+ if(result){cacheTexture(nk,result);}return result;
 }
 }
 bool RemasteredArt_Load(const std::string& directory){
@@ -74,7 +74,7 @@ bool RemasteredArt_Load(const std::string& directory){
  std::ifstream colors(root+"/teams.tsv");std::getline(colors,line);while(std::getline(colors,line)){auto f=fields(line);if(f.size()!=21)continue;std::array<float,20>a;for(int i=0;i<20;++i)a[i]=std::stof(f[i+1]);teams[f[0]]=a;}}
  catch(...){frames.clear();return false;}
  for(auto&pair:frames)std::sort(pair.second.begin(),pair.second.end(),[](const Frame&a,const Frame&b){return a.anim<b.anim;});
- ready=!frames.empty();textures=[NSMutableDictionary dictionary];images=[NSMutableDictionary dictionary];textureBytes=0;return ready;
+ ready=!frames.empty();textures=[NSCache new];textures.totalCostLimit=192*1024*1024;images=[NSCache new];images.totalCostLimit=96*1024*1024;return ready;
 }
 bool RemasteredArt_Ready(){return ready;}
 void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> device,MTLPixelFormat format,const unsigned char*palette,
@@ -82,12 +82,15 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
  const auto&scene=WPRemastered::Shared();if(!ready||!scene.valid||screenWidth<=0||screenHeight<=0)return;
  if(!pipeline){NSError*err=nil;id<MTLLibrary>lib=[device newLibraryWithSource:[NSString stringWithUTF8String:shader] options:nil error:&err];if(!lib){NSLog(@"Remastered shader: %@",err);return;}
  MTLRenderPipelineDescriptor*d=[MTLRenderPipelineDescriptor new];d.vertexFunction=[lib newFunctionWithName:@"rv"];d.fragmentFunction=[lib newFunctionWithName:@"rf"];d.colorAttachments[0].pixelFormat=format;auto a=d.colorAttachments[0];a.blendingEnabled=YES;a.sourceRGBBlendFactor=MTLBlendFactorSourceAlpha;a.destinationRGBBlendFactor=MTLBlendFactorOneMinusSourceAlpha;a.sourceAlphaBlendFactor=MTLBlendFactorOne;a.destinationAlphaBlendFactor=MTLBlendFactorOneMinusSourceAlpha;pipeline=[device newRenderPipelineStateWithDescriptor:d error:&err];if(!pipeline){NSLog(@"Remastered pipeline: %@",err);return;}}
- // Cropped textures, not entire native pages, live on GPU. Evict between frames.
- if(textureBytes>192*1024*1024){[textures removeAllObjects];textureBytes=0;}
+ // Bounded caches retain hot frames instead of clearing every texture at once.
  const float sx=float(ow)/screenWidth,sy=float(oh)/screenHeight;
  [encoder setRenderPipelineState:pipeline];
  if(!healthOnly) {
- for(const auto&c:scene.commands){
+ // Draw ground first. Native scorch art extends beyond a classic cell and
+ // must not be overwritten by the next cell's terrain tile.
+ for(int pass=0;pass<2;++pass) for(const auto&c:scene.commands){
+  bool ground=!c.shroud&&(c.kind==WPRemastered::Command::Tile||c.kind==WPRemastered::Command::Fill);
+  if(ground!=(pass==0))continue;
   if(c.width<=0||c.height<=0)continue;
   const Frame*f=(!(c.flags&0x0200))?lookup(c):nullptr;
   if(f&&f->page=="-")continue;
@@ -104,9 +107,9 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
     if(!c.ghost.empty()&&c.ghost[v]!=255){rgba[i*4]=rgba[i*4+1]=rgba[i*4+2]=0;rgba[i*4+3]=rgba[i*4+3]?128:0;}
    }
    uint64_t hash=1469598103934665603ull;for(uint8_t b:rgba){hash^=b;hash*=1099511628211ull;}
-   NSString*k=[NSString stringWithFormat:@"fallback:%d:%d:%llu",c.width,c.height,(unsigned long long)hash];tex=textures[k];if(!tex){
+   NSString*k=[NSString stringWithFormat:@"fallback:%d:%d:%llu",c.width,c.height,(unsigned long long)hash];tex=[textures objectForKey:k];if(!tex){
    MTLTextureDescriptor*d=[MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm width:c.width height:c.height mipmapped:NO];tex=[device newTextureWithDescriptor:d];[tex replaceRegion:MTLRegionMake2D(0,0,c.width,c.height) mipmapLevel:0 withBytes:rgba.data() bytesPerRow:c.width*4];
-   if(tex){textures[k]=tex;textureBytes+=rgba.size();}}
+   if(tex){cacheTexture(k,tex);}}
   }
   if(!tex)continue;
   const float tx=ox+x*zoom*sx,ty=oy+(mapTop+(y-mapTop)*zoom)*sy;
@@ -181,8 +184,8 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
  for(const auto&cell:scene.placement){
   unsigned char rgba[24*24*4]={};
   for(int y=0;y<24;++y)for(int x=0;x<24;++x){int i=(y*24+x)*4;rgba[i]=cell.valid?32:255;rgba[i+1]=cell.valid?255:32;rgba[i+2]=32;rgba[i+3]=(x<2||y<2||x>=22||y>=22)?220:65;}
-  NSString*key=cell.valid?@"placement:valid":@"placement:invalid";id<MTLTexture>tex=textures[key];
-  if(!tex){auto*d=[MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm width:24 height:24 mipmapped:NO];tex=[device newTextureWithDescriptor:d];[tex replaceRegion:MTLRegionMake2D(0,0,24,24) mipmapLevel:0 withBytes:rgba bytesPerRow:96];textures[key]=tex;}
+  NSString*key=cell.valid?@"placement:valid":@"placement:invalid";id<MTLTexture>tex=[textures objectForKey:key];
+  if(!tex){auto*d=[MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm width:24 height:24 mipmapped:NO];tex=[device newTextureWithDescriptor:d];[tex replaceRegion:MTLRegionMake2D(0,0,24,24) mipmapLevel:0 withBytes:rgba bytesPerRow:96];cacheTexture(key,tex);}
   int left=std::max(0,ox),top=std::max(0,int(oy+mapTop*sy)),right=std::min(dw,int(ox+mapRight*sx)),bottom=std::min(dh,int(oy+mapBottom*sy));if(right<=left||bottom<=top)continue;
   struct Params{float a[20]={};uint32_t recolor=0;}p;
   [encoder setViewport:MTLViewport{ox+cell.x*zoom*sx,oy+(mapTop+(cell.y-mapTop)*zoom)*sy,24*zoom*sx,24*zoom*sy,0,1}];

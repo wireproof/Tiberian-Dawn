@@ -131,6 +131,7 @@ void TabClass::Draw_It(bool complete)
     if(Tab_Height>0 && Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork() && LogicPage->Lock()){
         const auto* pixels=reinterpret_cast<const uint8_t*>(LogicPage->Get_Offset());
         int pitch=LogicPage->Get_Width()+LogicPage->Get_XAdd()+LogicPage->Get_Pitch();
+        WPRemastered::Chrome background;background.asset="UI.TOPBUTTON";background.width=width;background.height=Tab_Height;WPRemastered::Shared().chrome.push_back(background);
         for(int i=0;i<3;++i){
             WPRemastered::Chrome c;c.asset="UI.TOPBUTTON";c.x=i==0?0:width-(3-i)*Eva_Width;c.y=0;c.width=Eva_Width;c.height=Tab_Height;c.right=i!=0;
             c.text.resize(c.width*c.height);

@@ -532,6 +532,7 @@ void EventClass::Execute(void)
     case ABANDON:
         CCDebugString("C&C95 - Abandon packet received\n");
         Houses.Raw_Ptr(ID)->Abandon_Production(Data.Specific.Type);
+        WP_Queue_Cancelled(ID, Data.Specific.Type);
         break;
 
     /*

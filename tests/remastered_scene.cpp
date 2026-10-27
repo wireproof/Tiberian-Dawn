@@ -13,6 +13,12 @@ int main() {
     q.retry();CHECK(q.next(false)==2);q.acknowledge(99);CHECK(q.next(false)==-1);q.acknowledge(2);
     CHECK(q.next(false)==3);q.acknowledge(3);CHECK(q.next(false)==-1);
     for(int i=0;i<99;++i)CHECK(q.add(i));CHECK(!q.add(100));q.clear();CHECK(q.next(false)==-1);
+    CHECK(q.add(2)&&q.add(3)&&q.add(2));CHECK(q.next(false)==2);
+    q.cancelWaiting(2);CHECK(q.dispatched(2)&&q.count(2)==1&&q.count(3)==1);
+    q.acknowledge(2);CHECK(!q.dispatched(2)&&q.count(2)==0);
+    CHECK(q.next(false)==3);q.acknowledge(3);q.clear();
+    CHECK(q.add(2)&&q.add(2)&&q.add(3));q.cancelWaiting(2);
+    CHECK(q.count(2)==0&&q.next(false)==3);q.clear();
     using namespace WPRemastered;
     Clear();
     int identity = 1;

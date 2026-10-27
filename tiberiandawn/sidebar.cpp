@@ -2453,7 +2453,7 @@ int SidebarClass::StripClass::SelectClass::Action(unsigned flags, KeyNumType& ke
             /*
             **	A right mouse button signals "cancel".
             */
-            if ((flags & RIGHTPRESS) && WP_Queue_Remove(otype,oid)) { Map.Flag_To_Redraw(true); ControlClass::Action(flags,key); return true; }
+            if ((flags & RIGHTPRESS) && WP_Queue_Cancel(otype,oid,factory!=NULL)) { Speak(VOX_CANCELED); Map.Flag_To_Redraw(true); ControlClass::Action(flags,key); return true; }
             if (flags & RIGHTPRESS) {
 
                 /*

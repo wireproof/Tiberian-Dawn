@@ -6,18 +6,23 @@ Classic Command & Conquer, adapted for touch on iPhone and iPad and native play 
 
 An unofficial, free, non-commercial community project. **EA has not endorsed and does not support this product.**
 
-## Current release — v0.6.1
+## Current release — v0.7.1
 
-**Cloud sync, portable backups and touch refinements** · [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.6.1)
+**Current public build: v0.7.1** · [Releases and downloads](https://github.com/wireproof/Tiberian-Dawn/releases) · [Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest)
 
-- Optional, separate iCloud save and settings/cheat sync switches. Local saves stay available offline, and incoming save versions use free slots. Automatic sync requires an iCloud-provisioned signed build and the same Apple Account; public unsigned/ad-hoc builds retain manual Files import/export.
-- Export/import saves only, settings/cheats/Workshop configuration, or both. Existing saves are preserved; imported settings apply after restarting.
-- Slower pinch zoom, independent floating UI scale, separate display/orientation profiles, and a full-height production sidebar. Pinch zoom and icon changes were reported working in device testing of 0.6.0.
-- GDI and Nod mission selection, military build unlock, persistent damaged-building health bars, and interruption/input recovery improvements.
-- Choose Command & Conquer, GDI or Nod app icons. Workshop starts on Custom 1 when no preset choice is saved; Stock remains available.
-- White unselected menu tabs and a revised final drawing pass for unit labels. The label fix and cross-device cloud delivery still need physical confirmation for 0.6.1.
+The project has progressed substantially since the early v0.2.7 and v0.5.2 builds. The current feature set includes:
 
-See [0.6.1 validation and device checks](docs/TESTING-0.6.1.md). Update the existing native app or existing LiveContainer data container; do not uninstall to update. Native and LiveContainer installations have separate data containers. Public source and unsigned packages exclude original game archives and personal signing profiles; supply compatible game data separately.
+- Adaptive portrait and landscape gameplay on iPhone and iPad, including distinct cover and inner display layouts on hinge-enabled devices.
+- Adjustable battlefield zoom, independently scaled floating controls, movable analog map joystick, and optional one-finger map dragging.
+- Touch-friendly Game, Cheats, and Options panels, orders, and nine assignable control groups.
+- Single-player cheats for credits, power, visibility, construction, special weapons, and unit speeds.
+- A preset-based Mod Workshop with bulk editing of compatible units and structures.
+- Save/settings import and export, with optional iCloud sync for appropriately signed builds.
+- Continued fixes for sidebar rendering, campaign presentation, resizing, touch alignment, and device-specific layouts.
+
+**Next up:** v0.7.2 is in development; it is not a released or verified build. Consult the [release page](https://github.com/wireproof/Tiberian-Dawn/releases) for the actual downloadable version and version-specific notes.
+
+**Updating:** Update the existing native app or existing LiveContainer data container; do not uninstall to update. Native and LiveContainer installations have separate data containers. Public source and unsigned packages exclude original game archives and personal signing profiles; supply compatible game data separately.
 
 ## Gameplay showcase
 

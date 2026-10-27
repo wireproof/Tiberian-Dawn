@@ -89,10 +89,12 @@ IPadPaletteRenderer IPad_Palette_Create(SDL_Renderer* renderer,
                                         const char* nod_infrastructure_atlas_path,
                                         const char* gdi_infrastructure_activity_atlas_path,
                                         const char* nod_infrastructure_activity_atlas_path,
-                                        int modern_asset_scale);
+                                        int modern_asset_scale,
+                                        const char* mtnk_atlas_path);
 void IPad_Palette_Destroy(IPadPaletteRenderer renderer);
 bool IPad_Palette_Has_Buggy_Artwork(IPadPaletteRenderer renderer);
 bool IPad_Palette_Has_Humvee_Artwork(IPadPaletteRenderer renderer);
+bool IPad_Palette_Has_MTNK_Artwork(IPadPaletteRenderer renderer);
 bool IPad_Palette_Has_Minigunner_Artwork(IPadPaletteRenderer renderer);
 bool IPad_Palette_Has_GDI_MCV_Artwork(IPadPaletteRenderer renderer);
 bool IPad_Palette_Has_Nod_MCV_Artwork(IPadPaletteRenderer renderer);

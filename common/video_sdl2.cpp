@@ -109,6 +109,7 @@ uint64_t selection_generation = 1;
 uint64_t hd_buggy_generation = 1;
 bool hd_buggy_renderer_available = false;
 bool hd_humvee_renderer_available = false;
+bool remastered_mtnk_available = false;
 bool hd_minigunner_renderer_available = false;
 bool hd_gdi_mcv_renderer_available = false;
 bool hd_nod_mcv_renderer_available = false;
@@ -263,6 +264,18 @@ void Discover_Modern_Art_Pack()
             DBG_WARN("Built-in HD asset pack unavailable: %s; original artwork fallback active", error.c_str());
         }
     }
+}
+
+bool Remastered_Pack_Active()
+{
+    return modern_art_pack.Is_Loaded()
+           && modern_art_pack.Manifest().Identifier == "org.tiberiandawn.remastered-local";
+}
+
+std::string Remastered_Atlas_Path(const char* identifier)
+{
+    const HDAssetEntry* entry = Remastered_Pack_Active() ? modern_art_pack.Find(identifier) : nullptr;
+    return entry ? modern_art_pack.Absolute_Path(*entry) : std::string();
 }
 
 std::string Modern_Cursor_Path()
@@ -1456,8 +1469,9 @@ public:
             texture = SDL_CreateTexture(renderer, windowSurface->format->format, SDL_TEXTUREACCESS_STREAMING, w, h);
 #ifdef TIBERIAN_DAWN_APPLE_PORT
             const std::string modern_cursor_path = Modern_Cursor_Path();
-            const std::string buggy_atlas_path = Modern_Buggy_Atlas_Path();
-            const std::string humvee_atlas_path = Modern_Humvee_Atlas_Path();
+            const std::string buggy_atlas_path = Remastered_Atlas_Path("unit.buggy");
+            const std::string mtnk_atlas_path = Remastered_Atlas_Path("unit.mtnk");
+            const std::string humvee_atlas_path = Remastered_Atlas_Path("unit.humvee");
             const std::string minigunner_atlas_path = Modern_Minigunner_Atlas_Path();
             const std::string gdi_mcv_atlas_path = Modern_GDI_MCV_Atlas_Path();
             const std::string nod_mcv_atlas_path = Modern_Nod_MCV_Atlas_Path();
@@ -1480,9 +1494,10 @@ public:
                                                   nod_infrastructure_atlas_path.c_str(),
                                                   gdi_infrastructure_activity_atlas_path.c_str(),
                                                   nod_infrastructure_activity_atlas_path.c_str(),
-                                                  Modern_Asset_Scale());
+                                                  Modern_Asset_Scale(), mtnk_atlas_path.c_str());
             hd_buggy_renderer_available = IPad_Palette_Has_Buggy_Artwork(paletteRenderer);
             hd_humvee_renderer_available = IPad_Palette_Has_Humvee_Artwork(paletteRenderer);
+            remastered_mtnk_available = IPad_Palette_Has_MTNK_Artwork(paletteRenderer);
             hd_minigunner_renderer_available = IPad_Palette_Has_Minigunner_Artwork(paletteRenderer);
             hd_gdi_mcv_renderer_available = IPad_Palette_Has_GDI_MCV_Artwork(paletteRenderer);
             hd_nod_mcv_renderer_available = IPad_Palette_Has_Nod_MCV_Artwork(paletteRenderer);
@@ -1504,6 +1519,7 @@ public:
 #ifdef TIBERIAN_DAWN_APPLE_PORT
             hd_buggy_renderer_available = false;
             hd_humvee_renderer_available = false;
+            remastered_mtnk_available = false;
             hd_minigunner_renderer_available = false;
             hd_gdi_mcv_renderer_available = false;
             hd_nod_mcv_renderer_available = false;
@@ -1737,7 +1753,7 @@ public:
                 metal_buildings.push_back(overlay);
             }
         }
-        if (replacement_artwork_enabled && Settings.Video.ArtworkMode != 0 && !hd_buggies.empty()) {
+        if (Remastered_Pack_Active() && Settings.Video.ArtworkMode != 0 && !hd_buggies.empty()) {
             const float scale_x = render_dst.w / static_cast<float>(surface->w);
             const float scale_y = render_dst.h / static_cast<float>(surface->h);
             std::vector<RegisteredHDBuggy> sorted_buggies = hd_buggies;
@@ -1748,7 +1764,7 @@ public:
             metal_buggies.reserve(sorted_buggies.size());
             for (const RegisteredHDBuggy& registered : sorted_buggies) {
                 const auto destination = [&](int center_x, int center_y) {
-                    const int half_size = registered.atlas_kind >= 2 ? 16 : 12;
+                    const int half_size = registered.atlas_kind >= 4 ? 18 : (registered.atlas_kind >= 2 ? 16 : 12);
                     const int left = render_dst.x
                                      + static_cast<int>(std::lround((center_x - half_size) * scale_x));
                     const int top = render_dst.y
@@ -2414,9 +2430,9 @@ void Video_Set_HD_Vehicle_Component(const void* object,
                                     int center_y,
                                     unsigned char palette_index)
 {
-    const int frame_count = vehicle_kind >= 2 ? 8 : 64;
-    if (!object || !hd_world_artwork_visible || vehicle_kind < 0 || vehicle_kind > 3 || component < 0 || component > 1
-        || (vehicle_kind >= 2 && component != 0) || frame < 0 || frame >= frame_count) return;
+    const int frame_count = vehicle_kind >= 4 ? 128 : (vehicle_kind >= 2 ? 8 : 64);
+    if (!object || !hd_world_artwork_visible || vehicle_kind < 0 || vehicle_kind > 6 || component < 0 || component > 1
+        || (vehicle_kind >= 2 && vehicle_kind <= 3 && component != 0) || frame < 0 || frame >= frame_count) return;
     for (RegisteredHDBuggy& buggy : hd_buggies) {
         if (buggy.object != object) continue;
         if (buggy.atlas_kind != vehicle_kind) {
@@ -2648,6 +2664,13 @@ void Video_Set_HD_Health(const void* object,
         force_present = true;
         return;
     }
+}
+
+bool Video_Uses_Remastered_Vehicle_Artwork(int kind)
+{
+    if (!Remastered_Pack_Active() || !hd_world_artwork_visible || Settings.Video.ArtworkMode == 0) return false;
+    return kind == 4 ? remastered_mtnk_available
+                    : (kind == 5 ? hd_humvee_renderer_available : (kind == 6 && hd_buggy_renderer_available));
 }
 
 bool Video_Uses_HD_Buggy_Artwork()

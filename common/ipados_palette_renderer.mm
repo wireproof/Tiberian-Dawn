@@ -26,6 +26,7 @@
     id<MTLTexture> CursorTexture;
     id<MTLTexture> ModernCursorTexture;
     id<MTLTexture> BuggyAtlasTexture;
+    id<MTLTexture> MTNKAtlasTexture;
     id<MTLTexture> HumveeAtlasTexture;
     id<MTLTexture> MinigunnerAtlasTexture;
     id<MTLTexture> GDIMCVAtlasTexture;
@@ -241,6 +242,9 @@ fragment float4 TiberianDawnHDSpriteFragment(PaletteVertexOutput input [[stage_i
     const float2 atlas_uv = mix(cell_min, cell_max, input.uv);
     float4 artwork = atlas.sample(sprite_sampler, atlas_uv);
     if (artwork.a <= 0.002) discard_fragment();
+
+    // Imported frames are already recolored with the original team-color formula.
+    if (parameters.artwork_mode == 256u) return artwork;
 
     // The generated master uses neutral light body panels. Tint those panels
     // with the current house colour while preserving metal, tyres and detail.
@@ -532,7 +536,8 @@ IPadPaletteRenderer IPad_Palette_Create(SDL_Renderer* renderer,
                                         const char* nod_infrastructure_atlas_path,
                                         const char* gdi_infrastructure_activity_atlas_path,
                                         const char* nod_infrastructure_activity_atlas_path,
-                                        int modern_asset_scale)
+                                        int modern_asset_scale,
+                                        const char* mtnk_atlas_path)
 {
     if (!renderer || width <= 0 || height <= 0) return nullptr;
     CAMetalLayer* layer = (__bridge CAMetalLayer*)SDL_RenderGetMetalLayer(renderer);
@@ -627,8 +632,8 @@ IPadPaletteRenderer IPad_Palette_Create(SDL_Renderer* renderer,
                                                                          MTKTextureLoaderOptionOrigin:
                                                                              MTKTextureLoaderOriginTopLeft}
                                                                  error:&texture_error];
-        if (!state->BuggyAtlasTexture || state->BuggyAtlasTexture.width != 768
-            || state->BuggyAtlasTexture.height != 768) {
+        if (!state->BuggyAtlasTexture || state->BuggyAtlasTexture.width != 1536
+            || state->BuggyAtlasTexture.height != 3072) {
             NSLog(@"Tiberian Dawn HD buggy atlas rejected; original sprite fallback active: %@", texture_error.localizedDescription);
             state->BuggyAtlasTexture = nil;
         } else {
@@ -645,8 +650,8 @@ IPadPaletteRenderer IPad_Palette_Create(SDL_Renderer* renderer,
                                                                           MTKTextureLoaderOptionOrigin:
                                                                               MTKTextureLoaderOriginTopLeft}
                                                                   error:&texture_error];
-        if (!state->HumveeAtlasTexture || state->HumveeAtlasTexture.width != 768
-            || state->HumveeAtlasTexture.height != 768) {
+        if (!state->HumveeAtlasTexture || state->HumveeAtlasTexture.width != 1536
+            || state->HumveeAtlasTexture.height != 3072) {
             NSLog(@"Tiberian Dawn HD humvee atlas rejected; original sprite fallback active: %@",
                   texture_error.localizedDescription);
             state->HumveeAtlasTexture = nil;
@@ -654,6 +659,15 @@ IPadPaletteRenderer IPad_Palette_Create(SDL_Renderer* renderer,
             NSLog(@"Tiberian Dawn HD humvee atlas active: %lux%lu, 64 frames",
                   static_cast<unsigned long>(state->HumveeAtlasTexture.width),
                   static_cast<unsigned long>(state->HumveeAtlasTexture.height));
+        }
+    }
+    if (mtnk_atlas_path && mtnk_atlas_path[0]) {
+        NSError* error = nil;
+        state->MTNKAtlasTexture = [loader newTextureWithContentsOfURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:mtnk_atlas_path]]
+            options:@{MTKTextureLoaderOptionSRGB: @NO, MTKTextureLoaderOptionOrigin: MTKTextureLoaderOriginTopLeft} error:&error];
+        if (state->MTNKAtlasTexture.width != 1536 || state->MTNKAtlasTexture.height != 3072) {
+            state->MTNKAtlasTexture = nil;
+            NSLog(@"Remastered MTNK atlas rejected; classic fallback: %@", error.localizedDescription);
         }
     }
     if (minigunner_atlas_path && minigunner_atlas_path[0] != '\0') {
@@ -812,6 +826,12 @@ bool IPad_Palette_Has_Buggy_Artwork(IPadPaletteRenderer renderer)
 {
     TiberianDawnPaletteRendererState* state = State(renderer);
     return state && state->BuggyAtlasTexture;
+}
+
+bool IPad_Palette_Has_MTNK_Artwork(IPadPaletteRenderer renderer)
+{
+    TiberianDawnPaletteRendererState* state = State(renderer);
+    return state && state->MTNKAtlasTexture;
 }
 
 bool IPad_Palette_Has_Humvee_Artwork(IPadPaletteRenderer renderer)
@@ -992,6 +1012,9 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
     if (artwork_mode != 0 && buggies && buggy_count > 0) {
         const auto vehicle_texture = [state](int atlas_kind) -> id<MTLTexture> {
             switch (atlas_kind) {
+                case 4: return state->MTNKAtlasTexture;
+                case 5: return state->HumveeAtlasTexture;
+                case 6: return state->BuggyAtlasTexture;
                 case 1: return state->HumveeAtlasTexture;
                 case 2: return state->GDIMCVAtlasTexture;
                 case 3: return state->NodMCVAtlasTexture;
@@ -1003,10 +1026,11 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
         [encoder setRenderPipelineState:state->HDSpriteShadowPipeline];
         for (int index = 0; index < buggy_count; ++index) {
             const IPadHDBuggyOverlay& buggy = buggies[index];
+            if (buggy.atlas_kind >= 4) continue;
             id<MTLTexture> vehicle_atlas = vehicle_texture(buggy.atlas_kind);
             if (!vehicle_atlas) continue;
             [encoder setFragmentTexture:vehicle_atlas atIndex:0];
-            const int atlas_rows = buggy.atlas_kind >= 2 ? 1 : 8;
+            const int atlas_rows = buggy.atlas_kind >= 4 ? 16 : (buggy.atlas_kind >= 2 ? 1 : 8);
             const int frame_count = 8 * atlas_rows;
             if (buggy.body_frame < 0 || buggy.body_frame >= frame_count
                 || buggy.body_destination.width <= 0
@@ -1037,7 +1061,7 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
             [encoder setFragmentTexture:vehicle_atlas atIndex:0];
             const int frames[2] = {buggy.body_frame, buggy.turret_frame};
             const IPadPaletteRect destinations[2] = {buggy.body_destination, buggy.turret_destination};
-            const int atlas_rows = buggy.atlas_kind >= 2 ? 1 : 8;
+            const int atlas_rows = buggy.atlas_kind >= 4 ? 16 : (buggy.atlas_kind >= 2 ? 1 : 8);
             const int frame_count = 8 * atlas_rows;
             for (int component = 0; component < 2; ++component) {
                 if (frames[component] < 0 || frames[component] >= frame_count
@@ -1049,7 +1073,7 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
                     static_cast<float>(destinations[component].width),
                     static_cast<float>(destinations[component].height),
                     static_cast<std::uint32_t>(frames[component]),
-                    static_cast<std::uint32_t>(buggy.palette_index),
+                    buggy.atlas_kind >= 4 ? 256u : static_cast<std::uint32_t>(buggy.palette_index),
                 };
                 SetViewport(encoder, destinations[component]);
                 SetScissor(encoder, world_clip, layer);

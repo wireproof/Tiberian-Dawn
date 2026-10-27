@@ -2050,14 +2050,14 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window)
     */
     const bool is_hidden = (Visual_Character() == VISUAL_HIDDEN) && (window != WINDOW_VIRTUAL);
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
-    const bool hd_vehicle_type = *this == UNIT_BUGGY || *this == UNIT_JEEP || *this == UNIT_MCV;
-    const bool hd_vehicle_is_mcv = *this == UNIT_MCV;
-    const bool hd_vehicle_is_nod = House && House->ActLike == HOUSE_BAD;
-    const int hd_vehicle_kind = hd_vehicle_is_mcv ? (hd_vehicle_is_nod ? 3 : 2) : (*this == UNIT_JEEP ? 1 : 0);
-    const bool hd_vehicle_available = hd_vehicle_is_mcv
-                                          ? Video_Uses_HD_MCV_Artwork(hd_vehicle_is_nod)
-                                          : (hd_vehicle_kind == 1 ? Video_Uses_HD_Humvee_Artwork()
-                                                                  : Video_Uses_HD_Buggy_Artwork());
+    // Imported Remastered frames preserve the classic Name+Shape addressing.
+    // Only GOOD/BAD recolor variants are supplied; other houses retain classic art.
+    const bool hd_vehicle_type = *this == UNIT_MTANK || *this == UNIT_JEEP || *this == UNIT_BUGGY;
+    const bool hd_vehicle_is_nod = House && House->Class->House == HOUSE_BAD;
+    const bool hd_supported_house = House && (House->Class->House == HOUSE_GOOD || hd_vehicle_is_nod);
+    const int hd_vehicle_kind = *this == UNIT_MTANK ? 4 : (*this == UNIT_JEEP ? 5 : 6);
+    const bool hd_vehicle_available = hd_vehicle_type && hd_supported_house
+                                     && Video_Uses_Remastered_Vehicle_Artwork(hd_vehicle_kind);
     // The HD sprite is composited after the indexed tactical buffer, including
     // its shroud. Only promote it while the centre cell is currently visible.
     // Suppress the classic replacement body outside that boundary as well, so
@@ -2066,10 +2066,8 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window)
     const bool hd_cell_visible = Debug_Map || Debug_Unshroud
                                  || (PlayerPtr && Is_Discovered_By_Player(PlayerPtr)
                                      && Map[hd_cell].Is_Visible(PlayerPtr));
-    // The MCV atlas deliberately covers only its normal, undamaged field
-    // appearance. Keep original shapes for damage and special visual states.
-    const bool hd_vehicle_state_supported = !hd_vehicle_is_mcv
-                                            || (Health_Ratio() >= 0x0080 && Flagged == HOUSE_NONE);
+    // Flag carriers keep their full original presentation until that overlay is mapped.
+    const bool hd_vehicle_state_supported = Flagged == HOUSE_NONE;
     const bool use_hd_vehicle = hd_vehicle_type && window == WINDOW_TACTICAL
                                 && Visual_Character() == VISUAL_NORMAL && hd_vehicle_available
                                 && hd_cell_visible && hd_vehicle_state_supported;
@@ -2211,10 +2209,9 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window)
         if (use_hd_vehicle) {
             const int origin_x = WindowList[window][WINDOWX] + LogicPage->Get_XPos();
             const int origin_y = WindowList[window][WINDOWY] + LogicPage->Get_YPos();
-            // Authored MCV atlases use compass order N..NW. Buggy and Humvee
-            // atlases were generated in the classic reversed BodyShape frame order,
-            // so their already-resolved shape frame must remain untouched.
-            const int hd_frame = hd_vehicle_is_mcv ? Dir_Facing(PrimaryFacing.Current()) : shapenum;
+            // Keep the engine-resolved classic shape, with the second 64-frame
+            // bank containing the original BAD_UNIT recolor.
+            const int hd_frame = shapenum + (hd_vehicle_is_nod ? 64 : 0);
             Video_Set_HD_Vehicle_Component(this,
                                            hd_vehicle_kind,
                                            0,
@@ -2306,7 +2303,7 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window)
                 Video_Set_HD_Vehicle_Component(this,
                                              hd_vehicle_kind,
                                              1,
-                                             shapenum,
+                                             shapenum + (hd_vehicle_is_nod ? 64 : 0),
                                              origin_x + x1,
                                              origin_y + y1,
                                              House ? House->Class->BrightColor : WHITE);

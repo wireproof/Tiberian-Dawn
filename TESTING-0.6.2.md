@@ -7,3 +7,5 @@ Validation: 26 host tests, Apple parity, backup/cloud isolation tests, unsigned 
 Physical verification pending: dock layout in both orientations, cover/inner joystick persistence, labels beside and across HD sprites, named save transfer in both directions. User reported one save may have synced in 0.6.1, but named test save not confirmed.
 
 Delivery: native app installed on Duo and iPad; both read back version 0.6.2. Duo launch attempt was blocked because the device was locked, so startup and gameplay verification remain pending.
+
+User confirmed Duo-to-iPad iCloud save transfer on 2026-10-26: iPad reports a received save and lists the named iCloud save. Settings transfer and reverse-direction save transfer are not separately verified.

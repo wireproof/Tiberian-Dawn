@@ -47,7 +47,7 @@ const Translation Translations[] = {
     {"visual_mode_pixel", "Pixel-perfect", "Pixelgenau"},
     {"visual_mode_classic", "Classic", "Klassisch"},
     {"visual_artwork_original", "Original", "Original"},
-    {"visual_artwork_modern", "Modern", "Modern"},
+    {"visual_artwork_modern", "Enhanced classic", "Klassisch verbessert"},
     {"visual_readability_high", "High", "Hoch"},
     {"visual_readability_normal", "Normal", "Normal"},
     {"touch_edge_scroll_format", "Edge scroll: %s", "Randscrollen: %s"},

@@ -117,6 +117,9 @@ bool hd_nod_infrastructure_renderer_available = false;
 bool hd_gdi_infrastructure_activity_renderer_available = false;
 bool hd_nod_infrastructure_activity_renderer_available = false;
 IPadPaletteRect help_overlay = {0,0,0,0};
+std::vector<unsigned char> help_pixels;
+// Experimental atlas designs were rejected in device review. Keep classic silhouettes.
+constexpr bool replacement_artwork_enabled=false;
 IPadPaletteRect hd_artwork_clip = {0, 0, 0, 0};
 bool hd_world_artwork_visible = true;
 Uint8 previous_palette[256 * 3] = {0};
@@ -1608,6 +1611,16 @@ public:
             Get_Video_Mouse(cursor_x, cursor_y);
         }
 
+        // Overlay pixels have independent storage: map dirty-region redraws
+        // must never become the source of a partially erased label.
+        if(!help_pixels.empty()) {
+            const int left=std::max(0,help_overlay.x),top=std::max(0,help_overlay.y);
+            const int right=std::min(surface->w,help_overlay.x+help_overlay.width);
+            const int bottom=std::min(surface->h,help_overlay.y+help_overlay.height);
+            for(int y=top;y<bottom && right>left;++y)
+                std::memcpy(static_cast<unsigned char*>(surface->pixels)+y*surface->pitch+left,
+                    help_pixels.data()+(y-help_overlay.y)*help_overlay.width+left-help_overlay.x,right-left);
+        }
         IPadPaletteRect indexed_update = {0, 0, surface->w, surface->h};
         bool indexed_pixels_changed = !hasLastFrame;
         if (hasLastFrame) {
@@ -1671,7 +1684,7 @@ public:
         std::vector<IPadHDBuildingOverlay> metal_buildings;
         std::vector<IPadHDBuggyOverlay> metal_buggies;
         std::vector<IPadHDInfantryOverlay> metal_infantry;
-        if (Settings.Video.ArtworkMode != 0 && !hd_buildings.empty()) {
+        if (replacement_artwork_enabled && Settings.Video.ArtworkMode != 0 && !hd_buildings.empty()) {
             const float scale_x = render_dst.w / static_cast<float>(surface->w);
             const float scale_y = render_dst.h / static_cast<float>(surface->h);
             std::vector<RegisteredHDBuilding> sorted_buildings = hd_buildings;
@@ -1724,7 +1737,7 @@ public:
                 metal_buildings.push_back(overlay);
             }
         }
-        if (Settings.Video.ArtworkMode != 0 && !hd_buggies.empty()) {
+        if (replacement_artwork_enabled && Settings.Video.ArtworkMode != 0 && !hd_buggies.empty()) {
             const float scale_x = render_dst.w / static_cast<float>(surface->w);
             const float scale_y = render_dst.h / static_cast<float>(surface->h);
             std::vector<RegisteredHDBuggy> sorted_buggies = hd_buggies;
@@ -1774,7 +1787,7 @@ public:
                 metal_buggies.push_back(overlay);
             }
         }
-        if (Settings.Video.ArtworkMode != 0 && !hd_infantry.empty()) {
+        if (replacement_artwork_enabled && Settings.Video.ArtworkMode != 0 && !hd_infantry.empty()) {
             const float scale_x = render_dst.w / static_cast<float>(surface->w);
             const float scale_y = render_dst.h / static_cast<float>(surface->h);
             std::vector<RegisteredHDInfantry> sorted_infantry = hd_infantry;
@@ -2317,7 +2330,12 @@ void Video_Remove_Selection_Overlay(const void* object)
     force_present = true;
 }
 
-void Video_Set_Help_Overlay(int x,int y,int width,int height) { help_overlay={x,y,width,height}; }
+void Video_Set_Help_Overlay(int x,int y,int width,int height) { help_overlay={x,y,width,height};help_pixels.clear(); }
+void Video_Set_Help_Pixels(const unsigned char* pixels,int pitch) {
+    if(!pixels || help_overlay.width<=0 || help_overlay.height<=0 || pitch<help_overlay.width)return;
+    help_pixels.resize(help_overlay.width*help_overlay.height);
+    for(int y=0;y<help_overlay.height;++y)std::memcpy(help_pixels.data()+y*help_overlay.width,pixels+y*pitch,help_overlay.width);
+}
 
 void Video_Set_HD_Artwork_Clip(int x, int y, int width, int height)
 {
@@ -2558,6 +2576,7 @@ void Video_Remove_HD_Artwork(const void* object)
 
 void Video_Clear_HD_Artwork()
 {
+    Video_Set_Help_Overlay(0,0,0,0);
     if (hd_buggies.empty() && hd_infantry.empty() && hd_buildings.empty()
         && selection_overlays.empty()) return;
     hd_buggies.clear();
@@ -2633,34 +2652,34 @@ void Video_Set_HD_Health(const void* object,
 
 bool Video_Uses_HD_Buggy_Artwork()
 {
-    return hd_world_artwork_visible && Settings.Video.ArtworkMode != 0 && hd_buggy_renderer_available;
+    return replacement_artwork_enabled && hd_world_artwork_visible && Settings.Video.ArtworkMode != 0 && hd_buggy_renderer_available;
 }
 
 bool Video_Uses_HD_Humvee_Artwork()
 {
-    return hd_world_artwork_visible && Settings.Video.ArtworkMode != 0 && hd_humvee_renderer_available;
+    return replacement_artwork_enabled && hd_world_artwork_visible && Settings.Video.ArtworkMode != 0 && hd_humvee_renderer_available;
 }
 
 bool Video_Uses_HD_Minigunner_Artwork()
 {
-    return hd_world_artwork_visible && Settings.Video.ArtworkMode != 0 && hd_minigunner_renderer_available;
+    return replacement_artwork_enabled && hd_world_artwork_visible && Settings.Video.ArtworkMode != 0 && hd_minigunner_renderer_available;
 }
 
 bool Video_Uses_HD_MCV_Artwork(bool nod)
 {
-    return hd_world_artwork_visible && Settings.Video.ArtworkMode != 0
+    return replacement_artwork_enabled && hd_world_artwork_visible && Settings.Video.ArtworkMode != 0
            && (nod ? hd_nod_mcv_renderer_available : hd_gdi_mcv_renderer_available);
 }
 
 bool Video_Uses_HD_Infrastructure_Artwork(bool nod)
 {
-    return hd_world_artwork_visible && Settings.Video.ArtworkMode != 0
+    return replacement_artwork_enabled && hd_world_artwork_visible && Settings.Video.ArtworkMode != 0
            && (nod ? hd_nod_infrastructure_renderer_available : hd_gdi_infrastructure_renderer_available);
 }
 
 bool Video_Uses_HD_Infrastructure_Activity_Artwork(bool nod)
 {
-    return hd_world_artwork_visible && Settings.Video.ArtworkMode != 0
+    return replacement_artwork_enabled && hd_world_artwork_visible && Settings.Video.ArtworkMode != 0
            && (nod ? hd_nod_infrastructure_activity_renderer_available
                    : hd_gdi_infrastructure_activity_renderer_available);
 }

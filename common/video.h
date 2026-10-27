@@ -143,6 +143,7 @@ void Video_Set_HD_Health(const void* object,
                          int fill_width,
                          unsigned char palette_index);
 void Video_Set_Help_Overlay(int x, int y, int width, int height);
+void Video_Set_Help_Pixels(const unsigned char* pixels, int pitch);
 void Video_Set_HD_Artwork_Clip(int x, int y, int width, int height);
 void Video_Set_HD_World_Artwork_Visible(bool visible);
 void Video_Offset_HD_World_Artwork(int x, int y);

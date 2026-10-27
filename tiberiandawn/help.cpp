@@ -282,6 +282,26 @@ void HelpClass::Draw_Help_Overlay(bool forced)
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
     Video_Set_Help_Overlay(0,0,0,0);
 #endif
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    if(Text==TXT_NONE || (!forced && CountDownTimer.Time()))return;
+    Fancy_Text_Print(TXT_NONE,0,0,Color,BLACK,TPF_MAP|TPF_NOSHADOW);
+    int width=String_Pixel_Width(Text_String(Text));
+    char amount[32]={0};
+    if(Cost){snprintf(amount,sizeof(amount),"$%d",Cost);width=MAX(width,(int)String_Pixel_Width(amount));}
+    const int height=FontHeight*(Cost?2:1)+2;
+    GraphicBufferClass label(width+3,height,nullptr,0);
+    if(!label.Lock())return;
+    GraphicViewPortClass* previous=Set_Logic_Page(label);
+    label.Clear(BLACK);
+    Fancy_Text_Print(Text,1,1,Color,BLACK,TPF_MAP|TPF_NOSHADOW);
+    label.Draw_Rect(0,0,width+2,height-1,Color);
+    if(Cost)Fancy_Text_Print(amount,1,1+FontHeight,Color,BLACK,TPF_MAP|TPF_NOSHADOW);
+    Video_Set_Help_Overlay(DrawX-1,DrawY-1,width+3,height);
+    Video_Set_Help_Pixels(reinterpret_cast<unsigned char*>(label.Get_Offset()),label.Get_Width()+label.Get_XAdd()+label.Get_Pitch());
+    Set_Logic_Page(previous);
+    label.Unlock();
+    return;
+#endif
     if (Text != TXT_NONE && (forced || !CountDownTimer.Time())) {
 
         if (LogicPage->Lock()) {

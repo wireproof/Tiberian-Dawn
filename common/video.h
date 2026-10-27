@@ -151,6 +151,7 @@ void Video_Remove_HD_Artwork(const void* object);
 void Video_Clear_HD_Artwork();
 bool Video_Uses_HD_Buggy_Artwork();
 bool Video_Uses_HD_Humvee_Artwork();
+bool Video_Has_Full_Remastered_Artwork();
 bool Video_Uses_Remastered_Vehicle_Artwork(int kind);
 bool Video_Uses_HD_Minigunner_Artwork();
 bool Video_Uses_HD_MCV_Artwork(bool nod);

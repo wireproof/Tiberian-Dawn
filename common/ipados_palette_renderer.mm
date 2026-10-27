@@ -3,6 +3,8 @@
 #import <QuartzCore/CAMetalLayer.h>
 
 #include "ipados_palette_renderer.h"
+#include "remastered_art.h"
+extern bool Video_Uses_Modern_Artwork();
 
 #include <algorithm>
 #include <array>
@@ -967,6 +969,11 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
     [encoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
     [encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
 
+    if (artwork_mode != 0 && Video_Uses_Modern_Artwork())
+        RemasteredArt_Render(encoder, state->Device, layer.pixelFormat, rgb6_palette,
+            view_width, view_height, viewport.x, viewport.y, viewport.width, viewport.height,
+            map_zoom, map_right, map_top, map_bottom, layer.drawableSize.width, layer.drawableSize.height, false, state->Width);
+
     if (artwork_mode != 0 && buildings && building_count > 0) {
         // Infrastructure lives underneath mobile objects. Its atlas cells
         // contain the faction-specific power plant, barracks and yard.
@@ -1152,6 +1159,11 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
 
     // Health bars are deliberately last among world overlays so neither the
     // HD chassis nor the modern selection frame can cover their centre.
+    if (artwork_mode != 0 && Video_Uses_Modern_Artwork())
+        RemasteredArt_Render(encoder, state->Device, layer.pixelFormat, rgb6_palette,
+            view_width, view_height, viewport.x, viewport.y, viewport.width, viewport.height,
+            map_zoom, map_right, map_top, map_bottom, layer.drawableSize.width, layer.drawableSize.height, true, state->Width);
+
     if (artwork_mode != 0 && buildings && building_count > 0) {
         [encoder setRenderPipelineState:state->HealthPipeline];
         [encoder setFragmentTexture:state->PaletteTexture atIndex:1];

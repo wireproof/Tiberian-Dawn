@@ -347,7 +347,7 @@ if(BUILD_VANILLATD)
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
                 XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
             )
-            target_link_libraries(TiberianDawn "-framework UIKit" "-framework AVFAudio" "-framework Metal" "-framework MetalKit" "-framework QuartzCore" "-framework UniformTypeIdentifiers")
+            target_link_libraries(TiberianDawn "-framework UIKit" "-framework AVFAudio" "-framework Metal" "-framework MetalKit" "-framework ImageIO" "-framework QuartzCore" "-framework UniformTypeIdentifiers")
             if(IPADOS_DEVELOPMENT_TEAM)
                 set_target_properties(TiberianDawn PROPERTIES
                     XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${IPADOS_DEVELOPMENT_TEAM}"
@@ -420,7 +420,7 @@ if(BUILD_VANILLATD)
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
                 XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
             )
-            target_link_libraries(TiberianDawn "-framework UIKit" "-framework AVFAudio" "-framework Metal" "-framework MetalKit" "-framework QuartzCore" "-framework UniformTypeIdentifiers")
+            target_link_libraries(TiberianDawn "-framework UIKit" "-framework AVFAudio" "-framework Metal" "-framework MetalKit" "-framework ImageIO" "-framework QuartzCore" "-framework UniformTypeIdentifiers")
             if(VISIONOS_DEVELOPMENT_TEAM)
                 set_target_properties(TiberianDawn PROPERTIES
                     XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${VISIONOS_DEVELOPMENT_TEAM}"
@@ -492,7 +492,7 @@ if(BUILD_VANILLATD)
                 XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.wireproof.tiberiandawn"
                 XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
             )
-            target_link_libraries(TiberianDawn "-framework AppKit" "-framework AVFAudio" "-framework Metal" "-framework MetalKit" "-framework QuartzCore" "-framework UniformTypeIdentifiers")
+            target_link_libraries(TiberianDawn "-framework AppKit" "-framework AVFAudio" "-framework Metal" "-framework MetalKit" "-framework ImageIO" "-framework QuartzCore" "-framework UniformTypeIdentifiers")
         endif()
     endif()
 

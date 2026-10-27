@@ -78,6 +78,25 @@
 
 #include "function.h"
 #include "settings.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "common/remastered_scene.h"
+static std::vector<uint8_t> WP_Sidebar_Pixels(int x, int y, int width, int height)
+{
+    std::vector<uint8_t> result(static_cast<size_t>(width) * height, 0);
+    if (!LogicPage->Lock()) return result;
+    const int pitch = LogicPage->Get_Width() + LogicPage->Get_XAdd() + LogicPage->Get_Pitch();
+    const uint8_t* source = reinterpret_cast<const uint8_t*>(LogicPage->Get_Offset());
+    for (int row = 0; row < height; ++row) {
+        if (y + row < 0 || y + row >= LogicPage->Get_Height()) continue;
+        for (int col = 0; col < width; ++col) {
+            if (x + col >= 0 && x + col < LogicPage->Get_Width())
+                result[static_cast<size_t>(row) * width + col] = source[(y + row) * pitch + x + col];
+        }
+    }
+    LogicPage->Unlock();
+    return result;
+}
+#endif
 
 /*
 **	Define "_RETRIEVE" if the palette morphing tables are part of the loaded data. If this
@@ -767,6 +786,12 @@ bool SidebarClass::Scroll(bool up, int column)
 void SidebarClass::Draw_It(bool complete)
 {
     PowerClass::Draw_It(complete);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    WPRemastered::ClearSidebar();
+    // The private HD scene is reconstructed each presented frame. Rebuild
+    // cameo snapshots too, including availability and production overlays.
+    if (Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork()) complete = true;
+#endif
 
     if (IsSidebarActive && (IsToRedraw || complete) && !Debug_Map) {
         IsToRedraw = false;
@@ -1821,6 +1846,11 @@ void SidebarClass::StripClass::Draw_It(bool complete)
             int x = X;
             int y = Y + i * ObjectHeight;
             y--;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+            std::string hd_icon;
+            std::vector<uint8_t> hd_base;
+            int hd_width = 0, hd_height = 0;
+#endif
 
             /*
             **	If the strip is scrolling, then the offset is adjusted accordingly.
@@ -1841,6 +1871,9 @@ void SidebarClass::StripClass::Draw_It(bool complete)
 
                     obj = Fetch_Techno_Type(Buildables[index].BuildableType, Buildables[index].BuildableID);
                     if (obj != NULL) {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                        hd_icon = std::string("ICON.") + obj->IniName;
+#endif
                         bool isbusy = false;
                         switch (Buildables[index].BuildableType) {
                         case RTTI_INFANTRYTYPE:
@@ -1896,6 +1929,11 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                 } else {
 
                     spc = Buildables[index].BuildableID;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                    if (spc == SPC_ION_CANNON) hd_icon = "ICON.SW_ION";
+                    else if (spc == SPC_AIR_STRIKE) hd_icon = "ICON.SW_AIRSTRIKE";
+                    else if (spc == SPC_NUCLEAR_BOMB) hd_icon = "ICON.SW_NUKE";
+#endif
                     shapefile = Get_Special_Cameo(spc - 1);
                     shapenum = 0;
 
@@ -1961,6 +1999,14 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                               SHAPE_NORMAL | SHAPE_WIN_REL | (remapper ? SHAPE_FADING : SHAPE_NORMAL),
                               remapper);
                 IsTheaterShape = false;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                if (!hd_icon.empty() && shapefile && Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork()) {
+                    hd_width = Get_Build_Frame_Width(shapefile);
+                    hd_height = Get_Build_Frame_Height(shapefile);
+                    if (hd_width > 0 && hd_width <= 512 && hd_height > 0 && hd_height <= 512)
+                        hd_base = WP_Sidebar_Pixels(x + LeftEdgeOffset, y, hd_width, hd_height);
+                }
+#endif
 
                 /*
                 **	Darken this object because it cannot be produced or is otherwise
@@ -2024,6 +2070,17 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                     }
                 }
             }
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+            if (!hd_base.empty()) {
+                const auto final_pixels = WP_Sidebar_Pixels(x + LeftEdgeOffset, y, hd_width, hd_height);
+                WPRemastered::RecordSidebarIcon(hd_icon.c_str(),
+                    x + LeftEdgeOffset + LogicPage->Get_XPos(), y + LogicPage->Get_YPos(), hd_width, hd_height,
+                    WindowList[WINDOW_SIDEBAR][WINDOWX] + LogicPage->Get_XPos(),
+                    WindowList[WINDOW_SIDEBAR][WINDOWY] + LogicPage->Get_YPos(),
+                    WindowList[WINDOW_SIDEBAR][WINDOWWIDTH], WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT],
+                    hd_base.data(), final_pixels.data());
+            }
+#endif
         }
     }
 }

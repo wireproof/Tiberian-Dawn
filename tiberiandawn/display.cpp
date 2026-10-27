@@ -83,6 +83,7 @@
  *   DisplayClass::Prev_Object -- Searches for the previous object on the map.                 *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 #include "function.h"
+#include "common/remastered_scene.h"
 #include "common/fading.h"
 #ifdef IPADOS_PORT
 #include "common/settings.h"
@@ -2140,6 +2141,19 @@ void DisplayClass::Draw_It(bool forced)
     int x, y; // Working cell index values.
 
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    const bool remastered_frame = Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork();
+    if (remastered_frame) {
+        forced = true;
+        WPRemastered::Begin(static_cast<int>(Theater),
+            WindowList[WINDOW_TACTICAL][WINDOWX] + LogicPage->Get_XPos(),
+            WindowList[WINDOW_TACTICAL][WINDOWY] + LogicPage->Get_YPos(),
+            WindowList[WINDOW_TACTICAL][WINDOWWIDTH], WindowList[WINDOW_TACTICAL][WINDOWHEIGHT]);
+    } else {
+        WPRemastered::Clear();
+    }
+#endif
+
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
     // Presentation-layer world artwork must obey the same tactical-window
     // boundary as classic sprites, especially when the sidebar is open.
     Video_Set_HD_Artwork_Clip(WindowList[WINDOW_TACTICAL][WINDOWX] + LogicPage->Get_XPos(),
@@ -2464,10 +2478,12 @@ void DisplayClass::Draw_It(bool forced)
             **	Finally, redraw the shadow overlay as necessary.
             */
             // Colour_Debug(5);
+            WPRemastered::Shared().shroud = true;
             Redraw_Shadow();
         }
 
         Redraw_Shadow_Rects();
+        WPRemastered::Shared().shroud = false;
 
         HidPage.Unlock();
 
@@ -2515,6 +2531,9 @@ void DisplayClass::Draw_It(bool forced)
         }
 #endif
     }
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if (remastered_frame) WPRemastered::End();
+#endif
 }
 
 /***********************************************************************************************
@@ -2688,6 +2707,7 @@ void DisplayClass::Redraw_Shadow_Rects(void)
                                               Lepton_To_Pixel(TacLeptonWidth),
                                               Lepton_To_Pixel(TacLeptonHeight))
                                     >= 0) {
+                                    WPRemastered::RecordFill(TacPixelX + xpixel, TacPixelY + ypixel, ww, hh, BLACK);
                                     LogicPage->Fill_Rect(TacPixelX + xpixel,
                                                          TacPixelY + ypixel,
                                                          TacPixelX + xpixel + ww - 1,

@@ -1,5 +1,5 @@
 add_custom_target(tests)
-add_dependencies(tests test_miscasm test_face test_rect test_fading test_lcw test_xordelta test_irandom test_fatpixel test_tobuff test_drawline test_putpixel test_drawbuff test_ipados_layout test_ipados_localization test_ipados_pencil test_audio_queue_state test_app_lifecycle test_recovery_transaction test_install_transaction test_iso9660 test_isarchivev3 test_savegame_transfer test_hd_asset_pack test_relay_protocol test_visionos_input)
+add_dependencies(tests test_remastered_scene test_miscasm test_face test_rect test_fading test_lcw test_xordelta test_irandom test_fatpixel test_tobuff test_drawline test_putpixel test_drawbuff test_ipados_layout test_ipados_localization test_ipados_pencil test_audio_queue_state test_app_lifecycle test_recovery_transaction test_install_transaction test_iso9660 test_isarchivev3 test_savegame_transfer test_hd_asset_pack test_relay_protocol test_visionos_input)
 
 add_executable(test_ipados_pencil ipados_pencil.cpp ../common/ipados_pencil.cpp)
 target_include_directories(test_ipados_pencil PUBLIC .. ../common)
@@ -129,3 +129,7 @@ add_executable(test_wireproof_orders wireproof_orders.cpp ../common/wireproof_or
 target_include_directories(test_wireproof_orders PUBLIC ..)
 add_dependencies(tests test_wireproof_orders)
 add_test(NAME wireproof_orders COMMAND $<TARGET_FILE:test_wireproof_orders>)
+
+add_executable(test_remastered_scene remastered_scene.cpp ../common/remastered_scene.cpp)
+target_include_directories(test_remastered_scene PUBLIC .. ../common)
+add_test(NAME remastered_scene COMMAND $<TARGET_FILE:test_remastered_scene>)

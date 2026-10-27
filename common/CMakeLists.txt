@@ -74,6 +74,7 @@ set(COMMON_SRC
     rawfile.cpp
     readline.cpp
     rect.cpp
+    remastered_scene.cpp
     rgb.cpp
     rndstraw.cpp
     settings.cpp
@@ -145,6 +146,7 @@ if(APPLE_NATIVE_PORT)
         audio_queue_state.cpp
         ipados_audio_engine.mm
         ipados_palette_renderer.mm
+        remastered_art.mm
         soundio_common.cpp
         soundio_avengine.mm
         vqaaudio_avengine.mm

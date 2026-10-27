@@ -62,6 +62,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "common/remastered_scene.h"
 #ifdef IPADOS_PORT
 #include "platform/apple/ipados_platform.h"
 #endif
@@ -2725,7 +2726,10 @@ void CC_Draw_Shape(ObjectClass* object,
         return;
     }
 #endif
+    const int previous_owner = WPRemastered::Shared().owner;
+    if (object) WPRemastered::Shared().owner = static_cast<int>(object->Owner());
     CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata);
+    WPRemastered::Shared().owner = previous_owner;
 }
 
 void CC_Draw_Shape(ObjectClass* object,
@@ -2748,7 +2752,11 @@ void CC_Draw_Shape(ObjectClass* object,
         return;
     }
 #endif
+    const int previous_owner = WPRemastered::Shared().owner;
+    if (object) WPRemastered::Shared().owner = static_cast<int>(object->Owner());
+    if (override_owner >= 0) WPRemastered::Shared().owner = static_cast<int>(override_owner);
     CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata);
+    WPRemastered::Shared().owner = previous_owner;
 }
 
 void CC_Draw_Pip(ObjectClass* object,
@@ -2854,6 +2862,16 @@ void CC_Draw_Shape(void const* shapefile,
                 flags = flags & ~(SHAPE_FADING | SHAPE_PREDATOR);
                 flags = flags | SHAPE_GHOST;
                 ghostdata = Map.SpecialGhost;
+            }
+
+            if (window == WINDOW_TACTICAL && WPRemastered::Shared().capturing) {
+                WPRemastered::RecordSprite(shapefile, shapenum,
+                    x + WindowList[window][WINDOWX] + LogicPage->Get_XPos(),
+                    y + WindowList[window][WINDOWY] + LogicPage->Get_YPos(),
+                    Get_Build_Frame_Width(shapefile), Get_Build_Frame_Height(shapefile),
+                    static_cast<unsigned>(flags),
+                    static_cast<const uint8_t*>(Get_Shape_Header_Data(shape_pointer)),
+                    static_cast<const uint8_t*>(fadingdata), static_cast<const uint8_t*>(ghostdata));
             }
 
             predoffset = Frame;

@@ -115,6 +115,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "common/remastered_scene.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #include "common/wireproof_cheats.h"
 #endif
@@ -1132,6 +1133,8 @@ void TechnoClass::Draw_It(int x, int y, WindowNumberType window)
             if (window == WINDOW_TACTICAL) {
                 const int origin_x = WindowList[window][WINDOWX] + LogicPage->Get_XPos();
                 const int origin_y = WindowList[window][WINDOWY] + LogicPage->Get_YPos();
+                WPRemastered::RecordHealth(origin_x + xx, origin_y + yy, width, pwidth,
+                                            static_cast<unsigned char>(color));
                 Video_Set_HD_Health(this,
                                     true,
                                     origin_x + xx,

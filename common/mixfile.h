@@ -30,6 +30,7 @@
 #include "wwstd.h"
 #include "rndstraw.h"
 #include "paths.h"
+#include "remastered_scene.h"
 
 #ifndef _MAX_PATH
 #define _MAX_PATH PATH_MAX
@@ -501,6 +502,7 @@ template <class T, class TCRC> void const* MixFileClass<T, TCRC>::Retrieve(char 
 {
     void* ptr = 0;
     Offset(filename, &ptr);
+    WPRemastered::RegisterAsset(ptr, filename);
     return (ptr);
 };
 

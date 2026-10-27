@@ -63,6 +63,8 @@
 #endif
 #ifdef TIBERIAN_DAWN_APPLE_PORT
 #include "hd_asset_pack.h"
+#include "remastered_art.h"
+#include "remastered_scene.h"
 #include "ipados_palette_renderer.h"
 #include "paths.h"
 #include <mach/mach.h>
@@ -234,6 +236,11 @@ void Discover_Modern_Art_Pack()
 {
     if (modern_art_pack_checked) return;
     modern_art_pack_checked = true;
+#ifdef MACOS_PORT
+    RemasteredArt_Load(Paths.Concatenate_Paths(Paths.Program_Path(), "../Resources/RemasteredArt"));
+#else
+    RemasteredArt_Load(Paths.Concatenate_Paths(Paths.Program_Path(), "RemasteredArt"));
+#endif
     const std::string directory = Paths.Concatenate_Paths(Paths.User_Path(), "ModernArt");
     std::string error;
     if (modern_art_pack.Load(directory, error)) {
@@ -1664,7 +1671,8 @@ public:
                                  : IPadPaletteRect{0, 0, 0, 0};
         }
 
-        const bool visible_change = force_present || indexed_pixels_changed
+        const bool visible_change = (RemasteredArt_Ready() && hd_world_artwork_visible && Settings.Video.ArtworkMode != 0)
+                                    || force_present || indexed_pixels_changed
                                     || lastPaletteGeneration != palette_generation
                                     || lastCursorGeneration != cursor_generation
                                     || lastSelectionGeneration != selection_generation
@@ -2368,6 +2376,7 @@ void Video_Set_HD_World_Artwork_Visible(bool visible)
     if (hd_world_artwork_visible == visible) return;
     hd_world_artwork_visible = visible;
     if (!visible) {
+        WPRemastered::Clear();
         Video_Clear_HD_Artwork();
         if (touch_selection_box.active) {
             touch_selection_box.active = false;
@@ -2666,9 +2675,11 @@ void Video_Set_HD_Health(const void* object,
     }
 }
 
+bool Video_Has_Full_Remastered_Artwork() { return RemasteredArt_Ready(); }
+
 bool Video_Uses_Remastered_Vehicle_Artwork(int kind)
 {
-    if (!Remastered_Pack_Active() || !hd_world_artwork_visible || Settings.Video.ArtworkMode == 0) return false;
+    if (RemasteredArt_Ready() || !Remastered_Pack_Active() || !hd_world_artwork_visible || Settings.Video.ArtworkMode == 0) return false;
     return kind == 4 ? remastered_mtnk_available
                     : (kind == 5 ? hd_humvee_renderer_available : (kind == 6 && hd_buggy_renderer_available));
 }

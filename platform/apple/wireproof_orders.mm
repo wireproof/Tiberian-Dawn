@@ -156,6 +156,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UISwitch *freeSwitch;
 @property(nonatomic,strong) UISwitch *shroudSwitch;
 @property(nonatomic,strong) NSArray<UISlider*> *speedSliders;
+@property(nonatomic,strong) NSArray<UIStackView*> *speedButtons;
 @property(nonatomic,strong) NSArray<UILabel*> *speedLabels;
 @property(nonatomic) BOOL cheatsOpen;
 @property(nonatomic,strong) NSArray<UISlider*> *joystickSliders;
@@ -267,7 +268,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.zoomMinus.accessibilityLabel=@"Zoom out by 0.25"; self.zoomPlus.accessibilityLabel=@"Zoom in by 0.25";
         [self.zoomMinus.widthAnchor constraintEqualToConstant:44].active=YES;
         [self.zoomPlus.widthAnchor constraintEqualToConstant:44].active=YES;
-        UIStackView *zoomRow=[[UIStackView alloc] initWithArrangedSubviews:@[self.zoomMinus,self.zoomSlider,self.zoomPlus]];
+        UIStackView *zoomRow=[[UIStackView alloc] initWithArrangedSubviews:@[self.zoomMinus,self.zoomLabel,self.zoomPlus]];
         zoomRow.axis=UILayoutConstraintAxisHorizontal; zoomRow.spacing=8;
         self.cheatButton=[self button:@"Cheats" tag:500];
         self.cheatStatus=[UILabel new];self.cheatStatus.textColor=UIColor.whiteColor;
@@ -293,16 +294,20 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             row.axis=UILayoutConstraintAxisHorizontal;row.alignment=UIStackViewAlignmentCenter;
             [row.heightAnchor constraintEqualToConstant:44].active=YES;[cheatRows addObject:row];
         }
-        NSMutableArray *speedSliders=[NSMutableArray array],*speedLabels=[NSMutableArray array];
+        NSMutableArray *speedSliders=[NSMutableArray array],*speedLabels=[NSMutableArray array],*speedButtons=[NSMutableArray array];
         for(int i=0;i<3;++i) {
             UILabel *label=[UILabel new];label.textColor=UIColor.whiteColor;label.font=[UIFont systemFontOfSize:13];
             UISlider *slider=[UISlider new];slider.minimumValue=1;slider.maximumValue=12;slider.value=4;slider.tag=i;
             slider.accessibilityLabel=@[@"Infantry speed",@"Vehicle speed",@"Aircraft speed"][i];
             [slider addTarget:self action:@selector(speedChanged:) forControlEvents:UIControlEventValueChanged];
             [slider.heightAnchor constraintEqualToConstant:44].active=YES;
-            [speedLabels addObject:label];[speedSliders addObject:slider];[cheatRows addObject:label];[cheatRows addObject:slider];
+            label.textAlignment=NSTextAlignmentCenter;label.numberOfLines=2;
+            UIButton *minus=[self button:@"−" tag:800+i*2],*plus=[self button:@"+" tag:801+i*2];
+            [minus.widthAnchor constraintEqualToConstant:44].active=YES;[plus.widthAnchor constraintEqualToConstant:44].active=YES;
+            UIStackView *row=[[UIStackView alloc] initWithArrangedSubviews:@[minus,label,plus]];row.spacing=8;row.alignment=UIStackViewAlignmentCenter;
+            [speedButtons addObject:row];[speedLabels addObject:label];[speedSliders addObject:slider];[cheatRows addObject:row];
         }
-        self.speedSliders=speedSliders;self.speedLabels=speedLabels;
+        self.speedSliders=speedSliders;self.speedLabels=speedLabels;self.speedButtons=speedButtons;
         UILabel *help=[UILabel new];help.numberOfLines=0;help.font=[UIFont systemFontOfSize:11];help.textColor=UIColor.lightGrayColor;
         help.text=@"Player only • Single player\nShroud on restores the earlier explored area and current unit sight. Toggles and speed are saved between missions and app launches.";
         [cheatRows addObject:help];
@@ -325,20 +330,21 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             [slider addTarget:self action:@selector(joystickChanged:) forControlEvents:UIControlEventValueChanged];
             UIButton *minus=[self button:@"−" tag:600+i*2], *plus=[self button:@"+" tag:601+i*2];
             [minus.widthAnchor constraintEqualToConstant:44].active=YES;[plus.widthAnchor constraintEqualToConstant:44].active=YES;
-            UIStackView *row=[[UIStackView alloc] initWithArrangedSubviews:@[minus,slider,plus]];row.spacing=8;
-            [stickRows addObject:label];[stickRows addObject:row];[stickSliders addObject:slider];[stickLabels addObject:label];
+            UIStackView *row=[[UIStackView alloc] initWithArrangedSubviews:@[minus,label,plus]];row.spacing=8;
+            label.numberOfLines=2;row.alignment=UIStackViewAlignmentCenter;[stickRows addObject:row];[stickSliders addObject:slider];[stickLabels addObject:label];
         }
         self.joystickSliders=stickSliders;self.joystickLabels=stickLabels;
         UIStackView *stickControls=[[UIStackView alloc] initWithArrangedSubviews:stickRows];stickControls.axis=UILayoutConstraintAxisVertical;stickControls.spacing=6;
-        UIStackView *zoomControls=[[UIStackView alloc] initWithArrangedSubviews:@[self.zoomLabel,zoomRow]];zoomControls.axis=UILayoutConstraintAxisVertical;zoomControls.spacing=6;
-        UIStackView *sizeControls=[[UIStackView alloc] initWithArrangedSubviews:@[stickRows[0],stickRows[1]]];sizeControls.axis=UILayoutConstraintAxisVertical;sizeControls.spacing=6;
-        UIStackView *speedControls=[[UIStackView alloc] initWithArrangedSubviews:@[stickRows[2],stickRows[3]]];speedControls.axis=UILayoutConstraintAxisVertical;speedControls.spacing=6;
+        UIStackView *zoomControls=[[UIStackView alloc] initWithArrangedSubviews:@[zoomRow]];zoomControls.axis=UILayoutConstraintAxisVertical;zoomControls.spacing=6;
+        UIStackView *sizeControls=[[UIStackView alloc] initWithArrangedSubviews:@[stickRows[0]]];sizeControls.axis=UILayoutConstraintAxisVertical;sizeControls.spacing=6;
+        UIStackView *speedControls=[[UIStackView alloc] initWithArrangedSubviews:@[stickRows[1]]];speedControls.axis=UILayoutConstraintAxisVertical;speedControls.spacing=6;
         self.uiScaleLabel=[UILabel new];self.uiScaleLabel.textColor=UIColor.whiteColor;self.uiScaleLabel.font=[UIFont systemFontOfSize:14];
         self.uiScaleSlider=[UISlider new];self.uiScaleSlider.minimumValue=75;self.uiScaleSlider.maximumValue=150;
         self.uiScaleSlider.accessibilityLabel=@"UI size";
         [self.uiScaleSlider addTarget:self action:@selector(uiScaleChanged:) forControlEvents:UIControlEventValueChanged];
-        UIStackView *uiButtons=[[UIStackView alloc] initWithArrangedSubviews:@[[self button:@"−" tag:700],self.uiScaleSlider,[self button:@"+" tag:701]]];uiButtons.spacing=8;
-        UIStackView *uiControls=[[UIStackView alloc] initWithArrangedSubviews:@[self.uiScaleLabel,uiButtons,[self button:@"Reset UI size" tag:702]]];uiControls.axis=UILayoutConstraintAxisVertical;uiControls.spacing=6;
+        UIStackView *uiButtons=[[UIStackView alloc] initWithArrangedSubviews:@[[self button:@"−" tag:700],self.uiScaleLabel,[self button:@"+" tag:701]]];uiButtons.spacing=8;uiButtons.alignment=UIStackViewAlignmentCenter;self.uiScaleLabel.textAlignment=NSTextAlignmentCenter;
+        [uiButtons.arrangedSubviews.firstObject.widthAnchor constraintEqualToConstant:44].active=YES;[uiButtons.arrangedSubviews.lastObject.widthAnchor constraintEqualToConstant:44].active=YES;
+        UIStackView *uiControls=[[UIStackView alloc] initWithArrangedSubviews:@[uiButtons,[self button:@"Reset UI size" tag:702]]];uiControls.axis=UILayoutConstraintAxisVertical;uiControls.spacing=6;
         self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,uiControls,sizeControls,speedControls]];self.optionsPage.spacing=8;
         self.groupControls=groups;
         self.numberGrid=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],[self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]]]];
@@ -426,7 +432,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (void)tabChanged:(UISegmentedControl*)tabs { self.body.contentOffset=CGPointZero;[self refresh]; }
 - (void)joystickChanged:(UISlider*)slider {
     WPOrders::Shared().setJoystickSetting(slider.tag,(int)lroundf(slider.value));
-    [[NSUserDefaults standardUserDefaults] setInteger:WPOrders::Shared().joystickSetting(slider.tag) forKey:slider.tag?@"Wireproof.JoystickSpeed":@"Wireproof.JoystickSize"];
+    [[NSUserDefaults standardUserDefaults] setInteger:WPOrders::Shared().joystickSetting(slider.tag) forKey:[NSString stringWithFormat:@"Wireproof.Joystick.%@.%@",self.zoomProfile.pathExtension?:@"Standard",slider.tag?@"Speed":@"Size"]];
     [self refresh];
 }
 - (void)groupHeld:(UILongPressGestureRecognizer*)gesture {
@@ -451,6 +457,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self saveZoom];
 }
 - (void)pressed:(UIButton*)button {
+    if(button.tag>=800 && button.tag<=805){UISlider *value=self.speedSliders[(button.tag-800)/2];value.value+=(button.tag%2?1:-1);[self speedChanged:value];return;}
     if(button.tag>=700 && button.tag<=702){self.uiScaleSlider.value=button.tag==702?100:WPOrders::Shared().uiScale()+(button.tag==700?-5:5);[self uiScaleChanged:self.uiScaleSlider];return;}
     if(button.tag>=600 && button.tag<=603) {
         UISlider *slider=self.joystickSliders[(button.tag-600)/2];slider.value=WPOrders::Shared().joystickSetting(slider.tag)+(button.tag%2?1:-1);[self joystickChanged:slider];return;
@@ -496,6 +503,14 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             if(self.zoomProfile)[defaults setInteger:WPOrders::Shared().zoomQuarters() forKey:self.zoomProfile];
             NSNumber *saved=[defaults objectForKey:profile]?:[defaults objectForKey:legacy]?:[defaults objectForKey:@"Wireproof.ZoomQuarters"];
             WPOrders::Shared().setZoomQuarters(saved?saved.intValue:6);
+            for(int i=0;i<2;i++) {
+                NSString *component=i?@"Speed":@"Size";
+                if(self.zoomProfile)[defaults setInteger:WPOrders::Shared().joystickSetting(i) forKey:[NSString stringWithFormat:@"Wireproof.Joystick.%@.%@",self.zoomProfile.pathExtension,component]];
+                NSString *key=[NSString stringWithFormat:@"Wireproof.Joystick.%@.%@",profile.pathExtension,component];
+                NSNumber *value=[defaults objectForKey:key]?:[defaults objectForKey:i?@"Wireproof.JoystickSpeed":@"Wireproof.JoystickSize"];
+                WPOrders::Shared().setJoystickSetting(i,value?value.intValue:4);
+                [defaults setInteger:WPOrders::Shared().joystickSetting(i) forKey:key];
+            }
             self.zoomProfile=profile;
         }
     }
@@ -561,8 +576,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             [switchGrid.widthAnchor constraintEqualToAnchor:resources.widthAnchor].active=YES;
             [self.cheatStatus setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
             [self.cheatStack addArrangedSubview:top];
-            NSMutableArray *speeds=[NSMutableArray new];for(int i=0;i<3;i++){UIStackView *v=[[UIStackView alloc] initWithArrangedSubviews:@[self.speedLabels[i],self.speedSliders[i]]];v.axis=UILayoutConstraintAxisVertical;v.spacing=6;[speeds addObject:v];}
-            [self.cheatStack addArrangedSubview:[self gridRow:speeds]];
+            [self.cheatStack addArrangedSubview:[self gridRow:self.speedButtons]];
         } else {
             UIStackView *left=[[UIStackView alloc] initWithArrangedSubviews:[self.groupControls subarrayWithRange:NSMakeRange(0,5)]],*right=[[UIStackView alloc] initWithArrangedSubviews:[self.groupControls subarrayWithRange:NSMakeRange(5,4)]];left.axis=right.axis=UILayoutConstraintAxisVertical;left.spacing=right.spacing=6;
             UIStackView *numbers=(UIStackView*)[self gridRow:@[left,right]];numbers.alignment=UIStackViewAlignmentTop;[self.gamePage addArrangedSubview:numbers];

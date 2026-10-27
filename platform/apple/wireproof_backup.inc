@@ -6,7 +6,7 @@ extern "C" bool TiberianDawn_ValidateSaveGame(const char*,char*,size_t,unsigned*
 static NSURL* BackupDirectory() { return [NSURL fileURLWithPath:@(Paths.User_Path()) isDirectory:YES]; }
 static BOOL BackupKey(NSString *key) {
     if([@[@"WPActiveRules",@"WPRules.Custom 1",@"WPRules.Custom 2",@"WPRules.Custom 3",@"Wireproof.CheatPreferences.v1",@"Wireproof.JoystickSize",@"Wireproof.JoystickSpeed",@"Wireproof.ZoomQuarters",@"TiberianDawn.LanguagePreference",@"TiberianDawnLanguagePreference"] containsObject:key])return YES;
-    for(NSString *prefix in @[@"Wireproof.Zoom.",@"Wireproof.UIScale.",@"Wireproof.JoystickPosition",@"Wireproof.OrdersPosition"])
+    for(NSString *prefix in @[@"Wireproof.Zoom.",@"Wireproof.Joystick.",@"Wireproof.UIScale.",@"Wireproof.JoystickPosition",@"Wireproof.OrdersPosition"])
         if([key hasPrefix:prefix] && key.length<120)return YES;
     return NO;
 }

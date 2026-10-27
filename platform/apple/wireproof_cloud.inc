@@ -164,8 +164,27 @@ static void CloudTick() {
     }
     [d setObject:seen.allObjects forKey:seenKey];
     BOOL pending=[fm fileExistsAtPath:[BackupDirectory() URLByAppendingPathComponent:@".cloud-settings-pending.json"].path];
-    cloudStatus=[NSString stringWithFormat:@"%@ %@%@",failed?@"Some items will retry; local saves are safe.":@"iCloud checked. Uploads may still be propagating.",pending?@"Settings received: restart to apply. ":@"",waiting?@"Downloading saves…":@""];
-    (void)queued;(void)imported;cloudBusy=NO;
+    // A successful local write is not an upload confirmation. Ask iCloud for
+    // each local snapshot's upload state and retain receipt history across ticks.
+    NSUInteger uploaded=0,uploading=0,unknown=0;
+    for(NSURL *url in [fm contentsOfDirectoryAtURL:cloudRoot includingPropertiesForKeys:@[NSURLUbiquitousItemIsUploadedKey,NSURLUbiquitousItemUploadingErrorKey] options:0 error:nil]) {
+        if(![url.pathExtension isEqual:@"tdcloud"])continue;
+        NSNumber *complete=nil;NSError *uploadError=nil;
+        [url getResourceValue:&complete forKey:NSURLUbiquitousItemIsUploadedKey error:nil];
+        [url getResourceValue:&uploadError forKey:NSURLUbiquitousItemUploadingErrorKey error:nil];
+        if(uploadError)failed=YES;
+        if(!complete)unknown++;else if(complete.boolValue)uploaded++;else uploading++;
+    }
+    NSString *receiptKey=[@"Wireproof.Cloud.LastReceipt." stringByAppendingString:cloudAccount];
+    if(imported)[d setObject:[NSString stringWithFormat:@"Received %lu save(s) at %@",(unsigned long)imported,[NSDateFormatter localizedStringFromDate:NSDate.date dateStyle:NSDateFormatterShortStyle timeStyle:NSDateFormatterShortStyle]] forKey:receiptKey];
+    NSString *receipt=[d stringForKey:receiptKey]?:@"No saves received on this device yet.";
+    cloudStatus=[NSString stringWithFormat:@"Checked %@\n%lu snapshots uploaded • %lu waiting to upload • %lu upload states unknown\n%lu downloads pending • %lu local items queued\n%@\n%@%@%@",
+        [NSDateFormatter localizedStringFromDate:NSDate.date dateStyle:NSDateFormatterNoStyle timeStyle:NSDateFormatterMediumStyle],
+        (unsigned long)uploaded,(unsigned long)uploading,(unsigned long)unknown,(unsigned long)waiting,(unsigned long)queued,receipt,
+        pending?@"Settings received: restart to apply.\n":@"",
+        failed?@"Some items will retry; local saves are safe.\n":@"",
+        @"Uploaded means stored in iCloud; delivery to your other device is confirmed there when a save is received."];
+    cloudBusy=NO;
 }
 void WP_CloudStart() {
     @autoreleasepool {
@@ -199,9 +218,12 @@ static void CloudToggle(NSString *key,BOOL enabled) {
 #if TARGET_OS_IPHONE
 @interface WPCloudPicker : UITableViewController
 @property(nonatomic) BOOL finished;
+@property(nonatomic,strong) NSTimer *statusTimer;
 @end
 @implementation WPCloudPicker
 - (void)viewDidLoad {[super viewDidLoad];self.title=@"iCloud Sync";self.navigationItem.rightBarButtonItem=[[UIBarButtonItem alloc] initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(done)];}
+- (void)viewWillAppear:(BOOL)animated {[super viewWillAppear:animated];__weak WPCloudPicker *weakSelf=self;self.statusTimer=[NSTimer scheduledTimerWithTimeInterval:2 repeats:YES block:^(NSTimer *timer){[weakSelf.tableView reloadData];}];}
+- (void)viewWillDisappear:(BOOL)animated {[super viewWillDisappear:animated];[self.statusTimer invalidate];self.statusTimer=nil;}
 - (void)done {self.finished=YES;}
 - (NSInteger)tableView:(UITableView*)t numberOfRowsInSection:(NSInteger)s {return 3;}
 - (NSString*)tableView:(UITableView*)t titleForFooterInSection:(NSInteger)s {return [@"Same Apple Account and iCloud Drive required. Saves stay available offline; different versions are kept in separate slots. Settings and cheats apply after restarting. Zoom, controls, icon and display layout stay on this device. Cloud snapshots are retained; deleting a local save does not delete other devices' copies.\n\n" stringByAppendingString:cloudStatus];}

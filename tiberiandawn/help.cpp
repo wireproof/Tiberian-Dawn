@@ -279,6 +279,9 @@ void HelpClass::Draw_It(bool forced)
 // Draw after all map gadgets, which can otherwise repaint over part of a label.
 void HelpClass::Draw_Help_Overlay(bool forced)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    Video_Set_Help_Overlay(0,0,0,0);
+#endif
     if (Text != TXT_NONE && (forced || !CountDownTimer.Time())) {
 
         if (LogicPage->Lock()) {
@@ -300,6 +303,12 @@ void HelpClass::Draw_Help_Overlay(bool forced)
                     DrawX, DrawY + FontHeight, DrawX + MIN(width + 1, Width) - 1, DrawY + FontHeight, BLACK);
             }
 
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+            // Recompose the palette label after modern sprites and health bars.
+            int overlayWidth=Width;
+            if(Cost){char amount[15];sprintf(amount,"$%d",Cost);overlayWidth=MAX(overlayWidth,(int)String_Pixel_Width(amount));}
+            Video_Set_Help_Overlay(DrawX-1,DrawY-1,overlayWidth+3,FontHeight*(Cost?2:1)+2);
+#endif
             LogicPage->Unlock();
         }
     }

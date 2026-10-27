@@ -882,7 +882,7 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
                          int infantry_count,
                          const IPadSelectionOverlay* selections,
                          int selection_count,
-                         IPadPaletteCursor cursor, float map_zoom, int map_right, int map_top, int view_width, int view_height, int map_bottom)
+                         IPadPaletteCursor cursor, float map_zoom, int map_right, int map_top, int view_width, int view_height, int map_bottom, IPadPaletteRect help_overlay)
 {
     TiberianDawnPaletteRendererState* state = State(renderer);
     if (!state || !sdl_renderer || !indexed_pixels || indexed_pitch < state->Width || !rgb6_palette
@@ -1192,6 +1192,16 @@ bool IPad_Palette_Render(IPadPaletteRenderer renderer,
         }
     }
 
+    // The indexed label was drawn last in the classic framebuffer, but HD
+    // objects are composed later. Restore only its rectangle above those objects.
+    if(help_overlay.width>0 && help_overlay.height>0) {
+        SetViewport(encoder,viewport);SetScissor(encoder,help_overlay,layer);
+        [encoder setRenderPipelineState:state->BasePipeline];
+        [encoder setFragmentTexture:state->IndexTexture atIndex:0];
+        [encoder setFragmentTexture:state->PaletteTexture atIndex:1];
+        [encoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
+        [encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+    }
     if (cursor.visible && cursor.pixels && cursor.width > 0 && cursor.height > 0
         && cursor.destination.width > 0 && cursor.destination.height > 0) {
         if (!state->CursorTexture || state->CursorWidth != cursor.width || state->CursorHeight != cursor.height) {

@@ -21,6 +21,10 @@ int main(){@autoreleasepool {
     assert(!CloudSharedKey(@"Wireproof.Zoom.Standard"));
     assert(!CloudSharedKey(@"Wireproof.UIScale.Cover"));
     assert(!CloudSharedKey(@"Wireproof.JoystickPosition"));
+    assert(BackupKey(@"Wireproof.Joystick.Cover.Size"));
+    assert(BackupKey(@"Wireproof.Joystick.Inner.Speed"));
+    assert(!CloudSharedKey(@"Wireproof.Joystick.Cover.Size"));
+    assert(!CloudSharedKey(@"Wireproof.Joystick.Inner.Speed"));
     assert(CloudSharedKey(@"Wireproof.CheatPreferences.v1"));
     assert(CloudSharedKey(@"WPRules.Custom 1"));
     assert([CloudHash([@"abc" dataUsingEncoding:NSUTF8StringEncoding]) isEqual:@"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"]);

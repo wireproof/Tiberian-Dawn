@@ -116,6 +116,7 @@ bool hd_gdi_infrastructure_renderer_available = false;
 bool hd_nod_infrastructure_renderer_available = false;
 bool hd_gdi_infrastructure_activity_renderer_available = false;
 bool hd_nod_infrastructure_activity_renderer_available = false;
+IPadPaletteRect help_overlay = {0,0,0,0};
 IPadPaletteRect hd_artwork_clip = {0, 0, 0, 0};
 bool hd_world_artwork_visible = true;
 Uint8 previous_palette[256 * 3] = {0};
@@ -1902,6 +1903,20 @@ public:
                 world_clip = {render_dst.x, render_dst.y + (int)std::lround(battlefield_top * sy),
                     (int)std::lround(battlefield_right * sx), render_dst.h - (int)std::lround(battlefield_top * sy)};
             }
+            IPadPaletteRect help_destination={0,0,0,0};
+            if(help_overlay.width>0 && help_overlay.height>0) {
+                SDL_Rect mapping=Battlefield_Destination();
+                const int sidebar=Presentation_Width()-battlefield_right;
+                const bool sidebar_help=battlefield_active && sidebar>0 && help_overlay.x>=surface->w-sidebar;
+                float sx=mapping.w/float(surface->w),sy=mapping.h/float(surface->h);
+                int x=help_overlay.x,y=help_overlay.y;
+                if(sidebar_help){mapping=render_dst;sx=mapping.w/float(Presentation_Width());sy=mapping.h/float(Presentation_Height());x-=surface->w-Presentation_Width();}
+                int left=mapping.x+(int)std::floor(x*sx),top=mapping.y+(int)std::floor(y*sy);
+                int right=mapping.x+(int)std::ceil((x+help_overlay.width)*sx),bottom=mapping.y+(int)std::ceil((y+help_overlay.height)*sy);
+                const IPadPaletteRect clip=sidebar_help?viewport:world_clip;
+                left=std::max(left,clip.x);top=std::max(top,clip.y);right=std::min(right,clip.x+clip.width);bottom=std::min(bottom,clip.y+clip.height);
+                help_destination={left,top,std::max(0,right-left),std::max(0,bottom-top)};
+            }
             metal_rendered = IPad_Palette_Render(paletteRenderer,
                                                 renderer,
                                                 surface->pixels,
@@ -1925,7 +1940,7 @@ public:
                                                 metal_cursor,
                                                 Video_Battlefield_Zoom(),
                                                 battlefield_active ? battlefield_right : 0,
-                                                battlefield_top, Presentation_Width(), Presentation_Height(),battlefield_bottom);
+                                                battlefield_top, Presentation_Width(), Presentation_Height(),battlefield_bottom,help_destination);
         }
 #endif
 
@@ -2301,6 +2316,8 @@ void Video_Remove_Selection_Overlay(const void* object)
     ++selection_generation;
     force_present = true;
 }
+
+void Video_Set_Help_Overlay(int x,int y,int width,int height) { help_overlay={x,y,width,height}; }
 
 void Video_Set_HD_Artwork_Clip(int x, int y, int width, int height)
 {

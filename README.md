@@ -26,11 +26,13 @@ The project has progressed substantially since the early v0.2.7 and v0.5.2 build
 
 ## HD graphics — working in-game 😎
 
-HD graphics are already running in the Apple port, including enhanced terrain, structures, units, and battlefield artwork. The two supplied gameplay captures show a Nod base and a selected-unit battlefield scene with the production sidebar visible.
+HD graphics are already working in-game, with enhanced terrain, buildings, units, and battlefield artwork. These are actual gameplay screenshots, not mockups or concept art.
 
-These are real in-game captures, not concept art. HD graphics support is a working feature; compatibility and performance across every device and gameplay situation are not yet claimed to be fully validated.
+| Nod base and structures | Battlefield and selected units |
+| --- | --- |
+| ![HD graphics: Nod base, structures and production sidebar](docs/showcase/IMG_0468.png) | ![HD graphics: battlefield, selected units and production sidebar](docs/showcase/IMG_0467.png) |
 
-*HD gameplay screenshots will be added to this section once the image files are uploaded to the repository.*
+**Performance note:** HD graphics may run slowly immediately after loading, then become smoother during play. The underlying cause has not yet been confirmed, and further optimization and device testing remain ongoing.
 
 ## Gameplay showcase
 

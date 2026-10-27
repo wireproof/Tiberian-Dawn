@@ -55,6 +55,7 @@ public:
     virtual void Init_Clear(void); // Clears all to known state
 
     virtual void Draw_It(bool complete = false);
+    void Draw_Help_Overlay(bool forced = false);
     virtual void AI(KeyNumType& input, int x, int y);
     virtual bool Scroll_Map(DirType facing, int& distance, bool really);
     virtual void Set_Tactical_Position(COORDINATE coord);

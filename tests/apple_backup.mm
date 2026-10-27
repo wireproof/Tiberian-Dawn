@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cassert>
 #include "platform/apple/wireproof_backup.inc"
+#include "platform/apple/wireproof_cloud.inc"
 PathsClass Paths;
 static std::string TestDirectory;
 const char* PathsClass::User_Path(){return TestDirectory.c_str();}
@@ -17,6 +18,19 @@ int main(){@autoreleasepool {
     NSData *valid=[@"SAVE" dataUsingEncoding:NSUTF8StringEncoding];
     NSURL *original=[dir URLByAppendingPathComponent:@"SAVEGAME.000"];
     assert([valid writeToURL:original atomically:YES]);
+    assert(!CloudSharedKey(@"Wireproof.Zoom.Standard"));
+    assert(!CloudSharedKey(@"Wireproof.UIScale.Cover"));
+    assert(!CloudSharedKey(@"Wireproof.JoystickPosition"));
+    assert(CloudSharedKey(@"Wireproof.CheatPreferences.v1"));
+    assert(CloudSharedKey(@"WPRules.Custom 1"));
+    assert([CloudHash([@"abc" dataUsingEncoding:NSUTF8StringEncoding]) isEqual:@"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"]);
+    NSUserDefaults *defaults=NSUserDefaults.standardUserDefaults;
+    [defaults setBool:NO forKey:CloudSaveKey];WP_CloudSaveCompleted("SAVEGAME.000");
+    assert([fm contentsOfDirectoryAtPath:CloudOutbox().path error:nil].count==0);
+    [defaults setBool:YES forKey:CloudSaveKey];WP_CloudSaveCompleted("SAVEGAME.000");WP_CloudSaveCompleted("SAVEGAME.000");
+    assert([fm contentsOfDirectoryAtPath:CloudOutbox().path error:nil].count==1);
+    WP_CloudSaveCompleted("AUTOSAVE.SAV");assert([fm contentsOfDirectoryAtPath:CloudOutbox().path error:nil].count==1);
+    [defaults removeObjectForKey:CloudSaveKey];
     NSString *error=nil;NSURL *backup=CreateBackup(0,&error);assert(backup);
     NSString *result=RestoreBackup(backup);assert([result containsString:@"Imported 1 saves"]);
     assert([[NSData dataWithContentsOfURL:original] isEqual:valid]);

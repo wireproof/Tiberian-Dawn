@@ -6,20 +6,18 @@ Classic Command & Conquer, adapted for touch on iPhone and iPad and native play 
 
 An unofficial, free, non-commercial community project. **EA has not endorsed and does not support this product.**
 
-## Current release — v0.5.6
+## Current release — v0.6.1
 
-**UI Size & Saved Preferences** · [Release notes and IPA](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.5.6)
+**Cloud sync, portable backups and touch refinements** · [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.6.1)
 
-- **UI size:** 75–150% in Options, with a slider, 5% − / + steps, and Reset. Scales the top bar, production sidebar, and floating menu while keeping battlefield zoom and joystick size separate. Larger UI can show fewer production slots; scrolling remains available.
-- **Saved size profiles:** portrait and landscape settings, plus separate cover/inner profiles when UIKit reports a Duo hinge.
-- **Device-aware zoom:** ordinary iPhones and iPads show “Zoom.” Duo hinge detection enables “Cover zoom” and “Inner zoom,” preserving their existing saved values. Requires hinge reporting on iOS 27.1 or later; otherwise the standard profile is used.
-- **Persistent cheats:** toggles and unit-speed multipliers survive mission changes and app relaunches on iOS and macOS. Money/power buttons remain one-time actions.
+- Optional, separate iCloud save and settings/cheat sync switches. Local saves stay available offline, and incoming save versions use free slots. Automatic sync requires an iCloud-provisioned signed build and the same Apple Account; public unsigned/ad-hoc builds retain manual Files import/export.
+- Export/import saves only, settings/cheats/Workshop configuration, or both. Existing saves are preserved; imported settings apply after restarting.
+- Slower pinch zoom, independent floating UI scale, separate display/orientation profiles, and a full-height production sidebar. Pinch zoom and icon changes were reported working in device testing of 0.6.0.
+- GDI and Nod mission selection, military build unlock, persistent damaged-building health bars, and interruption/input recovery improvements.
+- Choose Command & Conquer, GDI or Nod app icons. Workshop starts on Custom 1 when no preset choice is saved; Stock remains available.
+- White unselected menu tabs and a revised final drawing pass for unit labels. The label fix and cross-device cloud delivery still need physical confirmation for 0.6.1.
 
-All 26 host tests, Apple parity checks, iOS Release compilation, and Universal 2 macOS packaging passed. Physical testing of UI-size extremes, LiveContainer hinge detection, and preference restoration remains pending. Update within the existing LiveContainer data container to preserve saves.
-
-**LiveContainer / Duo compatibility:** the app is built with the iOS 27.1 SDK and hinge detection requires iOS 27.1 or later. LiveContainer must expose UIKit hinge updates to the hosted app; this still needs device verification. If no hinge is reported, the standard Zoom profile is used. A requirement to rebuild LiveContainer itself with SDK 27.1 has not been established.
-
-For the Duo host, use [Wireproof LiveContainer 3.8.11 + SideStore — Duo SDK 27.1](https://github.com/wireproof/LiveContainer/releases/tag/v3.8.11-duo-sdk27.1). This custom LiveContainer host was rebuilt with SDK 27.1 and was reported to fix the Duo compatibility layout; the bundled SideStore was not rebuilt. Hinge forwarding to this game remains unverified. Update with the same signing account and app identity, preserving existing app data—do not uninstall first.
+See [0.6.1 validation and device checks](docs/TESTING-0.6.1.md). Update the existing native app or existing LiveContainer data container; do not uninstall to update. Native and LiveContainer installations have separate data containers. Public source and unsigned packages exclude original game archives and personal signing profiles; supply compatible game data separately.
 
 ## Gameplay showcase
 

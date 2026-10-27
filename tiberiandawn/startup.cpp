@@ -235,6 +235,8 @@ int main(int argc, char** argv)
     Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", args.ArgV[0]);
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
     extern void WP_ApplyPendingBackupSettings(void);
+    extern void WP_CloudStart(void);
+    WP_CloudStart();
     WP_ApplyPendingBackupSettings();
 #endif
     CDFileClass::Refresh_Search_Drives();

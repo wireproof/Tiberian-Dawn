@@ -271,7 +271,14 @@ void HelpClass::Help_Text(int text, int x, int y, int color, bool quick, int cos
 void HelpClass::Draw_It(bool forced)
 {
     TabClass::Draw_It(forced);
+#if !defined(IPADOS_PORT) && !defined(MACOS_PORT) && !defined(VISIONOS_PORT)
+    Draw_Help_Overlay(forced);
+#endif
+}
 
+// Draw after all map gadgets, which can otherwise repaint over part of a label.
+void HelpClass::Draw_Help_Overlay(bool forced)
+{
     if (Text != TXT_NONE && (forced || !CountDownTimer.Time())) {
 
         if (LogicPage->Lock()) {

@@ -261,6 +261,12 @@ if(BUILD_VANILLATD)
     # A target must include the icon for the custom command to run.
     add_executable(TiberianDawn ${TIBDAWN_SRC} ${TIBDAWN_NET_SRC} ${TIBDAWN_HEADERS} ${VANILLATD_RC} ${VANILLATD_ICON})
 
+    # Optional: source/ad-hoc builds remain usable without an Apple cloud profile.
+    set(WIREPROOF_ICLOUD_ENTITLEMENTS "" CACHE FILEPATH "Entitlements for an iCloud-provisioned Apple build")
+    if(APPLE_NATIVE_PORT AND WIREPROOF_ICLOUD_ENTITLEMENTS)
+        set_target_properties(TiberianDawn PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${WIREPROOF_ICLOUD_ENTITLEMENTS}")
+    endif()
+
     if(MAKE_BUNDLE)
         set_source_files_properties(${VANILLATD_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
         set_target_properties(TiberianDawn PROPERTIES

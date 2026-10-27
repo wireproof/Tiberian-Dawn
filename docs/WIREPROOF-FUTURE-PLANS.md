@@ -16,16 +16,13 @@ These are planned features, not functionality shipped in the current app.
    Remastered source changes individually. Windows mod DLLs are not directly
    compatible with this native app.
 
-5. Optional iCloud sync for standalone apps: separate save and settings/cheat
-   switches; shared Apple-account storage, offline local copies, and preservation
-   of conflicting saves. Keep device-specific control positions and display zoom
-   local by default. Enable iCloud capabilities/provisioning first; validate
-   signed iPad, Duo and Mac builds with two-device, offline, account-change and
-   conflict tests. Automatic sync is not included in 0.6.0; .tdbackup files can
-   be exported to and imported from iCloud Drive manually.
+5. Optional iCloud sync is implemented for 0.6.1 with separate save/settings
+   switches and provisioned native-device signing. Cross-device delivery,
+   offline conflicts and account-switch behavior still need physical testing.
+   See TESTING-0.6.1.md. Public ad-hoc builds retain manual Files import/export.
 
-Current priority: validate 0.6.0 backup restoration and slower pinch zoom on
-physical devices, then implement and verify optional iCloud sync.
+Current priority: verify 0.6.1 cloud delivery and unit-label rendering on both
+physical devices. The user reported 0.6.0 slower pinch zoom working well.
 
 Reference donor: [Jamesadsy/Vanilla-Conquer](https://github.com/Jamesadsy/Vanilla-Conquer),
 reviewed at a006664. Candidate areas: iOS Red Alert build work, controller

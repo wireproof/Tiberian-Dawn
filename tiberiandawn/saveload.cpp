@@ -271,6 +271,10 @@ bool Save_Game(const char* file_name, const char* descr)
     */
     file.Close();
     Decode_All_Pointers();
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    extern void WP_CloudSaveCompleted(const char*);
+    WP_CloudSaveCompleted(file_name);
+#endif
 
     return (true);
 }

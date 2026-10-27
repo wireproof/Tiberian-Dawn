@@ -351,6 +351,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         orderColumn.axis=UILayoutConstraintAxisVertical;orderColumn.spacing=6;
         self.gamePage=[[UIStackView alloc] initWithArrangedSubviews:@[groupColumn,orderColumn]];self.gamePage.spacing=8;
         self.tabs=[[UISegmentedControl alloc] initWithItems:@[@"Game",@"Cheats",@"Options"]];self.tabs.selectedSegmentIndex=0;
+        // Explicit contrast on the dark floating panel, independent of system appearance.
+        for (UISegmentedControl *control in @[self.page,self.tabs]) {
+            control.selectedSegmentTintColor=UIColor.whiteColor;
+            [control setTitleTextAttributes:@{NSForegroundColorAttributeName:UIColor.whiteColor} forState:UIControlStateNormal];
+            [control setTitleTextAttributes:@{NSForegroundColorAttributeName:UIColor.blackColor} forState:UIControlStateSelected];
+        }
         [self.tabs.heightAnchor constraintEqualToConstant:36].active=YES;
         [self.tabs addTarget:self action:@selector(tabChanged:) forControlEvents:UIControlEventValueChanged];
         self.panelHeader=[[UIStackView alloc] initWithArrangedSubviews:@[self.toggle,self.tabs]];self.panelHeader.spacing=6;self.panelHeader.alignment=UIStackViewAlignmentFill;

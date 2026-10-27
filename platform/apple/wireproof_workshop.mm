@@ -12,6 +12,7 @@
 #include "macos_platform.h"
 #endif
 #include "wireproof_backup.inc"
+#include "wireproof_cloud.inc"
 // Store only reusable choices, never mission balances or queued actions.
 namespace WPCheats {
 Snapshot LoadPreferences() {
@@ -29,7 +30,7 @@ void SavePreferences(const Snapshot& s) {
 #if !TARGET_OS_IPHONE
 namespace WPOrders { int LoadUIScale() { NSNumber *v=[NSUserDefaults.standardUserDefaults objectForKey:@"Wireproof.UIScale.Mac"];return v?v.intValue:100; } }
 #endif
-static NSString* Profile(void) { return [[NSUserDefaults standardUserDefaults] stringForKey:@"WPActiveRules"] ?: @"Stock"; }
+static NSString* Profile(void) { return [[NSUserDefaults standardUserDefaults] stringForKey:@"WPActiveRules"] ?: @"Custom 1"; }
 static NSString* StoreKey(void) { return [@"WPRules." stringByAppendingString:Profile()]; }
 static NSDictionary* Values(void) { return [[NSUserDefaults standardUserDefaults] dictionaryForKey:StoreKey()] ?: @{}; }
 int WP_LoadRule(const char* key,int fallback,int low,int high) {
@@ -227,6 +228,7 @@ void WP_ShowWorkshop(void) {
             [menu addAction:[UIAlertAction actionWithTitle:@"Manage saves" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=0;}]];
             [menu addAction:[UIAlertAction actionWithTitle:@"Mod Workshop" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=1;}]];
             [menu addAction:[UIAlertAction actionWithTitle:@"Import / Export" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=4;}]];
+            [menu addAction:[UIAlertAction actionWithTitle:@"iCloud Sync" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=5;}]];
             [menu addAction:[UIAlertAction actionWithTitle:@"App Icon" style:UIAlertActionStyleDefault handler:^(UIAlertAction* a){choice=3;}]];
             [menu addAction:[UIAlertAction actionWithTitle:@"Back" style:UIAlertActionStyleCancel handler:^(UIAlertAction* a){choice=2;}]];
             [root presentViewController:menu animated:NO completion:nil];
@@ -238,6 +240,11 @@ void WP_ShowWorkshop(void) {
             }
             if(choice==3) {
                 WPIconPicker *picker=[[WPIconPicker alloc] initWithStyle:UITableViewStyleInsetGrouped];
+                host.rootViewController=[[UINavigationController alloc] initWithRootViewController:picker];
+                while(!picker.finished) [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.02]];
+            }
+            if(choice==5) {
+                WPCloudPicker *picker=[[WPCloudPicker alloc] initWithStyle:UITableViewStyleInsetGrouped];
                 host.rootViewController=[[UINavigationController alloc] initWithRootViewController:picker];
                 while(!picker.finished) [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.02]];
             }
@@ -297,8 +304,8 @@ void WP_ShowWorkshop(void) {
     @autoreleasepool {
         WPGameWindowRestore restore{NSApp.keyWindow};
         NSAlert* menu=[NSAlert new];menu.messageText=@"Saves / Mod Workshop";
-        [menu addButtonWithTitle:@"Mod Workshop"];[menu addButtonWithTitle:@"Manage saves"];[menu addButtonWithTitle:@"Back"];[menu addButtonWithTitle:@"App Icon"];[menu addButtonWithTitle:@"Import / Export"];
-        NSInteger choice=[menu runModal];if(choice==NSAlertFirstButtonReturn+4){ShowBackupPicker();return;}if(choice==NSAlertFirstButtonReturn+3){PickAppIcon();return;}if(choice==NSAlertSecondButtonReturn){TiberianDawn_ManageSaveGames();return;}if(choice!=NSAlertFirstButtonReturn)return;
+        [menu addButtonWithTitle:@"Mod Workshop"];[menu addButtonWithTitle:@"Manage saves"];[menu addButtonWithTitle:@"Back"];[menu addButtonWithTitle:@"App Icon"];[menu addButtonWithTitle:@"Import / Export"];[menu addButtonWithTitle:@"iCloud Sync"];
+        NSInteger choice=[menu runModal];if(choice==NSAlertFirstButtonReturn+5){ShowCloudPicker();return;}if(choice==NSAlertFirstButtonReturn+4){ShowBackupPicker();return;}if(choice==NSAlertFirstButtonReturn+3){PickAppIcon();return;}if(choice==NSAlertSecondButtonReturn){TiberianDawn_ManageSaveGames();return;}if(choice!=NSAlertFirstButtonReturn)return;
         BOOL finished=NO;
         while(!finished) {
             NSAlert* a=[NSAlert new];a.messageText=@"Mod Workshop";a.informativeText=@"Choose a preset and rule. Edits apply after restarting; use new single-player missions. Stock is read-only. Modified rules disable multiplayer.";

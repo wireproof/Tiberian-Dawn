@@ -390,6 +390,9 @@ void GScreenClass::Render(void)
             Messages.Set_Width(Lepton_To_Cell(Map.TacLeptonWidth) * ICON_PIXEL_W);
         }
         Messages.Draw();
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        Map.Draw_Help_Overlay(IsToRedraw);
+#endif
 
 #ifndef REMASTER_BUILD
         Blit_Display();

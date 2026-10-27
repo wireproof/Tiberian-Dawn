@@ -6,9 +6,9 @@ Classic Command & Conquer, adapted for touch on iPhone and iPad and native play 
 
 An unofficial, free, non-commercial community project. **EA has not endorsed and does not support this product.**
 
-## Current release — v0.7.1
+## Current release — v0.7.2
 
-**Current public build: v0.7.1** · [Releases and downloads](https://github.com/wireproof/Tiberian-Dawn/releases) · [Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest)
+**Current public build: v0.7.2** · [Releases and downloads](https://github.com/wireproof/Tiberian-Dawn/releases) · [Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest)
 
 The project has progressed substantially since the early v0.2.7 and v0.5.2 builds. The current feature set includes:
 

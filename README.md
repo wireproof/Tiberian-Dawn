@@ -24,6 +24,14 @@ The project has progressed substantially since the early v0.2.7 and v0.5.2 build
 
 **Updating:** Update the existing native app or existing LiveContainer data container; do not uninstall to update. Native and LiveContainer installations have separate data containers. Public source and unsigned packages exclude original game archives and personal signing profiles; supply compatible game data separately.
 
+## HD graphics — working in-game 😎
+
+HD graphics are already running in the Apple port, including enhanced terrain, structures, units, and battlefield artwork. The two supplied gameplay captures show a Nod base and a selected-unit battlefield scene with the production sidebar visible.
+
+These are real in-game captures, not concept art. HD graphics support is a working feature; compatibility and performance across every device and gameplay situation are not yet claimed to be fully validated.
+
+*HD gameplay screenshots will be added to this section once the image files are uploaded to the repository.*
+
 ## Gameplay showcase
 
 Watch in your browser with sound, seeking, and fullscreen controls—no MOV download required.

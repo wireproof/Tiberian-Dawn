@@ -79,6 +79,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_production.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #include "wireproof_rules.h"
 #define WP_PLAYER_SPEED(value) WP_ScalePlayerSpeed(House,(value),0)
@@ -299,6 +300,7 @@ InfantryClass::InfantryClass(InfantryType classid, HousesType house)
  *=============================================================================================*/
 InfantryClass::~InfantryClass(void)
 {
+    WP_Rally_Forget(this);
     if (GameActive && Class) {
 #ifdef USE_RA_AI
         //

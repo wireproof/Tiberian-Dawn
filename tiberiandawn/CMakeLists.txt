@@ -161,7 +161,7 @@ elseif(MACOS_PORT)
 endif()
 
 if(APPLE_NATIVE_PORT)
-    list(APPEND TIBDAWN_SRC ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp wireproof_rules.cpp wireproof_viewport.cpp ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_workshop.mm)
+    list(APPEND TIBDAWN_SRC ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp wireproof_rules.cpp wireproof_viewport.cpp wireproof_production.cpp ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_workshop.mm)
     set_source_files_properties(${CMAKE_SOURCE_DIR}/platform/apple/wireproof_workshop.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
     set_source_files_properties(
         ${CMAKE_SOURCE_DIR}/platform/apple/apple_relay_transport.mm

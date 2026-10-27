@@ -1,3 +1,4 @@
+#include "wireproof_production.h"
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -150,6 +151,7 @@ bool Do_Reinforcements(TeamTypeClass* teamtype)
         for (int sub = 0; sub < teamtype->DesiredNum[index]; sub++) {
             ScenarioInit++;
             FootClass* temp = (FootClass*)tclass->Create_One_Of(HouseClass::As_Pointer(teamtype->House));
+            if(temp && teamtype->ClassCount==2 && teamtype->Class[0]==&AircraftTypeClass::As_Reference(AIRCRAFT_CARGO) && teamtype->MissionList[0].Mission==TMISSION_UNLOAD && As_Building(teamtype->MissionList[0].Argument)) WP_Rally_New(temp);
             ScenarioInit--;
 
             if (temp) {

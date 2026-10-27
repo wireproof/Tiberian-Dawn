@@ -94,6 +94,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_production.h"
 #include "ccini.h"
 
 /***********************************************************************************************
@@ -1115,6 +1116,7 @@ void UnitClass::operator delete(void* ptr)
  *=============================================================================================*/
 UnitClass::~UnitClass(void)
 {
+    WP_Rally_Forget(this);
     if (GameActive && Class) {
 
 #ifdef USE_RA_AI

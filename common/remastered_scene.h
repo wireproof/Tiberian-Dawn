@@ -20,12 +20,18 @@ struct Command {
     std::vector<uint8_t> pixels, alpha, ghost;
 };
 struct SidebarIcon {
+    int progress=-1, queued=0, status=0; bool darken=false;
     std::string asset;
     int x = 0, y = 0, width = 0, height = 0;
     int clip_x = 0, clip_y = 0, clip_w = 0, clip_h = 0;
     // Difference between these snapshots retains classic clock and READY/HOLD overlays.
     std::vector<uint8_t> base, final;
 };
+struct Chrome {
+    std::string asset; int x=0,y=0,width=0,height=0; bool right=false;
+    std::vector<uint8_t> text;
+};
+struct Placement {int x=0,y=0;bool valid=false;};
 struct Health {
     int x = 0, y = 0, width = 0, fill = 0;
     uint8_t color = 0;
@@ -36,17 +42,20 @@ struct Scene {
     int owner = -1;
     std::vector<Command> commands;
     std::vector<SidebarIcon> sidebar;
+    std::vector<Chrome> chrome;
     std::vector<Health> health;
+    std::vector<Placement> placement;
 };
 Scene& Shared();
 void Begin(int theater, int x, int y, int width, int height);
 void End();
 void Clear();
 void ClearSidebar();
+void RecordPlacement(int x,int y,bool valid);
 void RecordHealth(int x, int y, int width, int fill, uint8_t color);
 void RecordSidebarIcon(const char* asset, int x, int y, int width, int height,
                        int clip_x, int clip_y, int clip_w, int clip_h,
-                       const uint8_t* base, const uint8_t* final);
+                       const uint8_t* base, const uint8_t* final, int progress=-1, bool darken=false, int queued=0, int status=0);
 void RegisterAsset(const void* pointer, const char* filename);
 std::string AssetName(const void* pointer);
 void RecordTile(const char* name, int frame, int x, int y, int width, int height, const uint8_t* pixels = nullptr);

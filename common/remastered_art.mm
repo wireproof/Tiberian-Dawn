@@ -9,6 +9,7 @@
 #include <array>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <chrono>
 
 namespace {
@@ -23,7 +24,7 @@ bool safe(const std::string&s){return !s.empty()&&s[0]!='/'&&s.find("..") == std
 const Frame* lookup(const WPRemastered::Command& c){
  std::string asset=c.asset;for(char&x:asset)x=std::toupper((unsigned char)x);
  if(asset=="SHADOW") { char n[32];std::snprintf(n,sizeof(n),"SHADOW-%02d",c.frame);auto it=frames.find(key("TD_Terrain_Shroud",n,0));if(it!=frames.end())return &it->second[0];}
- auto dot=asset.find_last_of('.');if(dot!=std::string::npos&&asset.substr(0,5)!="ICON.")asset.resize(dot);
+ auto dot=asset.find_last_of('.');if(dot!=std::string::npos&&asset.substr(0,5)!="ICON."&&asset.substr(0,3)!="UI.")asset.resize(dot);
  const char* terrain=c.theater==0?"TD_Terrain_Desert":c.theater==3?"TD_Terrain_Winter":"TD_Terrain_Temperate";
  const char* sets[]={terrain,"TD_Units","TD_Structures","TD_VFX","TD_UI","TD_Terrain_Shroud"};
  for(auto t:sets){auto it=frames.find(key(t,asset,c.frame));if(it==frames.end())continue;auto&v=it->second;
@@ -51,6 +52,12 @@ id<MTLRenderPipelineState> pipeline=nil;
 NSMutableDictionary<NSString*,id<MTLTexture>>*textures=nil;
 NSMutableDictionary<NSString*,id>*images=nil;
 size_t textureBytes=0;
+id<MTLTexture> overlayTexture(id<MTLDevice>device,int w,int h,const std::vector<uint8_t>&rgba){
+ uint64_t hash=1469598103934665603ull;for(uint8_t b:rgba){hash^=b;hash*=1099511628211ull;}
+ NSString*k=[NSString stringWithFormat:@"overlay:%d:%d:%llu",w,h,(unsigned long long)hash];id<MTLTexture>t=textures[k];if(t)return t;
+ auto*d=[MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm width:w height:h mipmapped:NO];t=[device newTextureWithDescriptor:d];
+ if(t){[t replaceRegion:MTLRegionMake2D(0,0,w,h) mipmapLevel:0 withBytes:rgba.data() bytesPerRow:w*4];textures[k]=t;textureBytes+=rgba.size();}return t;
+}
 id<MTLTexture> texture(id<MTLDevice> device,const Frame&f){
  std::string k=f.page+":"+std::to_string(f.x)+":"+std::to_string(f.y)+":"+std::to_string(f.w)+":"+std::to_string(f.h);NSString*nk=[NSString stringWithUTF8String:k.c_str()];id<MTLTexture>result=textures[nk];if(result)return result;
  NSString*page=[NSString stringWithUTF8String:f.page.c_str()];CGImageRef full=(__bridge CGImageRef)images[page];
@@ -110,14 +117,27 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
   [encoder setFragmentTexture:tex atIndex:0];[encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
 
  }
+ // Remastered chrome is independent of battlefield zoom. Hitboxes remain native.
+ for(const auto&c:scene.chrome){
+  WPRemastered::Command q;q.asset=c.asset;const Frame*f=lookup(q);if(!f||c.width<=0||c.height<=0)continue;
+  id<MTLTexture>tex=texture(device,*f);if(!tex)continue;
+  float x=c.x-(c.right&&sourceWidth>0?sourceWidth-screenWidth:0),y=c.y;
+  int l=std::max(0,int(ox+x*sx)),t=std::max(0,int(oy+y*sy)),r=std::min(dw,int(ox+(x+c.width)*sx)),b=std::min(dh,int(oy+(y+c.height)*sy));if(r<=l||b<=t)continue;
+  struct Params{float a[20]={};uint32_t recolor=0;}p;
+  [encoder setViewport:MTLViewport{ox+x*sx,oy+y*sy,c.width*sx,c.height*sy,0,1}];[encoder setScissorRect:MTLScissorRect{NSUInteger(l),NSUInteger(t),NSUInteger(r-l),NSUInteger(b-t)}];[encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+  if(c.text.size()==size_t(c.width*c.height)){
+   std::vector<uint8_t>rgba(c.text.size()*4,0);for(size_t i=0;i<c.text.size();++i){int v=c.text[i];int red=palette[v*3],green=palette[v*3+1],blue=palette[v*3+2];if(green>red*1.3&&green>blue*1.3&&green>12){rgba[i*4]=red<<2;rgba[i*4+1]=green<<2;rgba[i*4+2]=blue<<2;rgba[i*4+3]=255;}}
+   tex=overlayTexture(device,c.width,c.height,rgba);[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+  }
+ }
  // Cameos remain in the established sidebar layout. Preserve original names
  // and pixel-exact production labels; dark clock masks shade the new artwork.
  for(const auto&icon:scene.sidebar){
   WPRemastered::Command c;c.asset=icon.asset;c.frame=0;c.theater=scene.theater;const Frame*f=lookup(c);if(!f||f->page=="-")continue;
   id<MTLTexture>tex=texture(device,*f);if(!tex)continue;
   float x=icon.x-(sourceWidth>0?sourceWidth-screenWidth:0);float y=icon.y;
-  int left=std::max(0,int(ox+std::max(float(mapRight),x)*sx)),top=std::max(0,int(oy+std::max(float(mapTop),y)*sy));
-  int right=std::min(dw,int(ox+(x+icon.width)*sx)),bottom=std::min(dh,int(oy+std::min(float(mapBottom),y+icon.height)*sy));
+  int left=std::max(0,int(ox+std::max(float(mapRight),x)*sx)),top=std::max(0,int(oy+std::max(float(std::max(mapTop,icon.clip_y)),y)*sy));
+  int right=std::min(dw,int(ox+(x+icon.width)*sx)),bottom=std::min(dh,int(oy+std::min(float(std::min(mapBottom,icon.clip_y+icon.clip_h)),y+icon.height)*sy));
   if(right<=left||bottom<=top)continue;
   struct Params{float a[20]={};uint32_t recolor=0;}p;
   [encoder setViewport:MTLViewport{ox+x*sx,oy+y*sy,icon.width*sx,icon.height*sy,0,1}];
@@ -125,22 +145,48 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
   [encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
   if(icon.base.size()!=size_t(icon.width*icon.height)||icon.final.size()!=icon.base.size())continue;
   std::vector<uint8_t>rgba(icon.base.size()*4,0);
-  for(size_t i=0;i<icon.base.size();++i){unsigned b=icon.base[i],v=icon.final[i];bool label=int(i/icon.width)>=icon.height-8;
-   if(v==b&&!label)continue;float before=palette[b*3]+palette[b*3+1]+palette[b*3+2],after=palette[v*3]+palette[v*3+1]+palette[v*3+2];
-   if(!label&&before>0&&after<before*.8f){rgba[i*4+3]=uint8_t(255*(1-after/before));}
-   else{rgba[i*4]=palette[v*3]<<2;rgba[i*4+1]=palette[v*3+1]<<2;rgba[i*4+2]=palette[v*3+2]<<2;rgba[i*4+3]=255;}
+  for(size_t i=0;i<icon.base.size();++i){
+   const int x=int(i%icon.width),y=int(i/icon.width);unsigned b=icon.base[i],v=icon.final[i];
+   bool label=y>=icon.height-8;
+   // Reconstruct the clock geometrically. Palette ghost tables are not RGB
+   // opacity masks and their differences can overwrite whole cameo rows.
+   double angle=std::atan2(double(x-icon.width/2),double(icon.height/2-y));if(angle<0)angle+=6.283185307;
+   bool clock=icon.progress>=0 && angle>6.283185307*std::min(108,icon.progress)/108.0;
+   if(icon.darken||clock)rgba[i*4+3]=150;
+   // Preserve only actual label/status/queue text areas from the engine.
+   if(label){rgba[i*4]=palette[b*3]<<2;rgba[i*4+1]=palette[b*3+1]<<2;rgba[i*4+2]=palette[b*3+2]<<2;rgba[i*4+3]=255;}
   }
-  MTLTextureDescriptor*d=[MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm width:icon.width height:icon.height mipmapped:NO];tex=[device newTextureWithDescriptor:d];[tex replaceRegion:MTLRegionMake2D(0,0,icon.width,icon.height) mipmapLevel:0 withBytes:rgba.data() bytesPerRow:icon.width*4];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+  // Explicit text avoids treating palette ghosting as status glyphs.
+  auto badge=[&](const std::string&text,int x,int y){
+   const char*alphabet="0123456789+READYHOL";
+   const uint8_t glyphs[][7]={{14,17,19,21,25,17,14},{4,12,4,4,4,4,14},{14,17,1,2,4,8,31},{30,1,1,14,1,1,30},{2,6,10,18,31,2,2},{31,16,16,30,1,1,30},{14,16,16,30,17,17,14},{31,1,2,4,8,8,8},{14,17,17,14,17,17,14},{14,17,17,15,1,1,14},{0,4,4,31,4,4,0},{30,17,17,30,20,18,17},{31,16,16,30,16,16,31},{14,17,17,31,17,17,17},{30,17,17,17,17,17,30},{17,17,10,4,4,4,4},{17,17,17,31,17,17,17},{14,17,17,17,17,17,14},{16,16,16,16,16,16,31}};
+   for(size_t n=0;n<text.size();++n){const char*g=strchr(alphabet,text[n]);if(!g)continue;for(int yy=-1;yy<8;++yy)for(int xx=-1;xx<6;++xx){int px=x+int(n)*6+xx,py=y+yy;if(px<0||py<0||px>=icon.width||py>=icon.height)continue;size_t i=(py*icon.width+px)*4;bool on=yy>=0&&yy<7&&xx>=0&&xx<5&&(glyphs[g-alphabet][yy]&(16>>xx));rgba[i]=rgba[i+1]=rgba[i+2]=on?255:0;rgba[i+3]=255;}}
+  };
+  if(icon.queued>0)badge("+"+std::to_string(icon.queued),2,2);
+  if(icon.status){std::string text=icon.status==1?"READY":"HOLD";badge(text,(icon.width-int(text.size())*6)/2,icon.height-18);}
+
+  tex=overlayTexture(device,icon.width,icon.height,rgba);[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
  }
  }
  if(!healthOnly)return;
  for(const auto&bar:scene.health){
   if(bar.width<=0)continue;std::vector<uint8_t>rgba(bar.width*4*4,0);
   for(int y=0;y<4;++y)for(int x=0;x<bar.width;++x){size_t i=(y*bar.width+x)*4;rgba[i+3]=255;if(y>0&&y<3&&x>0&&x<=bar.fill){rgba[i]=palette[bar.color*3]<<2;rgba[i+1]=palette[bar.color*3+1]<<2;rgba[i+2]=palette[bar.color*3+2]<<2;}}
-  MTLTextureDescriptor*d=[MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm width:bar.width height:4 mipmapped:NO];id<MTLTexture>tex=[device newTextureWithDescriptor:d];[tex replaceRegion:MTLRegionMake2D(0,0,bar.width,4) mipmapLevel:0 withBytes:rgba.data() bytesPerRow:bar.width*4];
+  id<MTLTexture>tex=overlayTexture(device,bar.width,4,rgba);
   struct Params{float a[20]={};uint32_t recolor=0;}p;
   int left=std::max(0,ox),top=std::max(0,int(oy+mapTop*sy)),right=std::min(dw,int(ox+mapRight*sx)),bottom=std::min(dh,int(oy+mapBottom*sy));if(right<=left||bottom<=top)continue;
   [encoder setViewport:MTLViewport{ox+bar.x*zoom*sx,oy+(mapTop+(bar.y-mapTop)*zoom)*sy,bar.width*zoom*sx,4*zoom*sy,0,1}];[encoder setScissorRect:MTLScissorRect{NSUInteger(left),NSUInteger(top),NSUInteger(right-left),NSUInteger(bottom-top)}];[encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+ }
+
+ for(const auto&cell:scene.placement){
+  unsigned char rgba[24*24*4]={};
+  for(int y=0;y<24;++y)for(int x=0;x<24;++x){int i=(y*24+x)*4;rgba[i]=cell.valid?32:255;rgba[i+1]=cell.valid?255:32;rgba[i+2]=32;rgba[i+3]=(x<2||y<2||x>=22||y>=22)?220:65;}
+  NSString*key=cell.valid?@"placement:valid":@"placement:invalid";id<MTLTexture>tex=textures[key];
+  if(!tex){auto*d=[MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm width:24 height:24 mipmapped:NO];tex=[device newTextureWithDescriptor:d];[tex replaceRegion:MTLRegionMake2D(0,0,24,24) mipmapLevel:0 withBytes:rgba bytesPerRow:96];textures[key]=tex;}
+  int left=std::max(0,ox),top=std::max(0,int(oy+mapTop*sy)),right=std::min(dw,int(ox+mapRight*sx)),bottom=std::min(dh,int(oy+mapBottom*sy));if(right<=left||bottom<=top)continue;
+  struct Params{float a[20]={};uint32_t recolor=0;}p;
+  [encoder setViewport:MTLViewport{ox+cell.x*zoom*sx,oy+(mapTop+(cell.y-mapTop)*zoom)*sy,24*zoom*sx,24*zoom*sy,0,1}];
+  [encoder setScissorRect:MTLScissorRect{NSUInteger(left),NSUInteger(top),NSUInteger(right-left),NSUInteger(bottom-top)}];[encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
  }
 
 }

@@ -1,3 +1,4 @@
+#include "wireproof_production.h"
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -352,6 +353,7 @@ void Fill_In_Data(void)
  *=============================================================================================*/
 void Clear_Scenario(void)
 {
+    WP_Production_Reset();
     EndCountDown = TICKS_PER_SECOND * 30;
     CrateCount = 0;
     CrateTimer = 0;

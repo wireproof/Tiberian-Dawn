@@ -1,3 +1,4 @@
+#include "wireproof_production.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 #include "wireproof_rules.h"
 #endif
@@ -2373,6 +2374,7 @@ int BuildingClass::Exit_Object(TechnoClass* base)
                 Transmit_Message(RADIO_HELLO, base);
                 Transmit_Message(RADIO_TETHER);
                 Assign_Mission(MISSION_UNLOAD);
+                WP_Rally_New(base);
                 ScenarioInit--;
                 return (2);
             }
@@ -2419,6 +2421,7 @@ int BuildingClass::Exit_Object(TechnoClass* base)
                     if (Transmit_Message(RADIO_HELLO, base) == RADIO_ROGER) {
                         Transmit_Message(RADIO_UNLOAD);
                     }
+                    WP_Rally_New(base);
                     ScenarioInit--;
                     return (2);
                 }

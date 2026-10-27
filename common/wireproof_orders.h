@@ -8,10 +8,10 @@ namespace WPOrders {
 #ifdef MACOS_PORT
 int LoadUIScale();
 #endif
-enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center };
+enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies };
 struct Stick { float x=0, y=0, intensity=0; };
 struct Command { Kind kind; int group; };
-struct Snapshot { bool active; int selected; int force; };
+struct Snapshot { bool active; int selected; int force; int rally; Snapshot(bool a=false,int s=0,int f=0):active(a),selected(s),force(f),rally(0){} };
 // UI threads only enqueue intentions. The game thread owns all game objects.
 class State {
     std::mutex mutex;
@@ -32,7 +32,7 @@ public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); state.force=0; pan_held=false; joystick={}; }
+        if (!active) { pending.clear(); state.force=0; state.rally=0; pan_held=false; joystick={}; }
         if (!selected) state.force=0;
     }
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
@@ -66,6 +66,7 @@ public:
         if (pending.empty()) return false;
         cmd=pending.front(); pending.pop_front(); return true;
     }
+    void rally(int mode) { std::lock_guard<std::mutex> lock(mutex);state.rally=mode>=0&&mode<=2?mode:0; }
     void force(int mode) { std::lock_guard<std::mutex> lock(mutex); state.force=state.active && state.selected ? mode : 0; }
 };
 State& Shared();

@@ -1,3 +1,4 @@
+#include "wireproof_production.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 #include "common/wireproof_viewport.h"
 #endif
@@ -108,8 +109,11 @@ static void WP_ProcessOrders() {
 #endif
     WPCheats::Shared().publish(Shared().snapshot().active && GameToPlay==GAME_NORMAL && PlayerPtr,
         PlayerPtr?PlayerPtr->Available_Money():0,PlayerPtr?PlayerPtr->Power:0,PlayerPtr?PlayerPtr->Drain:0);
+    if(Shared().snapshot().active) WP_Production_Tick();
     Command command;
     while (Shared().take(command)) {
+        if(command.kind==RallyInfantry || command.kind==RallyVehicles){Map.Cancel_Player_Action();Shared().rally(command.kind==RallyInfantry?1:2);continue;}
+        if(command.kind==ClearRallies){WP_Rally_Clear();Map.Flag_To_Redraw(true);continue;}
         if (command.kind==Attack || command.kind==Move) {
             Shared().force(command.kind==Attack?1:2); continue;
         }

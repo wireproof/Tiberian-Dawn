@@ -28,10 +28,11 @@ bool Valid(int w, int h) { return w > 0 && h > 0 && w <= 4096 && h <= 4096; }
 }
 Scene& Shared() { static Scene scene; return scene; }
 void Begin(int theater, int x, int y, int width, int height) {
-    Scene& s = Shared(); s.commands.clear(); s.health.clear(); s.valid = false; s.capturing = true;
+    Scene& s = Shared(); s.commands.clear(); s.health.clear(); s.placement.clear(); s.valid = false; s.capturing = true;
     s.shroud = false; s.owner = -1; s.theater = theater;
     s.clip_x = x; s.clip_y = y; s.clip_w = width; s.clip_h = height;
 }
+void RecordPlacement(int x,int y,bool valid) { if(Shared().capturing){Placement p;p.x=x;p.y=y;p.valid=valid;Shared().placement.push_back(p);} }
 void RecordHealth(int x, int y, int width, int fill, uint8_t color) {
     if (!Shared().capturing || width < 3 || width > 4096) return;
     Health health; health.x = x; health.y = y; health.width = width;
@@ -81,12 +82,13 @@ void RecordSprite(const void* pointer, int frame, int x, int y, int width, int h
     }
     Shared().commands.push_back(std::move(c));
 }
-void ClearSidebar() { Shared().sidebar.clear(); }
+void ClearSidebar() { Shared().sidebar.clear(); Shared().chrome.clear(); }
 void RecordSidebarIcon(const char* asset, int x, int y, int width, int height,
                        int clip_x, int clip_y, int clip_w, int clip_h,
-                       const uint8_t* base, const uint8_t* final) {
+                       const uint8_t* base, const uint8_t* final, int progress, bool darken, int queued, int status) {
     if (!asset || !*asset || !base || !final || !Valid(width, height) || clip_w <= 0 || clip_h <= 0) return;
     SidebarIcon icon;
+    icon.progress=progress;icon.darken=darken;icon.queued=queued;icon.status=status;
     icon.asset = asset; icon.x = x; icon.y = y; icon.width = width; icon.height = height;
     icon.clip_x = clip_x; icon.clip_y = clip_y; icon.clip_w = clip_w; icon.clip_h = clip_h;
     icon.base.assign(base, base + static_cast<size_t>(width) * height);

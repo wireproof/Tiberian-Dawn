@@ -276,16 +276,58 @@ def append_ui(collection, output, edge):
     print('Sidebar:', len(rows), 'exact XML mappings;', len(errors), 'unresolved;', len(unmapped), 'unassigned source icons', flush=True)
 
 
+def append_chrome(collection, output, edge):
+    """Import the Collection's TD control artwork without redistributing it."""
+    source_name = 'DATA/ART/TEXTURES/SRGB/MT_COMMANDBAR_COMMON.TGA'
+    raw = collection.read(source_name[:-4]+'.MTD')
+    version, count = struct.unpack_from('<ii', raw)
+    if version != -2: raise ValueError('Unsupported MTD version')
+    pos, records = 8, {}
+    for _ in range(count):
+        length, = struct.unpack_from('<I',raw,pos); pos += 4
+        name = norm(raw[pos:pos+length].split(b'\0',1)[0].decode()); pos += length
+        records[name] = struct.unpack_from('<8I',raw,pos); pos += 33
+    source = Image.open(io.BytesIO(collection.read(source_name))).convert('RGBA')
+    names = ['TOPBUTTON','RADARBG','FACTIONLOGO_GDI','FACTIONLOGO_NOD',
+             'BUTTON_REPAIR_OFF','BUTTON_REPAIR_ON','BUTTON_SELL_OFF','BUTTON_SELL_ON',
+             'BUTTON_MAP_OFF','BUILDFRAME','SELLREPAIRBG','POWERBG','POWERFRAMING']
+    atlas = Atlas(output, 'td_chrome', edge)
+    rows = []
+    for name in names:
+        key = 'UI_SIDEBAR_'+name+'.TGA'
+        x,y,w,h,cx,cy,cw,ch = records[key]
+        if x+w>source.width or y+h>source.height: raise ValueError(key)
+        rect = atlas.add(source.crop((x,y,x+w,y+h)))
+        rows.append(['TD_UI','UI.'+name,0,0,0,'SOURCE',*rect,cw,ch,cx,cy,source_name+'#'+key])
+    atlas.flush()
+    path = output/'frames.tsv'
+    with path.open() as f: previous=list(csv.reader(f,delimiter='\t'))
+    with path.open('w',newline='') as f:
+        writer=csv.writer(f,delimiter='\t',lineterminator='\n')
+        writer.writerows(row for row in previous if len(row)<2 or not row[1].startswith('UI.'))
+        writer.writerows(rows)
+    report_path=output/'coverage.json';report=json.loads(report_path.read_text())
+    report['chrome']={'mapped':len(rows),'source':source_name,'layout':'Existing touch targets retained'}
+    report['pages']=[page for page in report['pages'] if not str(page).startswith('td_chrome-')]+atlas.pages
+    report_path.write_text(json.dumps(report,indent=2)+'\n')
+    provenance_path=output/'provenance.json';provenance=json.loads(provenance_path.read_text());provenance.update(collection.receipts);provenance_path.write_text(json.dumps(provenance,indent=2)+'\n')
+    print('Remastered chrome:',len(rows),'source images')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('installation', type=pathlib.Path)
     parser.add_argument('output', type=pathlib.Path)
     parser.add_argument('--atlas-size', type=int, choices=[1024, 2048, 4096], default=2048)
     parser.add_argument('--metadata-only', action='store_true')
+    parser.add_argument('--append-chrome', action='store_true')
     parser.add_argument('--append-ui', action='store_true', help='Add exact sidebar mappings to a completed private tileset import')
     parser.add_argument('--tileset', action='append', help='Optional exact tileset filter for bounded validation')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
+    if args.append_chrome:
+        append_chrome(Collection(args.installation), args.output, args.atlas_size)
+        return
     if args.append_ui:
         append_ui(Collection(args.installation), args.output, args.atlas_size)
         return

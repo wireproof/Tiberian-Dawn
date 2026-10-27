@@ -239,6 +239,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         NSMutableArray *orders=[NSMutableArray array];
         NSArray *names=@[@"Stop",@"Guard",@"Scatter",@"Force Attack",@"Force Move",@"Cancel"];
         for (NSInteger i=0;i<names.count;i++) [orders addObject:[self button:names[i] tag:i]];
+        [orders addObject:[self button:@"Infantry rally" tag:WPOrders::RallyInfantry]];
+        [orders addObject:[self button:@"Vehicle rally" tag:WPOrders::RallyVehicles]];
+        [orders addObject:[self button:@"Clear rallies" tag:WPOrders::ClearRallies]];
         self.orderButtons=orders;
         NSMutableArray *groups=[NSMutableArray array];
         for (NSInteger i=0;i<9;i++) {
@@ -549,6 +552,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }
     if (!self.configured && self.window) { self.expanded=NO; self.configured=YES; }
     NSString *title=s.force==1?@"Force Attack: tap target • Cancel below":s.force==2?@"Force Move: tap destination • Cancel below":[NSString stringWithFormat:@"Orders & Groups %@ · %d selected",self.expanded?@"▾":@"▸",s.selected];
+    if(s.rally)title=s.rally==1?@"Infantry rally: tap destination":@"Vehicle rally: tap destination";
     [self.toggle setTitle:title forState:UIControlStateNormal];
     self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded;
     BOOL panHeld=WPOrders::Shared().panHeld();
@@ -583,6 +587,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             for(NSArray *row in @[@[o[0],o[1]],@[o[2],o[5]],@[o[3],o[4]]])[self.gamePage addArrangedSubview:[self gridRow:row]];
             for(UIView *v in self.cheatRows)[self.cheatStack addArrangedSubview:v];
         }
+        [self.gamePage addArrangedSubview:[self gridRow:@[o[6],o[7],o[8]]]];
     }
     self.panelHeader.axis=landscape?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
     self.panelHeader.distribution=landscape?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
@@ -623,7 +628,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             b.imageView.layer.magnificationFilter=kCAFilterNearest;
             b.imageEdgeInsets=UIEdgeInsetsMake(0,0,0,6);
         }
-        b.enabled=b.tag==WPOrders::Cancel || s.selected>0;
+        b.enabled=b.tag==WPOrders::Cancel || b.tag>=WPOrders::RallyInfantry || s.selected>0;
         b.alpha=b.enabled?1:0.4;
         b.backgroundColor=((b.tag==WPOrders::Attack && s.force==1)||(b.tag==WPOrders::Move && s.force==2))?UIColor.systemBlueColor:[UIColor colorWithWhite:0.18 alpha:0.96];
     }

@@ -37,6 +37,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+#include "common/remastered_scene.h"
+#endif
 
 void const* TabClass::TabShape = NULL;
 
@@ -81,6 +84,9 @@ TabClass::TabClass(void)
 void TabClass::Draw_It(bool complete)
 {
 
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if(Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork()) complete=true;
+#endif
     SidebarClass::Draw_It(complete);
 
     if (Debug_Map) {
@@ -121,6 +127,19 @@ void TabClass::Draw_It(bool complete)
     }
 
     Credits.Graphic_Logic(complete || IsToRedraw);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if(Tab_Height>0 && Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork() && LogicPage->Lock()){
+        const auto* pixels=reinterpret_cast<const uint8_t*>(LogicPage->Get_Offset());
+        int pitch=LogicPage->Get_Width()+LogicPage->Get_XAdd()+LogicPage->Get_Pitch();
+        for(int i=0;i<3;++i){
+            WPRemastered::Chrome c;c.asset="UI.TOPBUTTON";c.x=i==0?0:width-(3-i)*Eva_Width;c.y=0;c.width=Eva_Width;c.height=Tab_Height;c.right=i!=0;
+            c.text.resize(c.width*c.height);
+            for(int y=0;y<c.height;++y)for(int x=0;x<c.width;++x)c.text[y*c.width+x]=pixels[y*pitch+c.x+x];
+            WPRemastered::Shared().chrome.push_back(std::move(c));
+        }
+        LogicPage->Unlock();
+    }
+#endif
 #endif
     IsToRedraw = false;
 }

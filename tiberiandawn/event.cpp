@@ -1,3 +1,4 @@
+#include "wireproof_production.h"
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -512,6 +513,7 @@ void EventClass::Execute(void)
     case PRODUCE:
         CCDebugString("C&C95 - Produce packet received\n");
         Houses.Raw_Ptr(ID)->Begin_Production(Data.Specific.Type, Data.Specific.ID);
+        WP_Queue_Acknowledge(ID, Data.Specific.Type, Data.Specific.ID);
         break;
 
     /*

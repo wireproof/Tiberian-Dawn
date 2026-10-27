@@ -1,3 +1,4 @@
+#include "wireproof_production.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 #include "wireproof_rules.h"
 #endif
@@ -3727,6 +3728,7 @@ void DisplayClass::Mouse_Right_Press(void)
 {
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
     WPOrders::Shared().force(0);
+    WPOrders::Shared().rally(0);
 #endif
     if (PendingObjectPtr && PendingObjectPtr->Is_Techno()) {
         // PendingObjectPtr->Transmit_Message(RADIO_OVER_OUT);
@@ -4020,6 +4022,7 @@ void DisplayClass::Mouse_Left_Release(CELL cell, int x, int y, ObjectClass* obje
     // invalid destination or an early return. Hardware modifiers are untouched.
     struct FinishTouchOrder { ~FinishTouchOrder() { WPOrders::Shared().force(0); } } finishTouchOrder;
 #endif
+    if(WP_Rally_Click(cell,object==nullptr)) { Cancel_Pointer_Gesture(); return; }
     if (PendingObjectPtr) {
 
         /*

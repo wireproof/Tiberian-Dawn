@@ -1130,6 +1130,9 @@ void CellClass::Draw_It(int x, int y, int draw_type) const
             **	- Otherwise, it's up to the Display.Refresh_Map() routine to draw it
             */
             if (IsCursorHere) {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                WPRemastered::RecordPlacement(x + Map.TacPixelX, y + Map.TacPixelY, Map.ProximityCheck && Is_Generally_Clear());
+#endif
 
                 /*
                 **	Draw the hash-mark cursor:

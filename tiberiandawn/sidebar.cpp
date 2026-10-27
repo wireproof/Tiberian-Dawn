@@ -1,3 +1,4 @@
+#include "wireproof_production.h"
 #include "common/wireproof_camera.h"
 #include "common/video.h"
 //
@@ -854,6 +855,22 @@ void SidebarClass::Draw_It(bool complete)
         Repair->Draw_Me(true);
         Upgrade->Draw_Me(true);
         Zoom->Draw_Me(true);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        if(Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork()){
+            auto chrome=[](const char* asset,int x,int y,int w,int h){WPRemastered::Chrome c;c.asset=asset;c.x=x;c.y=y;c.width=w;c.height=h;c.right=true;WPRemastered::Shared().chrome.push_back(std::move(c));};
+            if(!Is_Radar_Active()){
+                chrome("UI.RADARBG",Map.RadX,Map.RadY,Map.RadWidth,Map.RadHeight);
+                int size=std::min(Map.RadWidth,Map.RadHeight)-8;
+                chrome(PlayerPtr && PlayerPtr->Class->House==HOUSE_BAD?"UI.FACTIONLOGO_NOD":"UI.FACTIONLOGO_GDI",Map.RadX+(Map.RadWidth-size)/2,Map.RadY+(Map.RadHeight-size)/2,size,size);
+            }
+            // A source panel segment fits each existing build column; the
+            // actual radar, power meter and scroll controls remain functional.
+            chrome("UI.RADARBG",SideX+Map.PowWidth,SideY+TopHeight,SideWidth-Map.PowWidth,SideHeight-TopHeight-24*Get_Resolution_Factor());
+            chrome(IsRepairMode?"UI.BUTTON_REPAIR_ON":"UI.BUTTON_REPAIR_OFF",Repair->X,Repair->Y,Repair->Width,Repair->Height);
+            chrome(IsSellMode?"UI.BUTTON_SELL_ON":"UI.BUTTON_SELL_OFF",Upgrade->X,Upgrade->Y,Upgrade->Width,Upgrade->Height);
+            chrome("UI.BUTTON_MAP_OFF",Zoom->X,Zoom->Y,Zoom->Width,Zoom->Height);
+        }
+#endif
     }
 
     IsToRedraw = false;
@@ -2001,8 +2018,8 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                 IsTheaterShape = false;
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
                 if (!hd_icon.empty() && shapefile && Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork()) {
-                    hd_width = Get_Build_Frame_Width(shapefile);
-                    hd_height = Get_Build_Frame_Height(shapefile);
+                    hd_width = ObjectWidth;
+                    hd_height = ObjectHeight;
                     if (hd_width > 0 && hd_width <= 512 && hd_height > 0 && hd_height <= 512)
                         hd_base = WP_Sidebar_Pixels(x + LeftEdgeOffset, y, hd_width, hd_height);
                 }
@@ -2071,6 +2088,12 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                 }
             }
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+            if(index<BuildableCount){
+                const int count=WP_Queue_Count(Buildables[index].BuildableType,Buildables[index].BuildableID);
+                if(count>0){char badge[12];snprintf(badge,sizeof(badge),"+%d",count);Fancy_Text_Print(badge,x+LeftEdgeOffset+2,y+2,WHITE,TBLACK,TPF_6POINT|TPF_NOSHADOW);}
+            }
+#endif
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
             if (!hd_base.empty()) {
                 const auto final_pixels = WP_Sidebar_Pixels(x + LeftEdgeOffset, y, hd_width, hd_height);
                 WPRemastered::RecordSidebarIcon(hd_icon.c_str(),
@@ -2078,7 +2101,9 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                     WindowList[WINDOW_SIDEBAR][WINDOWX] + LogicPage->Get_XPos(),
                     WindowList[WINDOW_SIDEBAR][WINDOWY] + LogicPage->Get_YPos(),
                     WindowList[WINDOW_SIDEBAR][WINDOWWIDTH], WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT],
-                    hd_base.data(), final_pixels.data());
+                    hd_base.data(), final_pixels.data(), production&&!completed?stage:-1, darken,
+                    index<BuildableCount?WP_Queue_Count(Buildables[index].BuildableType,Buildables[index].BuildableID):0,
+                    production&&completed?1:(production&&factory&&!factory->Is_Building()?2:0));
             }
 #endif
         }
@@ -2428,6 +2453,7 @@ int SidebarClass::StripClass::SelectClass::Action(unsigned flags, KeyNumType& ke
             /*
             **	A right mouse button signals "cancel".
             */
+            if ((flags & RIGHTPRESS) && WP_Queue_Remove(otype,oid)) { Map.Flag_To_Redraw(true); ControlClass::Action(flags,key); return true; }
             if (flags & RIGHTPRESS) {
 
                 /*
@@ -2459,6 +2485,11 @@ int SidebarClass::StripClass::SelectClass::Action(unsigned flags, KeyNumType& ke
                 }
             }
 
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+            if ((flags & LEFTPRESS) && (otype==RTTI_UNITTYPE || otype==RTTI_INFANTRYTYPE || otype==RTTI_AIRCRAFTTYPE) && !(factory && !factory->Is_Building() && !factory->Has_Completed())) {
+                WP_Queue_Add(otype,oid);Map.Flag_To_Redraw(true);ControlClass::Action(flags,key);return true;
+            }
+#endif
             if (flags & LEFTPRESS) {
 
                 /*

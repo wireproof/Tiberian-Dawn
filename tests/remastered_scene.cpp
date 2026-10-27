@@ -1,10 +1,18 @@
 #include "common/remastered_scene.h"
+#include "common/wireproof_production_queue.h"
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
 // Explicit checks remain enabled in Release/RelWithDebInfo builds.
 #define CHECK(condition) do { if (!(condition)) { std::fprintf(stderr, "line %d: %s\n", __LINE__, #condition); return EXIT_FAILURE; } } while (false)
 int main() {
+    WPProduction::Queue q;
+    CHECK(q.add(2)&&q.add(2)&&q.add(3));CHECK(q.count(2)==2);
+    CHECK(q.next(true)==-1);CHECK(q.next(false)==2);CHECK(q.next(false)==-1);
+    CHECK(q.remove(2));CHECK(!q.remove(2)); // dispatched head is immutable
+    q.retry();CHECK(q.next(false)==2);q.acknowledge(99);CHECK(q.next(false)==-1);q.acknowledge(2);
+    CHECK(q.next(false)==3);q.acknowledge(3);CHECK(q.next(false)==-1);
+    for(int i=0;i<99;++i)CHECK(q.add(i));CHECK(!q.add(100));q.clear();CHECK(q.next(false)==-1);
     using namespace WPRemastered;
     Clear();
     int identity = 1;
@@ -20,6 +28,7 @@ int main() {
     RecordHealth(0, 0, 24, 22, 4);
     CHECK(Shared().commands.empty() && Shared().health.empty());
     Begin(1, 10, 20, 100, 200);
+    RecordPlacement(24,48,true);CHECK(Shared().placement.size()==1 && Shared().placement[0].valid);
     Shared().owner = 1;
     RecordSprite(&identity, 32, 40, 50, 2, 2, 0x120, pixels, remap, nullptr);
     pixels[2] = 99; // Commands own their pixels, independent of reusable shape buffers.
@@ -42,7 +51,7 @@ int main() {
     RecordHealth(0, 0, 24, 22, 5);
     CHECK(Shared().health.size() == 1);
     Begin(0, 0, 0, 20, 20);
-    CHECK(Shared().commands.empty() && Shared().health.empty() && !Shared().valid);
+    CHECK(Shared().commands.empty() && Shared().health.empty() && Shared().placement.empty() && !Shared().valid);
     RecordTile("CLEAR1.TEM", 4, -12, 0, 2, 2, pixels);
     CHECK(Shared().commands.front().asset == "CLEAR1");
     CHECK(Shared().commands.front().frame == 4 && Shared().commands.front().x == -12);

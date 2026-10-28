@@ -1,0 +1,68 @@
+name: "Feature Request"
+description: "Suggest a new feature or improvement for Tiberian Dawn."
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Tiberian Dawn! Use this form for new features, not existing bugs.
+        The target release is a planning goal, not the version where you encountered a bug.
+  - type: input
+    id: target-release
+    attributes:
+      label: Target release
+      description: "Version in which you want this feature implemented."
+      placeholder: "v0.7.3"
+      value: "v0.7.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - iPhone
+        - iPad
+        - macOS
+        - All Apple platforms
+    validations:
+      required: true
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature description
+      description: "What would you like added or improved?"
+      placeholder: "Describe the feature and its purpose."
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Desired behavior
+      description: "Explain how it should work from the player's perspective."
+      placeholder: "When I..., the app should..."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: "What must be true for this request to be considered complete?"
+      placeholder: "- [ ] The feature ...\n- [ ] Works on ..."
+    validations:
+      required: false
+  - type: textarea
+    id: visuals
+    attributes:
+      label: Screenshots or mockups
+      description: "Drag and drop any relevant images here."
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: "Related issues, compatibility considerations, or other notes."
+    validations:
+      required: false

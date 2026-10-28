@@ -12,6 +12,8 @@ body:
     attributes:
       label: Platform
       options:
+        - iPhone / Duo cover screen
+        - iPhone / Duo inside screen
         - Physical iPad
         - macOS 11+ native app
         - Designed for iPad on Apple Vision Pro
@@ -23,8 +25,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Revision
-      description: Commit hash or release tag
+      label: App version and build
+      description: For example 0.7.2 (702), or a commit hash
     validations:
       required: true
   - type: textarea
@@ -44,6 +46,30 @@ body:
         3. Tap…
     validations:
       required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device model and OS version
+      placeholder: iPhone Duo, iOS version; or iPad model, iPadOS version
+  - type: dropdown
+    id: graphics
+    attributes:
+      label: Graphics mode
+      options:
+        - Remastered
+        - Original
+        - Both
+        - Unsure
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings and cheats
+      description: Mention enabled cheats, Workshop preset, zoom, orientation, and whether the issue happens on a new mission or loaded save.
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or gameplay video
+      description: Drag images or a short video here. Include a timestamp for the glitch and say whether lag happens only at startup or continues.
   - type: textarea
     id: logs
     attributes:

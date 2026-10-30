@@ -7,6 +7,24 @@
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
 #include "ipados_platform.h"
+void WP_ShowMultiplayerRestriction(void) {
+    void (^show)(void)=^{
+        UIWindowScene* scene=nil;
+        for(UIScene* candidate in UIApplication.sharedApplication.connectedScenes)
+            if([candidate isKindOfClass:UIWindowScene.class] && candidate.activationState==UISceneActivationStateForegroundActive) {scene=(UIWindowScene*)candidate;break;}
+        if(!scene)return;
+        UIWindow* previous=scene.keyWindow;
+        UIWindow* host=[[UIWindow alloc] initWithWindowScene:scene];
+        UIViewController* root=[UIViewController new];host.rootViewController=root;host.windowLevel=UIWindowLevelAlert;[host makeKeyAndVisible];
+        __block BOOL done=NO;
+        UIAlertController* alert=[UIAlertController alertControllerWithTitle:@"Multiplayer unavailable with custom rules" message:@"Select the Stock preset and restart the app before starting multiplayer." preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){done=YES;}]];
+        [root presentViewController:alert animated:NO completion:nil];
+        while(!done)[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.02]];
+        host.hidden=YES;[previous makeKeyAndVisible];
+    };
+    if(NSThread.isMainThread)show();else dispatch_sync(dispatch_get_main_queue(),show);
+}
 #else
 #import <AppKit/AppKit.h>
 #include "macos_platform.h"
@@ -261,6 +279,11 @@ void WP_ShowWorkshop(void) {
 }
 #else
 // macOS allows a runtime Dock icon without modifying the signed app bundle.
+void WP_ShowMultiplayerRestriction(void) {
+    NSAlert* alert=[NSAlert new];alert.messageText=@"Multiplayer unavailable with custom rules";
+    alert.informativeText=@"Select the Stock preset and restart the app before starting multiplayer.";
+    [alert runModal];
+}
 void WP_ApplySavedAppIcon(void) {
     NSString *name=[NSUserDefaults.standardUserDefaults stringForKey:@"Wireproof.AppIcon"] ?: @"AppIcon";
     if(![IconNames() containsObject:name])name=@"AppIcon";

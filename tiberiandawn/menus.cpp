@@ -38,6 +38,7 @@
 #include "common/framelimit.h"
 #include "common/wireproof_viewport.h"
 #include "common/wireproof_menu_layout.h"
+#include "common/remastered_scene.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #ifdef IPADOS_PORT
 #include "platform/apple/ipados_platform.h"
@@ -464,6 +465,10 @@ int Do_Menu(char const** strings, bool blue)
  *=========================================================================*/
 int Main_Menu(unsigned int timeout)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    // Gameplay's last captured HD frame must not bleed into title menus.
+    WPRemastered::Clear();
+#endif
     int scale_factor = Get_Resolution_Factor() + 1;
 
     int D_DIALOG_W = 152 * scale_factor, D_DIALOG_H = 136 * scale_factor, D_DIALOG_X = 85 * scale_factor,
@@ -1011,7 +1016,7 @@ int Main_Menu(unsigned int timeout)
 
         case (BUTTON_MULTI | KN_BUTTON):
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
-            if (WP_RulesActive()) { WP_ShowWorkshop(); Keyboard->Clear(); display=true; break; }
+            if (WP_RulesActive()) { WP_ShowMultiplayerRestriction(); Keyboard->Clear(); display=true; break; }
 #endif
 #if (defined(IPADOS_PORT) || defined(MACOS_PORT)) && !defined(NETWORKING)
             // The Apple menu keeps its layout when networking is omitted, but
@@ -1083,7 +1088,7 @@ int Main_Menu(unsigned int timeout)
         case KN_RETURN:
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
             if (buttons[curbutton] == &multibtn && WP_RulesActive()) {
-                WP_ShowWorkshop(); Keyboard->Clear(); display = true; break;
+                WP_ShowMultiplayerRestriction(); Keyboard->Clear(); display = true; break;
             }
             if (buttons[curbutton] == &savebtn) {
                 WP_ShowWorkshop();

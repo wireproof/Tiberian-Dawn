@@ -28,11 +28,17 @@ bool Valid(int w, int h) { return w > 0 && h > 0 && w <= 4096 && h <= 4096; }
 }
 Scene& Shared() { static Scene scene; return scene; }
 void Begin(int theater, int x, int y, int width, int height) {
-    Scene& s = Shared(); s.commands.clear(); s.health.clear(); s.placement.clear(); s.valid = false; s.capturing = true;
+    Scene& s = Shared(); s.commands.clear(); s.health.clear(); s.placement.clear(); s.laserLines.clear(); s.valid = false; s.capturing = true;
     s.shroud = false; s.owner = -1; s.theater = theater;
     s.clip_x = x; s.clip_y = y; s.clip_w = width; s.clip_h = height;
 }
 void RecordPlacement(int x,int y,bool valid) { if(Shared().capturing){Placement p;p.x=x;p.y=y;p.valid=valid;Shared().placement.push_back(p);} }
+void RecordLaserLine(int x,int y,int x1,int y1,uint8_t color) {
+    if(Shared().capturing && Shared().laserLines.size()<32) {
+        LaserLine line;line.x=x;line.y=y;line.x1=x1;line.y1=y1;line.color=color;
+        Shared().laserLines.push_back(line);
+    }
+}
 void RecordHealth(int x, int y, int width, int fill, uint8_t color) {
     if (!Shared().capturing || width < 3 || width > 4096) return;
     Health health; health.x = x; health.y = y; health.width = width;

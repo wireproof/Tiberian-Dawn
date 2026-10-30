@@ -2784,6 +2784,9 @@ void CC_Draw_Pip(ObjectClass* object,
 
 void CC_Draw_Line(int x, int y, int x1, int y1, unsigned char color, int frame, WindowNumberType window)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if(window==WINDOW_TACTICAL)WPRemastered::RecordLaserLine(x,y,x1,y1,color);
+#endif
 #ifdef REMASTER_BUILD
     if (window == WINDOW_VIRTUAL) {
         DLL_Draw_Line_Intercept(x, y, x1, y1, color, frame);

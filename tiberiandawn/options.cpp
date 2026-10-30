@@ -567,7 +567,12 @@ void OptionsClass::Load_Settings(void)
     **	Read in the Options values
     */
     static char const* const OPTIONS = "Options";
+    // The second-highest speed is the preferred starting point on Apple.
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    GameSpeed = ini.Get_Int(OPTIONS, "GameSpeed", MAX_SPEED_SETTING - 2);
+#else
     GameSpeed = ini.Get_Int(OPTIONS, "GameSpeed", 4);
+#endif
     ScrollRate = ini.Get_Int(OPTIONS, "ScrollRate", 4);
     Set_Brightness(ini.Get_Int(OPTIONS, "Brightness", 0x80));
     Set_Sound_Volume(ini.Get_Int(OPTIONS, "Volume", 0xA0), false);

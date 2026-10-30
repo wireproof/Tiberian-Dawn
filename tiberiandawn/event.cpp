@@ -682,6 +682,12 @@ void EventClass::Execute(void)
     case GAMESPEED:
         CCDebugString("C&C95 - Game speed packet received\n");
         Options.GameSpeed = Data.General.Value;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+        // Persist the applied value, including when the app is closed before
+        // the options dialog is opened again. Never change multiplayer timing.
+        if (GameToPlay == GAME_NORMAL || GameToPlay == GAME_SKIRMISH)
+            Options.Save_Settings();
+#endif
         break;
 
     /*

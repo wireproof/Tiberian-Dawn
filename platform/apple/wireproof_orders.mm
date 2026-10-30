@@ -221,11 +221,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if ((self=[super initWithFrame:frame])) {
         WPObserveHinge(self);
         self.backgroundColor=[UIColor colorWithWhite:0.05 alpha:0.92]; self.layer.cornerRadius=12;
-        self.toggle=[self button:@"Orders & Groups ▸" tag:100];
+        self.toggle=[self button:@"Cheats & Options ▸" tag:100];
         self.bubble=[UIButton buttonWithType:UIButtonTypeSystem];
-        [self.bubble setImage:[UIImage systemImageNamed:@"gamecontroller.fill"] forState:UIControlStateNormal];
+        [self.bubble setImage:[UIImage systemImageNamed:@"slider.horizontal.3"] forState:UIControlStateNormal];
         self.bubble.tintColor=UIColor.whiteColor;
-        self.bubble.accessibilityLabel=@"Tap for Orders and Groups. Drag to reposition.";
+        self.bubble.accessibilityLabel=@"Tap for Cheats and Options. Drag to reposition.";
         self.bubble.tag=100;
         [self.bubble addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];
         for (UIView *handle in @[self.toggle,self.bubble]) {
@@ -359,7 +359,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             [self gridRow:@[orders[0],orders[1]]],[self gridRow:@[orders[2],orders[5]]],[self gridRow:@[orders[3],orders[4]]]]];
         orderColumn.axis=UILayoutConstraintAxisVertical;orderColumn.spacing=6;
         self.gamePage=[[UIStackView alloc] initWithArrangedSubviews:@[groupColumn,orderColumn]];self.gamePage.spacing=8;
-        self.tabs=[[UISegmentedControl alloc] initWithItems:@[@"Game",@"Cheats",@"Options"]];self.tabs.selectedSegmentIndex=0;
+        self.tabs=[[UISegmentedControl alloc] initWithItems:@[@"Cheats",@"Options"]];self.tabs.selectedSegmentIndex=0;
         // Explicit contrast on the dark floating panel, independent of system appearance.
         for (UISegmentedControl *control in @[self.page,self.tabs]) {
             control.selectedSegmentTintColor=UIColor.whiteColor;
@@ -522,9 +522,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         [NSUserDefaults.standardUserDefaults setInteger:WPOrders::Shared().zoomQuarters() forKey:self.zoomProfile];
     auto s=WPOrders::Shared().snapshot();
     auto cheats=WPCheats::Shared().snapshot();
-    self.gamePage.hidden=self.tabs.selectedSegmentIndex!=0;
-    self.cheatStack.hidden=self.tabs.selectedSegmentIndex!=1;
-    self.optionsPage.hidden=self.tabs.selectedSegmentIndex!=2;
+    self.gamePage.hidden=YES;
+    self.cheatStack.hidden=self.tabs.selectedSegmentIndex!=0;
+    self.optionsPage.hidden=self.tabs.selectedSegmentIndex!=1;
     self.cheatStack.userInteractionEnabled=cheats.available;
     self.cheatStatus.text=[NSString stringWithFormat:@"Credits: %d\nPower: %d / %d",cheats.money,cheats.power,cheats.drain];
     self.weaponsSwitch.on=cheats.weapons;self.anywhereSwitch.on=cheats.anywhere;self.unlockSwitch.on=cheats.unlock;self.healthSwitch.on=cheats.damagedHealth;
@@ -551,13 +551,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.layoutOrientation=orientation;
     }
     if (!self.configured && self.window) { self.expanded=NO; self.configured=YES; }
-    NSString *title=s.force==1?@"Force Attack: tap target • Cancel below":s.force==2?@"Force Move: tap destination • Cancel below":[NSString stringWithFormat:@"Orders & Groups %@ · %d selected",self.expanded?@"▾":@"▸",s.selected];
-    if(s.rally)title=s.rally==1?@"Infantry rally: tap destination":@"Vehicle rally: tap destination";
+    NSString *title=[NSString stringWithFormat:@"Cheats & Options %@",self.expanded?@"▾":@"▸"];
     [self.toggle setTitle:title forState:UIControlStateNormal];
     self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded;
     BOOL panHeld=WPOrders::Shared().panHeld();
     self.bubble.tintColor=panHeld?UIColor.systemBlueColor:(s.force?UIColor.systemOrangeColor:UIColor.whiteColor);
-    [self.bubble setImage:[UIImage systemImageNamed:panHeld?@"hand.draw.fill":@"gamecontroller.fill"] forState:UIControlStateNormal];
+    [self.bubble setImage:[UIImage systemImageNamed:panHeld?@"hand.draw.fill":@"slider.horizontal.3"] forState:UIControlStateNormal];
     self.layer.cornerRadius=self.expanded?12:28;
     CGRect safe=[self availableRect];
     BOOL landscape=self.window.bounds.size.width>self.window.bounds.size.height;
@@ -598,7 +597,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.optionsPage.distribution=wideOptions?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
     self.optionsPage.alignment=wideOptions?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
     const CGFloat uiScale=1.0; // Floating controls have their own fixed touch-target size.
-    CGFloat width=self.expanded?MIN(landscape?(self.tabs.selectedSegmentIndex==2?1000:820):256,MAX(56,safe.size.width/uiScale)):56;
+    CGFloat width=self.expanded?MIN(landscape?(self.tabs.selectedSegmentIndex==1?1000:820):256,MAX(56,safe.size.width/uiScale)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {
@@ -636,14 +635,152 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 @end
 
+// Game commands live in their own movable panel. Cheats and display options
+// remain in WPOrdersPanel, so opening either panel never hides the other.
+@interface WPGameToolbar : UIView
+@property(nonatomic,strong) UIButton *bubble;
+@property(nonatomic,strong) UIButton *header;
+@property(nonatomic,strong) UIButton *orientationButton;
+@property(nonatomic,strong) UIScrollView *body;
+@property(nonatomic,strong) NSArray<UIButton*> *commands;
+@property(nonatomic,strong) NSArray<UIButton*> *groups;
+@property(nonatomic,strong) WPControlPositionStore *positionStore;
+@property(nonatomic) CGPoint position;
+@property(nonatomic) BOOL expanded;
+@property(nonatomic) BOOL vertical;
+@property(nonatomic) NSInteger builtOrientation;
+@end
+@implementation WPGameToolbar
+- (UIButton*)button:(NSString*)title tag:(NSInteger)tag {
+    UIButton *b=[UIButton buttonWithType:UIButtonTypeSystem];b.tag=tag;
+    [b setTitle:title forState:UIControlStateNormal];
+    b.titleLabel.font=[UIFont systemFontOfSize:13 weight:UIFontWeightSemibold];
+    b.titleLabel.adjustsFontSizeToFitWidth=YES;b.titleLabel.minimumScaleFactor=.72;
+    b.titleLabel.numberOfLines=2;b.titleLabel.textAlignment=NSTextAlignmentCenter;
+    b.tintColor=UIColor.whiteColor;b.backgroundColor=[UIColor colorWithWhite:.18 alpha:.97];
+    b.layer.cornerRadius=8;b.accessibilityLabel=title;
+    [b addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];return b;
+}
+- (instancetype)initWithFrame:(CGRect)frame {
+    if((self=[super initWithFrame:frame])) {
+        self.backgroundColor=[UIColor colorWithWhite:.05 alpha:.94];self.layer.cornerRadius=12;
+        self.positionStore=[WPControlPositionStore new];self.positionStore.base=@"Wireproof.GameToolbarPosition";
+        NSUserDefaults *defaults=NSUserDefaults.standardUserDefaults;
+        if(![defaults arrayForKey:self.positionStore.base])
+            [defaults setObject:@[@0,@.72] forKey:self.positionStore.base];
+        self.position=CGPointMake(0,.72);
+        self.vertical=[defaults objectForKey:@"Wireproof.GameToolbarVertical"]?[defaults boolForKey:@"Wireproof.GameToolbarVertical"]:YES;
+        self.bubble=[self button:@"" tag:1002];
+        [self.bubble setImage:[UIImage systemImageNamed:@"gamecontroller.fill"] forState:UIControlStateNormal];
+        self.bubble.accessibilityLabel=@"Game commands. Tap to open; drag to move.";
+        self.header=[self button:@"Game ▾" tag:1001];
+        self.orientationButton=[self button:@"↔" tag:1000];
+        self.orientationButton.accessibilityLabel=@"Switch Game toolbar orientation";
+        self.body=[UIScrollView new];self.body.showsVerticalScrollIndicator=YES;
+        [self addSubview:self.body];[self addSubview:self.header];
+        [self addSubview:self.orientationButton];[self addSubview:self.bubble];
+        NSMutableArray *commands=[NSMutableArray array];
+        NSArray *titles=@[@"Stop",@"Guard",@"Scatter",@"Force Attack",@"Force Move",@"Cancel",@"Infantry rally",@"Vehicle rally",@"Clear rallies"];
+        NSInteger kinds[]={WPOrders::Stop,WPOrders::Guard,WPOrders::Scatter,WPOrders::Attack,WPOrders::Move,WPOrders::Cancel,WPOrders::RallyInfantry,WPOrders::RallyVehicles,WPOrders::ClearRallies};
+        for(NSInteger i=0;i<titles.count;++i)[commands addObject:[self button:titles[i] tag:kinds[i]]];
+        self.commands=commands;
+        NSMutableArray *groups=[NSMutableArray array];
+        for(NSInteger i=0;i<9;++i){UIButton *b=[self button:[NSString stringWithFormat:@"%ld",(long)(i+1)] tag:200+i];
+            b.accessibilityLabel=[NSString stringWithFormat:@"Control group %ld",(long)(i+1)];
+            b.accessibilityHint=@"Tap to recall; hold to assign selected units.";
+            UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(groupHeld:)];
+            hold.minimumPressDuration=.5;hold.cancelsTouchesInView=YES;[b addGestureRecognizer:hold];[groups addObject:b];}
+        self.groups=groups;
+        for(UIView *handle in @[self.bubble,self.header]){UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)];[handle addGestureRecognizer:pan];}
+    }return self;
+}
+- (void)pressed:(UIButton*)button {
+    if(button.tag==1000){self.vertical=!self.vertical;[NSUserDefaults.standardUserDefaults setBool:self.vertical forKey:@"Wireproof.GameToolbarVertical"];self.builtOrientation=0;[self refresh];return;}
+    if(button.tag==1001||button.tag==1002){self.expanded=!self.expanded;[self refresh];return;}
+    if(button.tag>=200){WPOrders::Shared().enqueue(WPOrders::Recall,(int)button.tag-200);return;}
+    WPOrders::Shared().enqueue((WPOrders::Kind)button.tag);
+}
+- (void)groupHeld:(UILongPressGestureRecognizer*)gesture {
+    if(gesture.state==UIGestureRecognizerStateBegan && WPOrders::Shared().enqueue(WPOrders::Assign,(int)gesture.view.tag-200))
+        [[UISelectionFeedbackGenerator new] selectionChanged];
+}
+- (void)drag:(UIPanGestureRecognizer*)pan {
+    if(!self.window)return;
+    CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+    CGPoint delta=[pan translationInView:self.superview];
+    CGFloat dx=MAX(0,safe.size.width-self.bounds.size.width),dy=MAX(0,safe.size.height-self.bounds.size.height);
+    self.position=CGPointMake(dx?MIN(1,MAX(0,(self.frame.origin.x+delta.x-safe.origin.x)/dx)):0,
+                              dy?MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)):0);
+    [pan setTranslation:CGPointZero inView:self.superview];[self refresh];
+    if(pan.state==UIGestureRecognizerStateEnded||pan.state==UIGestureRecognizerStateCancelled)
+        [self.positionStore save:self.position];
+}
+- (void)addRow:(NSArray<UIButton*>*)buttons y:(CGFloat*)cursor width:(CGFloat)width buttonWidth:(CGFloat)buttonWidth {
+    const CGFloat rowWidth=MAX(width,buttons.count*buttonWidth+MAX(0,(NSInteger)buttons.count-1)*6);
+    UIScrollView *scroll=[[UIScrollView alloc] initWithFrame:CGRectMake(0,*cursor,width,44)];
+    scroll.tag=1100;
+    scroll.showsHorizontalScrollIndicator=rowWidth>width;scroll.contentSize=CGSizeMake(rowWidth,44);
+    UIStackView *row=[[UIStackView alloc] initWithArrangedSubviews:buttons];
+    row.axis=UILayoutConstraintAxisHorizontal;row.spacing=6;row.distribution=UIStackViewDistributionFillEqually;
+    row.frame=CGRectMake(0,0,rowWidth,44);[scroll addSubview:row];[self.body addSubview:scroll];
+    *cursor+=50;
+}
+- (void)rebuildRows:(CGFloat)width {
+    for(UIView *v in [self.body.subviews copy])if(v.tag==1100)[v removeFromSuperview];
+    CGFloat y=0;
+    if(self.vertical){
+        for(int i=0;i<9;i+=3)[self addRow:[self.groups subarrayWithRange:NSMakeRange(i,3)] y:&y width:width buttonWidth:64];
+        for(int i=0;i<6;i+=2)[self addRow:[self.commands subarrayWithRange:NSMakeRange(i,2)] y:&y width:width buttonWidth:104];
+        for(int i=6;i<9;++i)[self addRow:@[self.commands[i]] y:&y width:width buttonWidth:width];
+    }else{
+        [self addRow:self.groups y:&y width:width buttonWidth:48];
+        [self addRow:[self.commands subarrayWithRange:NSMakeRange(0,6)] y:&y width:width buttonWidth:98];
+        [self addRow:[self.commands subarrayWithRange:NSMakeRange(6,3)] y:&y width:width buttonWidth:120];
+    }
+    self.body.contentSize=CGSizeMake(width,y);
+}
+- (void)refresh {
+    if(!self.window)return;
+    self.position=[self.positionStore update:self.position window:self.window];
+    WPOrders::Snapshot s=WPOrders::Shared().snapshot();
+    self.hidden=!s.active||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
+    if(self.hidden)return;
+    CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+    CGFloat width=self.expanded?MIN(safe.size.width,self.vertical?228:660):56;
+    CGFloat contentHeight=self.vertical?450:150;
+    CGFloat height=self.expanded?MIN(safe.size.height,50+contentHeight+8):56;
+    if(self.expanded && (self.builtOrientation!=(self.vertical?1:2)||fabs(self.body.bounds.size.width-(width-16))>1)){
+        [self rebuildRows:width-16];self.builtOrientation=self.vertical?1:2;
+    }
+    self.bounds=CGRectMake(0,0,width,height);
+    self.frame=CGRectMake(safe.origin.x+self.position.x*MAX(0,safe.size.width-width),
+                          safe.origin.y+self.position.y*MAX(0,safe.size.height-height),width,height);
+    self.bubble.hidden=self.expanded;self.header.hidden=!self.expanded;self.orientationButton.hidden=!self.expanded;self.body.hidden=!self.expanded;
+    self.bubble.frame=self.bounds;
+    self.header.frame=CGRectMake(8,6,width-64,44);self.orientationButton.frame=CGRectMake(width-52,6,44,44);
+    self.body.frame=CGRectMake(8,56,width-16,MAX(0,height-62));
+    [self.orientationButton setTitle:self.vertical?@"↔":@"↕" forState:UIControlStateNormal];
+    NSString *title=s.force==1?@"Force Attack: tap target":s.force==2?@"Force Move: tap target":s.rally==1?@"Infantry rally: tap map":s.rally==2?@"Vehicle rally: tap map":[NSString stringWithFormat:@"Game · %d selected",s.selected];
+    [self.header setTitle:title forState:UIControlStateNormal];
+    for(UIButton *button in self.commands){BOOL needsSelection=button.tag<=WPOrders::Move;
+        button.enabled=!needsSelection||s.selected>0;
+        button.alpha=button.enabled?1:.45;
+        button.backgroundColor=((button.tag==WPOrders::Attack&&s.force==1)||(button.tag==WPOrders::Move&&s.force==2))?UIColor.systemBlueColor:[UIColor colorWithWhite:.18 alpha:.97];
+        UIImage *icon=button.tag==WPOrders::Attack?WPAttackIcon:button.tag==WPOrders::Move?WPMoveIcon:nil;
+        if(icon&&button.currentImage!=icon)[button setImage:[icon imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] forState:UIControlStateNormal];
+    }
+}
+@end
+
 extern "C" void WP_InstallOrdersPanel(void) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         NSTimer *timer=[NSTimer timerWithTimeInterval:0.15 repeats:YES block:^(NSTimer*) {
             static WPOrdersPanel *panel;
+            static WPGameToolbar *gameToolbar;
             static WPMapJoystick *joystick;
             if (UIApplication.sharedApplication.applicationState!=UIApplicationStateActive) {
-                WPOrders::Shared().publish(false,0); panel.hidden=YES;joystick.hidden=YES; return;
+                WPOrders::Shared().publish(false,0); panel.hidden=YES;gameToolbar.hidden=YES;joystick.hidden=YES; return;
             }
             static Uint32 gameWindowID=0;
             SDL_Window *sdl=gameWindowID?SDL_GetWindowFromID(gameWindowID):nullptr;
@@ -659,12 +796,15 @@ extern "C" void WP_InstallOrdersPanel(void) {
                 [panel removeFromSuperview]; panel=[WPOrdersPanel new];
                 [window addSubview:panel];
             }
+            if(!gameToolbar || gameToolbar.superview!=window){[gameToolbar removeFromSuperview];gameToolbar=[WPGameToolbar new];[window addSubview:gameToolbar];}
             if(!joystick || joystick.superview!=window){[joystick removeFromSuperview];joystick=[WPMapJoystick new];[window addSubview:joystick];}
             [joystick refresh];[window bringSubviewToFront:joystick];
             [panel refresh];
+            [gameToolbar refresh];
             // The root view can be reordered during keyboard/window changes.
             // Only raise inside this game window; never steal key-window focus.
             if (!panel.hidden) [window bringSubviewToFront:panel];
+            if (!gameToolbar.hidden) [window bringSubviewToFront:gameToolbar];
         }];
         [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
     });

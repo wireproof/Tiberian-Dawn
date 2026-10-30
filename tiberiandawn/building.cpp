@@ -1784,7 +1784,11 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
             if (*this != STRUCT_SAM && !House->Is_Ally(source) && Class->Primary != WEAPON_NONE
                 && (!Target_Legal(TarCom) || !In_Range(TarCom))) {
 
-                if (source->What_Am_I() != RTTI_AIRCRAFT && (!House->IsHuman || Special.IsSmartDefense)) {
+                if (source->What_Am_I() != RTTI_AIRCRAFT && (!House->IsHuman || Special.IsSmartDefense
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                    || (GameToPlay == GAME_NORMAL && House == PlayerPtr)
+#endif
+                    )) {
                     Assign_Target(source->As_Target());
                 } else {
 

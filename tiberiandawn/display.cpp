@@ -4171,6 +4171,11 @@ void DisplayClass::Mouse_Left_Release(CELL cell, int x, int y, ObjectClass* obje
                     } else {
                         OutList.Add(EventClass(EventClass::SELL, ::As_Target(cell)));
                     }
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                    // On touch, leaving sell mode armed makes subsequent taps
+                    // on units resolve as NO_SELL instead of selecting them.
+                    Sell_Mode_Control(0);
+#endif
                 }
                 if (action == ACTION_ION) {
                     OutList.Add(EventClass(EventClass::SPECIAL_PLACE, SPC_ION_CANNON, cell));

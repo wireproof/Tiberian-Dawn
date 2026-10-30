@@ -1171,11 +1171,17 @@ ResultType FootClass::Take_Damage(int& damage, int distance, WarheadType warhead
             **	If this object is not part of a team and it can retaliate for the damage, then have
             **	it try to do so. This prevents it from just sitting there and taking damage.
             */
+            const bool player_auto_defense =
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                GameToPlay == GAME_NORMAL && House == PlayerPtr;
+#else
+                false;
+#endif
             if (source && !House->Is_Ally(source) && Techno_Type_Class()->Primary != WEAPON_NONE
                 && (source->What_Am_I() != RTTI_AIRCRAFT
                     || BulletTypeClass::As_Reference(Weapons[Techno_Type_Class()->Primary].Fires).IsAntiAircraft)
                 && (!Target_Legal(TarCom)
-                    || ((!House->IsHuman || Special.IsSmartDefense) && (!tweap || !In_Range(TarCom))))
+                    || ((!House->IsHuman || Special.IsSmartDefense || player_auto_defense) && (!tweap || !In_Range(TarCom))))
                 &&
                 //				!Target_Legal(NavCom) &&
                 (Mission == MISSION_AMBUSH || Mission == MISSION_GUARD || Mission == MISSION_RESCUE
@@ -1186,14 +1192,16 @@ ResultType FootClass::Take_Damage(int& damage, int distance, WarheadType warhead
                 **	controled units. For the player, this only occurs if the source of the damage
                 **	is within range.
                 */
-                if (!House->IsHuman) {
+                if (!House->IsHuman || player_auto_defense) {
 
                     /*
                     ** If this unit is in TIMED_HUNT (multiplayer computer-controlled)
                     ** mode, "snap out of it" into HUNT mode; otherwise, assign
                     ** HUNT as the next mission through the normal mission queue.
                     */
-                    if (Mission == MISSION_TIMED_HUNT) {
+                    if (player_auto_defense) {
+                        Assign_Mission(MISSION_ATTACK);
+                    } else if (Mission == MISSION_TIMED_HUNT) {
                         Set_Mission(MISSION_HUNT);
                     } else {
                         Assign_Mission(MISSION_HUNT);

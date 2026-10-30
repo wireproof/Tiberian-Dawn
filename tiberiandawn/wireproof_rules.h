@@ -29,6 +29,7 @@ const char* WP_RuleChoiceLabel(int index, int choice);
 int WP_RuleValueValid(int index, int value);
 int WP_LoadRule(const char* key, int fallback, int low, int high);
 void WP_ShowWorkshop(void);
+void WP_ShowMultiplayerRestriction(void);
 #ifdef __cplusplus
 }
 #endif

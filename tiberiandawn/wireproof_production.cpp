@@ -8,6 +8,28 @@ WPProduction::Queue queues[3];
 int cancelling[3]={-1,-1,-1};
 bool cancelSent[3]={false,false,false};
 CELL rally[2]={0,0};
+bool rallyLoaded=false;
+void persistRallies(){
+ if(!PlayerPtr)return;
+ CCFileClass file(CONFIG_FILE_NAME);INIClass ini;ini.Load(file);
+ const char* section="WireproofRally";
+ ini.Put_Int(section,"Scenario",Scen.Scenario);
+ ini.Put_Int(section,"House",PlayerPtr->Class->House);
+ ini.Put_Int(section,"Infantry",rally[0]);
+ ini.Put_Int(section,"Vehicles",rally[1]);
+ ini.Save(file);
+}
+void restoreRallies(){
+ if(rallyLoaded||!PlayerPtr)return;
+ rallyLoaded=true;
+ CCFileClass file(CONFIG_FILE_NAME);INIClass ini;ini.Load(file);
+ const char* section="WireproofRally";
+ if(ini.Get_Int(section,"Scenario",-1)!=(int)Scen.Scenario||
+    ini.Get_Int(section,"House",-1)!=(int)PlayerPtr->Class->House)return;
+ const char* keys[]={"Infantry","Vehicles"};
+ for(int c=0;c<2;++c){int cell=ini.Get_Int(section,keys[c],0);
+  if(cell>0&&cell<MAP_CELL_TOTAL&&Map.In_Radar(cell))rally[c]=cell;}
+}
 struct Departure{TARGET target;CELL cell;int frame;};
 std::vector<Departure> departures;
 int category(int type){if(type==RTTI_INFANTRYTYPE||type==RTTI_INFANTRY)return 0;if(type==RTTI_UNITTYPE||type==RTTI_UNIT)return 1;if(type==RTTI_AIRCRAFTTYPE||type==RTTI_AIRCRAFT)return 2;return -1;}
@@ -26,10 +48,11 @@ bool WP_Queue_Cancel(int type,int id,bool active){
 void WP_Queue_Cancelled(int house,int type){int c=category(type);if(PlayerPtr&&house==Houses.ID(PlayerPtr)&&c>=0){cancelling[c]=-1;cancelSent[c]=false;}}
 int WP_Queue_Count(int type,int id){int c=category(type);return c>=0?queues[c].count(id):0;}
 void WP_Queue_Acknowledge(int house,int type,int id){int c=category(type);if(PlayerPtr&&house==Houses.ID(PlayerPtr)&&c>=0)queues[c].acknowledge(id);}
-void WP_Rally_Clear(){rally[0]=rally[1]=0;departures.clear();WPOrders::Shared().rally(0);}
-void WP_Production_Reset(){for(int c=0;c<3;++c){queues[c].clear();cancelling[c]=-1;cancelSent[c]=false;}WP_Rally_Clear();}
+void WP_Rally_Clear(){rally[0]=rally[1]=0;departures.clear();rallyLoaded=true;persistRallies();WPOrders::Shared().rally(0);}
+void WP_Production_Reset(){for(int c=0;c<3;++c){queues[c].clear();cancelling[c]=-1;cancelSent[c]=false;}rally[0]=rally[1]=0;rallyLoaded=false;departures.clear();WPOrders::Shared().rally(0);}
 void WP_Production_Tick(){
  if(!available()||!GameActive||!InMainLoop)return;
+ restoreRallies();
  const int factories[]={PlayerPtr->InfantryFactory,PlayerPtr->UnitFactory,PlayerPtr->AircraftFactory};
  const RTTIType types[]={RTTI_INFANTRYTYPE,RTTI_UNITTYPE,RTTI_AIRCRAFTTYPE};
  for(int c=0;c<3;++c){
@@ -61,7 +84,7 @@ bool WP_Rally_Click(int cell,bool ground){
  }
  if(!mode)return false;
  if(available()&&cell>0&&cell<MAP_CELL_TOTAL&&Map.In_Radar(cell)&&Map[cell].Is_Visible(PlayerPtr)){
-  rally[mode-1]=cell;WPOrders::Shared().rally(0);Map.Flag_To_Redraw(true);
+  restoreRallies();rally[mode-1]=cell;persistRallies();WPOrders::Shared().rally(0);Map.Flag_To_Redraw(true);
   OutList.Add(EventClass(ANIM_MOVE_FLASH,PlayerPtr->Class->House,Cell_Coord(cell)));
  }
  return true;

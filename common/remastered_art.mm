@@ -92,12 +92,20 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
   bool ground=!c.shroud&&(c.kind==WPRemastered::Command::Tile||c.kind==WPRemastered::Command::Fill);
   if(ground!=(pass==0))continue;
   if(c.width<=0||c.height<=0)continue;
-  const Frame*f=(!(c.flags&0x0200))?lookup(c):nullptr;
+  // The classic ghost table carries shadow/translucency semantics. Drawing a
+  // full-colour remastered sprite for that pass duplicates airborne projectiles.
+  const Frame*f=(!(c.flags&0x0200)&&c.ghost.empty())?lookup(c):nullptr;
   if(f&&f->page=="-")continue;
   id<MTLTexture>tex=nil;float x=c.x,y=c.y,w=c.width,h=c.height;
   struct Params{float a[20]={};uint32_t recolor=0;}p;
   if(f){tex=texture(device,*f);if(tex){const float scale=24.0f/128.0f;
-   if(c.centered){x+=(c.width-f->cw*scale)/2;y+=(c.height-f->ch*scale)/2;}
+   if(c.centered){
+    x+=(c.width-f->cw*scale)/2;
+    // AnimClass draws the classic Ion Cannon beam with its bottom at the
+    // impact point. Its remastered canvas is much taller than the classic
+    // shape, so centering it moves the strike far below the actual damage.
+    y=c.asset=="IONSFX"?c.y+c.height-f->ch*scale:c.y+(c.height-f->ch*scale)/2;
+   }
    x+=f->cx*scale;y+=f->cy*scale;w=f->w*scale;h=f->h*scale;
    std::string team=c.owner==0?"GOOD":c.owner==1?(f->tileset=="TD_Structures"?"BAD_STRUCTURE":"BAD_UNIT"):c.owner==2?"NEUTRAL":c.owner>=4&&c.owner<=9?"MULTI"+std::to_string(c.owner-3):"";
    auto t=teams.find(team);if(t!=teams.end()&&t->second[12]>t->second[10]&&t->second[17]>t->second[15]){std::copy(t->second.begin(),t->second.end(),p.a);p.recolor=1;}
@@ -172,6 +180,25 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
  }
  }
  if(!healthOnly)return;
+ // The Obelisk beam is a classic vector line, not a sprite. Its indexed
+ // pixels sit underneath the remastered terrain, so composite the captured
+ // line after world artwork using the same battlefield transform.
+ for(const auto&line:scene.laserLines){
+  int x0=std::min(line.x,line.x1),y0=std::min(line.y,line.y1);
+  int w=std::abs(line.x1-line.x)+1,h=std::abs(line.y1-line.y)+1;
+  if(w<=0||h<=0||w>2048||h>2048||size_t(w)*h>1024*1024)continue;
+  std::vector<uint8_t>rgba(size_t(w)*h*4,0);
+  int x=line.x-x0,y=line.y-y0,ex=line.x1-x0,ey=line.y1-y0;
+  int dx=std::abs(ex-x),dy=std::abs(ey-y),stepX=x<ex?1:-1,stepY=y<ey?1:-1,err=dx-dy;
+  while(true){size_t i=(size_t(y)*w+x)*4;rgba[i]=palette[line.color*3]<<2;rgba[i+1]=palette[line.color*3+1]<<2;rgba[i+2]=palette[line.color*3+2]<<2;rgba[i+3]=255;
+   if(x==ex&&y==ey)break;int e=2*err;if(e>-dy){err-=dy;x+=stepX;}if(e<dx){err+=dx;y+=stepY;}}
+  id<MTLTexture>tex=overlayTexture(device,w,h,rgba);if(!tex)continue;
+  int left=std::max(0,ox),top=std::max(0,int(oy+mapTop*sy)),right=std::min(dw,int(ox+mapRight*sx)),bottom=std::min(dh,int(oy+mapBottom*sy));if(right<=left||bottom<=top)continue;
+  struct Params{float a[20]={};uint32_t recolor=0;}p;
+  [encoder setViewport:MTLViewport{ox+x0*zoom*sx,oy+(mapTop+(y0-mapTop)*zoom)*sy,w*zoom*sx,h*zoom*sy,0,1}];
+  [encoder setScissorRect:MTLScissorRect{NSUInteger(left),NSUInteger(top),NSUInteger(right-left),NSUInteger(bottom-top)}];
+  [encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+ }
  for(const auto&bar:scene.health){
   if(bar.width<=0)continue;std::vector<uint8_t>rgba(bar.width*4*4,0);
   for(int y=0;y<4;++y)for(int x=0;x<bar.width;++x){size_t i=(y*bar.width+x)*4;rgba[i+3]=255;if(y>0&&y<3&&x>0&&x<=bar.fill){rgba[i]=palette[bar.color*3]<<2;rgba[i+1]=palette[bar.color*3+1]<<2;rgba[i+2]=palette[bar.color*3+2]<<2;}}

@@ -2816,7 +2816,7 @@ ActionType TechnoClass::What_Action(CELL cell) const
         /*
         **	Special override to force a move regardless of what is occupying the location.
         */
-        if (shiftdown) {
+        if (shiftdown || altdown) {
             return (ACTION_MOVE);
         }
 

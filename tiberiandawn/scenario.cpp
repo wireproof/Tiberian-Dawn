@@ -1,4 +1,5 @@
 #include "wireproof_production.h"
+#include "common/remastered_scene.h"
 //
 // Copyright 2020 Electronic Arts Inc.
 //
@@ -411,6 +412,11 @@ void Clear_Scenario(void)
  *=============================================================================================*/
 void Do_Win(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    // The victory caption is drawn into the classic page. Stop compositing
+    // the last HD battlefield over it while the announcement is displayed.
+    WPRemastered::Clear();
+#endif
     Map.Set_Default_Mouse(MOUSE_NORMAL);
     Hide_Mouse();
 

@@ -182,8 +182,6 @@ The Mod Workshop incorporates settings and behavior learned by reverse-engineeri
 
 CnCGEdit's executable and original source code are not included. The workshop is newly implemented against the game engine's native types, with presets and validation. Misleading or unsafe legacy behaviors were deliberately not reproduced. See [the reverse-engineering findings](docs/CNCGEDIT-RESEARCH.txt) for the mapping and differences. CnCGEdit remains copyright its original author; this credit does not imply endorsement.
 
-## Licenses
+## Legal notices
 
-Source licenses and notices are preserved: [Tiberian Dawn](tiberiandawn/license.txt), [Red Alert](redalert/license.txt), and dependency licenses. Game artwork and audio have separate rights from source code.
-
-Research notes: `docs/CNCGEDIT-RESEARCH.txt`. Historical upstream documentation is retained in `docs/UPSTREAM-README.md`; its release/notarization claims refer to upstream, not this fork.
+[Licenses, game assets, music, and third-party notices](docs/LEGAL-NOTICES.md).

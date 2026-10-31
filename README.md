@@ -26,7 +26,7 @@ The [v0.7.3 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.
 
 ## HD graphics — working in-game 😎
 
-HD graphics are already working in-game, with enhanced terrain, buildings, units, and battlefield artwork. These are actual gameplay screenshots, not mockups or concept art.
+HD graphics are already working in-game, with enhanced terrain, buildings, units, and battlefield artwork. These are actual gameplay screenshots, not mockups or concept art. Their exact capture build is not recorded; they were added October 26, 2026 and do not verify v0.7.3.
 
 | Nod base and structures | Battlefield and selected units |
 | --- | --- |
@@ -46,7 +46,7 @@ Watch in your browser with sound, seeking, and fullscreen controls—no MOV down
 | iPad Pro 11 gameplay and controls | 2:54 | [Play iPad gameplay](https://wireproof.github.io/Tiberian-Dawn/#ipad-gameplay) |
 | iPad Pro 11 campaign and gameplay | 1:05 | [Play iPad campaign footage](https://wireproof.github.io/Tiberian-Dawn/#ipad-campaign) |
 
-The Duo recordings are from the v0.5.2-era showcase. The iPad Pro 11 recordings and 11 screenshots were supplied on October 26, 2026. They show real-device use, not comprehensive verification of every feature or later fix. Browser copies use H.264 video and AAC audio in fast-start MP4 containers. Original recordings are preserved separately.
+The Duo recordings are from the v0.5.2-era showcase. The iPad Pro 11 recordings and 12 screenshots were supplied on October 26, 2026; their main-menu images show v0.5.5. Other exact capture builds are noted in the [gallery](docs/showcase/README.md) when known. These show real-device use, not comprehensive verification of every feature or later fix. Browser copies use H.264 video and AAC audio in fast-start MP4 containers. Original recordings are preserved separately.
 
 ### Cover display
 
@@ -78,7 +78,7 @@ Landscape and portrait gameplay, menus, floating controls, and the Mod Workshop.
 | --- | --- | --- |
 | ![iPad portrait gameplay](docs/showcase/ipad-gameplay-portrait.jpg) | ![iPad portrait menu](docs/showcase/ipad-main-menu-portrait.jpg) | ![iPad Workshop](docs/showcase/ipad-workshop-portrait.jpg) |
 
-[View all 11 iPad screenshots →](docs/showcase/README.md#ipad-pro-11)
+[View all 12 iPad screenshots →](docs/showcase/README.md#ipad-pro-11)
 
 ## Full features
 
@@ -156,7 +156,7 @@ Keep SDL at its recorded submodule commit and apply the supplied patch through t
 | Duo gameplay | Owner-provided gameplay and screenshots are available above |
 | Latest layout changes | UI-size extremes, LiveContainer hinge detection, fold/rotation switching, and relaunch persistence still need physical-device confirmation |
 | Display presentation | Cover/inner zoom separation and campaign/menu/movie alignment need continued real-device regression testing |
-| iPad Pro 11 | Two recordings and 11 screenshots available; broader device and lifecycle validation remains pending |
+| iPad Pro 11 | Two recordings and 12 screenshots available; broader device and lifecycle validation remains pending |
 | macOS distribution | Ad-hoc signed local build; not notarized |
 | Multiplayer | Custom Workshop rules disable it; cross-device compatibility is not certified here |
 | Other configurations | Arbitrary Workshop combinations and Vision Pro are not certified |

@@ -4,11 +4,21 @@
 
 The player source is [index.html](index.html); published media lives on the separate `gh-pages` branch to keep videos out of the main source checkout.
 
-User-supplied cover and inner display captures. The cover main menu identifies v0.5.2. These are gameplay examples, not verification of later fixes.
+These are historical captures, not screenshots of the current v0.7.3 release. Version labels below come from a visible in-game version or an existing capture note; the date a file was added to Git does not establish the app build that produced it.
+
+| Capture | Version shown or recorded |
+| --- | --- |
+| Duo cover main menu | **v0.5.2**, visible in the screenshot |
+| iPad main menu, portrait and landscape | **v0.5.5**, visible in both screenshots |
+| iPad Build Anywhere | **v0.5.7**, recorded with the capture |
+| Other Duo and iPad screenshots | Exact build not recorded |
+| HD gameplay images in the main README | Exact build not recorded; added October 26, 2026 |
+
+For future screenshots, record the device, graphics mode, capture date, and version/build shown in the app alongside the image. A Git commit date alone is only a publication date.
 
 ## Cover display
 
-### Cover Main Menu
+### Cover Main Menu — v0.5.2
 
 ![cover main menu](cover-main-menu.jpg)
 
@@ -44,11 +54,11 @@ User-supplied cover and inner display captures. The cover main menu identifies v
 
 ## iPad Pro 11
 
-Owner-supplied on October 26, 2026: 11 screenshots plus two browser-playable recordings. These document real-device gameplay and menus; they are not a complete compatibility test.
+Owner-supplied on October 26, 2026: 12 screenshots plus two browser-playable recordings. Both main-menu screenshots visibly show v0.5.5. The exact build for the other iPad captures is not recorded unless called out below. These document real-device gameplay and menus; they are not a complete compatibility test.
 
 [Gameplay and controls (2:54)](https://wireproof.github.io/Tiberian-Dawn/#ipad-gameplay) · [Campaign and gameplay (1:05)](https://wireproof.github.io/Tiberian-Dawn/#ipad-campaign)
 
-### Main menu — landscape
+### Main menu — landscape, v0.5.5
 
 ![iPad Pro 11: Main menu — landscape](ipad-main-menu-landscape.jpg)
 
@@ -56,7 +66,7 @@ Owner-supplied on October 26, 2026: 11 screenshots plus two browser-playable rec
 
 ![iPad Pro 11: Gameplay — landscape](ipad-gameplay-landscape.jpg)
 
-### Build Anywhere and customized build options
+### Build Anywhere and customized build options — v0.5.7
 
 ![iPad Pro 11: Build Anywhere and customized build options](ipad-build-anywhere.jpg)
 
@@ -82,7 +92,7 @@ Owner-supplied v0.5.7 screenshot. Shows existing Build Anywhere and Workshop cus
 
 ![iPad Pro 11: Portrait battlefield view](ipad-gameplay-portrait-wide-view.jpg)
 
-### Main menu — portrait
+### Main menu — portrait, v0.5.5
 
 ![iPad Pro 11: Main menu — portrait](ipad-main-menu-portrait.jpg)
 

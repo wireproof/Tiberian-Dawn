@@ -4,7 +4,7 @@ Classic Command & Conquer, adapted for touch on iPhone and iPad and native play 
 
 **[Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest) · [Watch gameplay](https://wireproof.github.io/Tiberian-Dawn/) · [Screenshots](docs/showcase/README.md) · [Bugs and feature requests](https://github.com/wireproof/Tiberian-Dawn/issues)**
 
-An unofficial, free, non-commercial community project. **EA has not endorsed and does not support this product.**
+An unofficial, free, community-maintained project.
 
 ## Current release — v0.7.3
 
@@ -22,7 +22,7 @@ The project has progressed substantially since the early v0.2.7 and v0.5.2 build
 
 Version 0.7.3 adds a separate Game command toolbar and candidate fixes for rendering, rally points, game speed, combat behavior, and menu transitions. Issues marked **stage: implemented** have code changes but are still open until tested on a device; **stage: verified** requires a confirmed result. The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) records both bugs and feature requests.
 
-The [v0.7.3 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.3) includes a complete iOS IPA with classic game data, music, and Remastered artwork. The public IPA has no personal developer provisioning profile and must be signed for your device before installation. To preserve saves, update the existing native app or existing LiveContainer data container instead of uninstalling it.
+The [v0.7.3 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.3) includes an iOS IPA that must be signed for your device before installation. To preserve saves, update the existing native app or existing LiveContainer data container instead of uninstalling it.
 
 ## HD graphics — working in-game 😎
 
@@ -123,7 +123,7 @@ Workshop changes apply after restarting and beginning a new mission. Type edits 
 2. Sign it for your device and install with your sideloading tool or LiveContainer. iCloud sync requires a compatible signed entitlement.
 3. When updating LiveContainer, replace the app in its **existing data container** to preserve saves.
 
-The bundle identifier remains `com.wireproof.tiberiandawn`. macOS builds can be produced from source below. See the asset and licensing notes before redistributing builds or game data.
+The bundle identifier remains `com.wireproof.tiberiandawn`. macOS builds can be produced from source below. Review applicable licenses before redistributing builds or game data.
 
 ## Build from source
 
@@ -145,7 +145,7 @@ cmake --build --preset macos-universal
 sh scripts/package-macos-app.sh
 ```
 
-Keep SDL at its recorded submodule commit and apply the supplied patch through the dependency helper. Local source builds do not automatically include original game data: import authorized data through the app, or add an authorized GameData directory to the built bundle and re-sign before packaging.
+Keep SDL at its recorded submodule commit and apply the supplied patch through the dependency helper. Local source builds require game data separately: import it through the app, or add a GameData directory to the built bundle and re-sign before packaging.
 
 ## Validation and limits
 
@@ -182,10 +182,8 @@ The Mod Workshop incorporates settings and behavior learned by reverse-engineeri
 
 CnCGEdit's executable and original source code are not included. The workshop is newly implemented against the game engine's native types, with presets and validation. Misleading or unsafe legacy behaviors were deliberately not reproduced. See [the reverse-engineering findings](docs/CNCGEDIT-RESEARCH.txt) for the mapping and differences. CnCGEdit remains copyright its original author; this credit does not imply endorsement.
 
-## Licensing and assets
+## Licenses
 
-Source licenses and original notices are preserved; see [Tiberian Dawn’s license](tiberiandawn/license.txt), [Red Alert’s license](redalert/license.txt), and dependency licenses. The GPL source license does not grant ownership of game artwork/audio. EA owns the classic assets bundled in the release IPA; they are not committed to this source repository or relicensed as GPL.
-
-The iOS release package includes classic game data and the soundtrack. Those assets remain EA's property and are not covered by the source-code license. This project is unofficial, free and non-commercial.
+Source licenses and notices are preserved: [Tiberian Dawn](tiberiandawn/license.txt), [Red Alert](redalert/license.txt), and dependency licenses. Game artwork and audio have separate rights from source code.
 
 Research notes: `docs/CNCGEDIT-RESEARCH.txt`. Historical upstream documentation is retained in `docs/UPSTREAM-README.md`; its release/notarization claims refer to upstream, not this fork.

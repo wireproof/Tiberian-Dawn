@@ -2,7 +2,7 @@
 
 Classic Command & Conquer, adapted for touch on iPhone and iPad and native play on macOS. Built on [Cesarus85’s Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and EA’s released source.
 
-**[Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest) · [Report a bug or request a feature](https://github.com/wireproof/Tiberian-Dawn/issues) · [Gameplay and screenshots](docs/showcase/README.md)**
+**[Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest) · [Watch gameplay](https://wireproof.github.io/Tiberian-Dawn/) · [Screenshots](docs/showcase/README.md) · [Bugs and feature requests](https://github.com/wireproof/Tiberian-Dawn/issues)**
 
 An unofficial, free, non-commercial community project. **EA has not endorsed and does not support this product.**
 

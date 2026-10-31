@@ -1,5 +1,22 @@
 # Changelog
 
+All notable changes to Tiberian Dawn for Apple platforms are documented here. Source commits, build delivery, and gameplay verification are tracked separately.
+
+## 0.7.3 — 2026-10-29
+
+- Added a separate movable Game command toolbar with groups and orders.
+- Implemented candidate fixes for Obelisk/Ion rendering, projectile shadows, Remastered scene transitions, rally persistence, game speed, defense, Force Move, and Mission Accomplished text.
+- Built and installed iOS build 703 on iPad and Duo. Physical gameplay verification is pending; see [the checklist](docs/TESTING-0.7.3.md) and [open issues](https://github.com/wireproof/Tiberian-Dawn/issues).
+
+## 0.7.2 — 2026-10-27
+
+- Added paid production-queue cancellation and improved infantry rally dispatch.
+- Corrected Remastered terrain/decal order, reduced texture-cache churn, and filled the top-bar gap. See [the release details](docs/REMASTERED-0.7.2.md).
+
+## 0.7.1 — 2026-10-27
+
+- Added Remastered artwork integration and UI adaptation, unit production queues, and infantry and vehicle rally points.
+
 ## 0.5.5
 
 - Remember joystick and controller positions independently for cover/inner displays and portrait/landscape. Existing shared positions seed uncustomized layouts; positions stay relative to the usable area.
@@ -15,10 +32,6 @@
 - Center campaign scores, maps, and videos across the full display width, including Duo cover windows with a reserved side strip. Preserve aspect ratio and vertical letterboxing.
 - Cover-screen showcase recording remains associated with v0.5.2, the recorded build.
 
-
-All notable changes to Tiberian Dawn for Apple platforms are documented here.
-The project keeps iPadOS, macOS, and visionOS on one shared engine and content
-baseline wherever the operating systems permit it.
 
 ## 0.5.2 — 2026-10-26
 

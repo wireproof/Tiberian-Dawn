@@ -2,13 +2,13 @@
 
 Classic Command & Conquer, adapted for touch on iPhone and iPad and native play on macOS. Built on [Cesarus85’s Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and EA’s released source.
 
-**[Download the latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest) · [Watch gameplay](https://wireproof.github.io/Tiberian-Dawn/) · [Screenshot gallery](docs/showcase/README.md)**
+**[Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest) · [Report a bug or request a feature](https://github.com/wireproof/Tiberian-Dawn/issues) · [Gameplay and screenshots](docs/showcase/README.md)**
 
 An unofficial, free, non-commercial community project. **EA has not endorsed and does not support this product.**
 
-## Current release — v0.7.2
+## Current release — v0.7.3
 
-**Current public build: v0.7.2** · [Releases and downloads](https://github.com/wireproof/Tiberian-Dawn/releases) · [Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest)
+**Build 703 is installed on the owner's iPad and Duo. Gameplay fixes are awaiting device verification.** [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.3) · [Device test checklist](docs/TESTING-0.7.3.md) · [Open bugs and features](https://github.com/wireproof/Tiberian-Dawn/issues)
 
 The project has progressed substantially since the early v0.2.7 and v0.5.2 builds. The current feature set includes:
 
@@ -20,9 +20,9 @@ The project has progressed substantially since the early v0.2.7 and v0.5.2 build
 - Save/settings import and export, with optional iCloud sync for appropriately signed builds.
 - Continued fixes for sidebar rendering, campaign presentation, resizing, touch alignment, and device-specific layouts.
 
-**Next up:** v0.7.2 is in development; it is not a released or verified build. Consult the [release page](https://github.com/wireproof/Tiberian-Dawn/releases) for the actual downloadable version and version-specific notes.
+Version 0.7.3 adds a separate Game command toolbar and candidate fixes for rendering, rally points, game speed, combat behavior, and menu transitions. Issues marked **stage: implemented** have code changes but are still open until tested on a device; **stage: verified** requires a confirmed result. The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) records both bugs and feature requests.
 
-**Updating:** Update the existing native app or existing LiveContainer data container; do not uninstall to update. Native and LiveContainer installations have separate data containers. Public source and unsigned packages exclude original game archives and personal signing profiles; supply compatible game data separately.
+The [v0.7.3 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.3) includes a complete iOS IPA with classic game data, music, and Remastered artwork. The public IPA has no personal developer provisioning profile and must be signed for your device before installation. To preserve saves, update the existing native app or existing LiveContainer data container instead of uninstalling it.
 
 ## HD graphics — working in-game 😎
 
@@ -119,8 +119,8 @@ Workshop changes apply after restarting and beginning a new mission. Type edits 
 
 ## Install or update
 
-1. Download the IPA from [Releases](https://github.com/wireproof/Tiberian-Dawn/releases/latest).
-2. Install/resign with your sideloading tool or LiveContainer.
+1. Download the complete IPA from the [latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest).
+2. Sign it for your device and install with your sideloading tool or LiveContainer. iCloud sync requires a compatible signed entitlement.
 3. When updating LiveContainer, replace the app in its **existing data container** to preserve saves.
 
 The bundle identifier remains `com.wireproof.tiberiandawn`. macOS builds can be produced from source below. See the asset and licensing notes before redistributing builds or game data.
@@ -151,8 +151,8 @@ Keep SDL at its recorded submodule commit and apply the supplied patch through t
 
 | Area | Status |
 | --- | --- |
-| v0.5.6 host validation | All 26 host tests and Apple parity checks passed |
-| Apple builds | iOS Release compiled; Universal 2 macOS package signed and verified |
+| v0.7.3 source and build | iOS Release compiled and signed; build 703 installed on iPad and Duo |
+| v0.7.3 gameplay | Owner's physical-device checks are pending; see the [checklist](docs/TESTING-0.7.3.md) |
 | Duo gameplay | Owner-provided gameplay and screenshots are available above |
 | Latest layout changes | UI-size extremes, LiveContainer hinge detection, fold/rotation switching, and relaunch persistence still need physical-device confirmation |
 | Display presentation | Cover/inner zoom separation and campaign/menu/movie alignment need continued real-device regression testing |
@@ -169,7 +169,7 @@ These are planned or exploratory directions, **not shipped features or promises 
 
 - **More real-device coverage:** expand the iPad showcase and device coverage, broaden portrait and landscape testing, and keep improving cover/inner display transitions, saved layouts, and presentation alignment.
 - **Original-game reference research:** continue comparing the original C&C95 behavior with the mobile port to guide compatibility fixes and optimization. Current research is partial; it is not a complete reconstruction of the game.
-- **Optional modern graphics:** investigate user-supplied Remastered assets and a classic/modern graphics toggle. Asset mapping, rendering, memory use, team colors, and licensing still need work; Remastered graphics are not currently supported.
+- **Remastered graphics:** continue checking asset mapping, rendering, memory use, team colors, and performance in both graphics modes. The Enhanced classic toggle and Remastered artwork already work in the owner's asset-equipped builds; public source packages do not include extracted artwork.
 - **A broader Command & Conquer library:** explore C&C DOS and Red Alert references and, eventually, a shared launcher for selecting games. Collecting/reference analysis of those files does not mean native ports are available.
 
 ## Credits
@@ -186,6 +186,6 @@ CnCGEdit's executable and original source code are not included. The workshop is
 
 Source licenses and original notices are preserved; see [Tiberian Dawn’s license](tiberiandawn/license.txt), [Red Alert’s license](redalert/license.txt), and dependency licenses. The GPL source license does not grant ownership of game artwork/audio. EA owns the classic assets bundled in the release IPA; they are not committed to this source repository or relicensed as GPL.
 
-The requested release includes the classic soundtrack. EA's [current modding guidelines](https://www.ea.com/games/command-and-conquer/news/modding-faq) explicitly exclude game music files from mods. The historic freeware release is not represented here as an unrestricted redistribution license. This project is unofficial, free and non-commercial.
+The iOS release package includes classic game data and the soundtrack. Those assets remain EA's property and are not covered by the source-code license. This project is unofficial, free and non-commercial.
 
 Research notes: `docs/CNCGEDIT-RESEARCH.txt`. Historical upstream documentation is retained in `docs/UPSTREAM-README.md`; its release/notarization claims refer to upstream, not this fork.

@@ -1,6 +1,6 @@
 # iOS 0.7.3 device check
 
-Build 703 is a test candidate. Install it over 0.7.2 to preserve local saves and settings. The private device package contains the user's game data and Remastered artwork; neither belongs in public source downloads.
+Build 703 is a test candidate. Install it over 0.7.2 to preserve local saves and settings. The complete iOS release IPA includes classic game data, music, and Remastered artwork; the public source archive contains code without those assets. The public IPA must be signed for the destination device.
 
 ## Check on iPad and Duo
 

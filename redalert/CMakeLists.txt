@@ -241,7 +241,48 @@ if(BUILD_VANILLARA)
     # A target must include the icon for the custom command to run.
     add_executable(VanillaRA ${REDALERT_SRC} ${REDALERT_NET_SRC} ${REDALERT_HEADERS} ${VANILLARA_RC} ${VANILLARA_ICON})
 
-    if(MAKE_BUNDLE)
+    if(IPADOS_PORT)
+        # Red Alert already compiles for arm64 iOS. Give the standalone engine
+        # the same UIKit/SDL bridge and Apple frameworks as Tiberian Dawn so
+        # link failures identify engine differences rather than missing glue.
+        set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=SDL_main")
+        target_sources(VanillaRA PRIVATE
+            ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp
+            ipados_bridge.mm)
+        set_source_files_properties(ipados_bridge.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+        set_target_properties(VanillaRA PROPERTIES
+            MACOSX_BUNDLE True
+            MACOSX_BUNDLE_GUI_IDENTIFIER "com.wireproof.redalert.probe"
+            MACOSX_BUNDLE_BUNDLE_NAME "Red Alert"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${TIBERIAN_DAWN_BUILD_VERSION}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/platform/apple/Info-RedAlert-iPadOS.plist.in"
+            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.wireproof.redalert.probe"
+            XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+            XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST "NO")
+        set(RED_ALERT_DATA_DIR "" CACHE PATH "Private staged original Red Alert CD data")
+        if(RED_ALERT_DATA_DIR)
+            set(RED_ALERT_GAME_DATA
+                "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
+                "${RED_ALERT_DATA_DIR}/MAIN.MIX"
+                "${RED_ALERT_DATA_DIR}/SOVIET.MIX"
+                "${RED_ALERT_DATA_DIR}/manifest.json")
+            foreach(asset IN LISTS RED_ALERT_GAME_DATA)
+                if(NOT EXISTS "${asset}")
+                    message(FATAL_ERROR "Missing staged Red Alert asset: ${asset}")
+                endif()
+            endforeach()
+            set_source_files_properties(${RED_ALERT_GAME_DATA}
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData)
+            target_sources(VanillaRA PRIVATE ${RED_ALERT_GAME_DATA})
+        endif()
+        target_link_libraries(VanillaRA
+            "-framework UIKit" "-framework AVFAudio" "-framework Metal"
+            "-framework MetalKit" "-framework ImageIO" "-framework QuartzCore"
+            "-framework UniformTypeIdentifiers")
+    endif()
+
+    if(MAKE_BUNDLE AND NOT IPADOS_PORT)
         set_source_files_properties(${VANILLARA_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
         set_target_properties(VanillaRA PROPERTIES
             MACOSX_BUNDLE True

@@ -123,6 +123,17 @@
             }
         },
         {
+            "name": "ipados-redalert-probe",
+            "inherits": "ipados-device",
+            "displayName": "Red Alert iOS engine link probe",
+            "binaryDir": "${sourceDir}/build/ipados-redalert-probe",
+            "cacheVariables": {
+                "BUILD_VANILLATD": "OFF",
+                "BUILD_VANILLARA": "ON",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "/private/tmp/VanillaRA-iOS-Probe"
+            }
+        },
+        {
             "name": "visionos-simulator",
             "displayName": "Tiberian Dawn for Vision Pro — Simulator Prototype",
             "generator": "Xcode",
@@ -244,6 +255,13 @@
             "displayName": "Tiberian Dawn for iPad — Release",
             "configuration": "Release",
             "targets": ["TiberianDawn"]
+        },
+        {
+            "name": "ipados-redalert-probe",
+            "configurePreset": "ipados-redalert-probe",
+            "displayName": "Red Alert iOS engine link probe",
+            "configuration": "Release",
+            "targets": ["VanillaRA"]
         },
         {
             "name": "visionos-simulator",

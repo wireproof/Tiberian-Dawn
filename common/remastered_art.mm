@@ -94,7 +94,7 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
   if(c.width<=0||c.height<=0)continue;
   // The classic ghost table carries shadow/translucency semantics. Drawing a
   // full-colour remastered sprite for that pass duplicates airborne projectiles.
-  const Frame*f=(!(c.flags&0x0200)&&c.ghost.empty())?lookup(c):nullptr;
+  const Frame*f=(!(c.flags&0x0200)&&(c.ghost.empty()||c.remapped))?lookup(c):nullptr;
   if(f&&f->page=="-")continue;
   id<MTLTexture>tex=nil;float x=c.x,y=c.y,w=c.width,h=c.height;
   struct Params{float a[20]={};uint32_t recolor=0;}p;
@@ -130,12 +130,13 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
  }
  // Remastered chrome is independent of battlefield zoom. Hitboxes remain native.
  for(const auto&c:scene.chrome){
-  WPRemastered::Command q;q.asset=c.asset;const Frame*f=lookup(q);if(!f||c.width<=0||c.height<=0)continue;
-  id<MTLTexture>tex=texture(device,*f);if(!tex)continue;
+  if(c.width<=0||c.height<=0)continue;
+  WPRemastered::Command q;q.asset=c.asset;const Frame*f=c.asset.empty()?nullptr:lookup(q);
+  id<MTLTexture>tex=f?texture(device,*f):nil;
   float x=c.x-(c.right&&sourceWidth>0?sourceWidth-screenWidth:0),y=c.y;
   int l=std::max(0,int(ox+x*sx)),t=std::max(0,int(oy+y*sy)),r=std::min(dw,int(ox+(x+c.width)*sx)),b=std::min(dh,int(oy+(y+c.height)*sy));if(r<=l||b<=t)continue;
   struct Params{float a[20]={};uint32_t recolor=0;}p;
-  [encoder setViewport:MTLViewport{ox+x*sx,oy+y*sy,c.width*sx,c.height*sy,0,1}];[encoder setScissorRect:MTLScissorRect{NSUInteger(l),NSUInteger(t),NSUInteger(r-l),NSUInteger(b-t)}];[encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+  [encoder setViewport:MTLViewport{ox+x*sx,oy+y*sy,c.width*sx,c.height*sy,0,1}];[encoder setScissorRect:MTLScissorRect{NSUInteger(l),NSUInteger(t),NSUInteger(r-l),NSUInteger(b-t)}];[encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];if(tex){[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];}
   if(c.text.size()==size_t(c.width*c.height)){
    std::vector<uint8_t>rgba(c.text.size()*4,0);for(size_t i=0;i<c.text.size();++i){int v=c.text[i];int red=palette[v*3],green=palette[v*3+1],blue=palette[v*3+2];if(green>red*1.3&&green>blue*1.3&&green>12){rgba[i*4]=red<<2;rgba[i*4+1]=green<<2;rgba[i*4+2]=blue<<2;rgba[i*4+3]=255;}}
    tex=overlayTexture(device,c.width,c.height,rgba);[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];

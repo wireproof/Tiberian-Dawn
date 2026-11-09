@@ -10,7 +10,7 @@ namespace WPOrders {
 #ifdef MACOS_PORT
 int LoadUIScale();
 #endif
-enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies, QueueUnit, CancelUnit };
+enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies, QueueUnit, CancelUnit, BuildItem, CancelBuildItem, ToggleArtwork, ToggleLaptop };
 struct Stick { float x=0, y=0, intensity=0; };
 struct Command {
     Kind kind; int group; int itemType; int itemID;
@@ -19,11 +19,11 @@ struct Command {
         : kind(command),group(selectedGroup),itemType(type),itemID(id) {}
 };
 struct Production {
-    int type; int id; std::string name; int queued;
-    Production(int itemType,int itemID,const std::string& itemName,int count)
-        : type(itemType),id(itemID),name(itemName),queued(count) {}
+    int type; int id; std::string name, asset; int queued, category;
+    Production(int itemType,int itemID,const std::string& itemName,const std::string& assetName,int count,int group)
+        : type(itemType),id(itemID),name(itemName),asset(assetName),queued(count),category(group) {}
 };
-struct Snapshot { bool active; int selected; int force; int rally; Snapshot(bool a=false,int s=0,int f=0):active(a),selected(s),force(f),rally(0){} };
+struct Snapshot { bool active; int selected; int force; int rally; bool remastered; Snapshot(bool a=false,int s=0,int f=0):active(a),selected(s),force(f),rally(0),remastered(false){} };
 // UI threads only enqueue intentions. The game thread owns all game objects.
 class State {
     std::mutex mutex;
@@ -68,16 +68,17 @@ public:
     }
     Stick stick() { std::lock_guard<std::mutex> lock(mutex); return joystick; }
     Snapshot snapshot() { std::lock_guard<std::mutex> lock(mutex); return state; }
+    void publishArtwork(bool remastered) { std::lock_guard<std::mutex> lock(mutex); state.remastered=remastered; }
     void publishProduction(std::vector<Production> value) {
         std::lock_guard<std::mutex> lock(mutex); production=std::move(value);
     }
     std::vector<Production> productionSnapshot() {
         std::lock_guard<std::mutex> lock(mutex); return production;
     }
-    bool enqueueProduction(bool cancel,int type,int id) {
+    bool enqueueProduction(bool cancel,int type,int id,bool building=false) {
         std::lock_guard<std::mutex> lock(mutex);
         if (!state.active || pending.size()>=32 || type<0 || id<0) return false;
-        pending.push_back({cancel?CancelUnit:QueueUnit,0,type,id}); return true;
+        pending.push_back({building?(cancel?CancelBuildItem:BuildItem):(cancel?CancelUnit:QueueUnit),0,type,id}); return true;
     }
     bool enqueue(Kind kind, int group=0) {
         std::lock_guard<std::mutex> lock(mutex);

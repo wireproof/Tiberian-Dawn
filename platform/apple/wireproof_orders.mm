@@ -4,6 +4,7 @@
 #include "common/wireproof_camera.h"
 #include "common/wireproof_cheats.h"
 #include "common/wireproof_laptop.h"
+#include "common/remastered_art.h"
 #include "third_party/SDL2/include/SDL.h"
 #include "third_party/SDL2/include/SDL_syswm.h"
 
@@ -153,6 +154,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UIStackView *numberGrid;
 @property(nonatomic,strong) UIStackView *modeGrid;
 @property(nonatomic,strong) UIStackView *optionsPage;
+@property(nonatomic,strong) UIButton *artworkButton;
+@property(nonatomic,strong) UIButton *laptopButton;
 @property(nonatomic,strong) UIStackView *cheatStack;
 @property(nonatomic,strong) UIButton *cheatButton;
 @property(nonatomic,strong) UILabel *cheatStatus;
@@ -357,7 +360,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         UIStackView *uiButtons=[[UIStackView alloc] initWithArrangedSubviews:@[[self button:@"−" tag:700],self.uiScaleLabel,[self button:@"+" tag:701]]];uiButtons.spacing=8;uiButtons.alignment=UIStackViewAlignmentCenter;self.uiScaleLabel.textAlignment=NSTextAlignmentCenter;
         [uiButtons.arrangedSubviews.firstObject.widthAnchor constraintEqualToConstant:44].active=YES;[uiButtons.arrangedSubviews.lastObject.widthAnchor constraintEqualToConstant:44].active=YES;
         UIStackView *uiControls=[[UIStackView alloc] initWithArrangedSubviews:@[uiButtons,[self button:@"Reset UI size" tag:702]]];uiControls.axis=UILayoutConstraintAxisVertical;uiControls.spacing=6;
-        self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,uiControls,sizeControls,speedControls]];self.optionsPage.spacing=8;
+        self.artworkButton=[self button:@"Graphics: Original" tag:900];
+        self.laptopButton=[self button:@"Laptop deck: Off" tag:901];
+        UIStackView *displayControls=[[UIStackView alloc] initWithArrangedSubviews:@[self.artworkButton,self.laptopButton]];
+        displayControls.axis=UILayoutConstraintAxisVertical;displayControls.spacing=6;
+        self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,uiControls,sizeControls,speedControls,displayControls]];self.optionsPage.spacing=8;
         self.groupControls=groups;
         self.numberGrid=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],[self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]]]];
         self.numberGrid.spacing=6;self.numberGrid.distribution=UIStackViewDistributionFillEqually;
@@ -469,6 +476,10 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self saveZoom];
 }
 - (void)pressed:(UIButton*)button {
+    if(button.tag==900 || button.tag==901) {
+        WPOrders::Shared().enqueue(button.tag==900?WPOrders::ToggleArtwork:WPOrders::ToggleLaptop);
+        return;
+    }
     if(button.tag>=800 && button.tag<=805){UISlider *value=self.speedSliders[(button.tag-800)/2];value.value+=(button.tag%2?1:-1);[self speedChanged:value];return;}
     if(button.tag>=700 && button.tag<=702){self.uiScaleSlider.value=button.tag==702?100:WPOrders::Shared().uiScale()+(button.tag==700?-5:5);[self uiScaleChanged:self.uiScaleSlider];return;}
     if(button.tag>=600 && button.tag<=603) {
@@ -530,6 +541,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     if(self.zoomProfile && [self.zoomProfile isEqual:self.pendingZoomProfile])
         [NSUserDefaults.standardUserDefaults setInteger:WPOrders::Shared().zoomQuarters() forKey:self.zoomProfile];
     auto s=WPOrders::Shared().snapshot();
+    [self.artworkButton setTitle:s.remastered?@"Graphics: Remastered":@"Graphics: Original" forState:UIControlStateNormal];
+    [self.laptopButton setTitle:WPLaptop::Enabled().load()?@"Laptop deck: On":@"Laptop deck: Off" forState:UIControlStateNormal];
     auto cheats=WPCheats::Shared().snapshot();
     self.gamePage.hidden=YES;
     self.cheatStack.hidden=self.tabs.selectedSegmentIndex!=0;
@@ -781,10 +794,48 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 @end
 
+// Build cameos come from the packaged remaster atlas. The TSV is indexed once;
+// UIKit only decodes images for buildables currently shown in the deck.
+static UIImage *WPBuildCameo(NSString *asset) {
+    static NSDictionary<NSString*,NSArray<NSString*>*> *index;
+    static NSCache<NSString*,UIImage*> *cache;
+    static NSString *root;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        root=[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"RemasteredArt"];
+        NSString *manifest=[NSString stringWithContentsOfFile:[root stringByAppendingPathComponent:@"frames.tsv"]
+                                                   encoding:NSUTF8StringEncoding error:nil];
+        NSMutableDictionary *entries=[NSMutableDictionary new];
+        [manifest enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
+            if(![line hasPrefix:@"TD_UI\tICON."])return;
+            NSArray<NSString*> *parts=[line componentsSeparatedByString:@"\t"];
+            if(parts.count>=11 && [parts[2] isEqualToString:@"0"])
+                entries[parts[1]]=@[parts[6],parts[7],parts[8],parts[9],parts[10]];
+        }];
+        index=[entries copy];cache=[NSCache new];cache.countLimit=80;
+    });
+    NSString *key=[@"ICON." stringByAppendingString:asset.uppercaseString];
+    UIImage *cached=[cache objectForKey:key];if(cached)return cached;
+    NSArray<NSString*> *entry=index[key];if(!entry)return nil;
+    UIImage *page=[UIImage imageWithContentsOfFile:[root stringByAppendingPathComponent:entry[0]]];
+    if(!page.CGImage)return nil;
+    CGRect rect=CGRectMake(entry[1].integerValue,entry[2].integerValue,entry[3].integerValue,entry[4].integerValue);
+    if(CGRectGetMaxX(rect)>CGImageGetWidth(page.CGImage)||CGRectGetMaxY(rect)>CGImageGetHeight(page.CGImage))return nil;
+    CGImageRef crop=CGImageCreateWithImageInRect(page.CGImage,rect);
+    UIImage *image=crop?[UIImage imageWithCGImage:crop]:nil;
+    if(crop)CGImageRelease(crop);
+    if(image)[cache setObject:image forKey:key];
+    return image;
+}
+
 // The laptop preview keeps the battlefield on the upper half of the inner
 // display and makes production and orders reachable from the lower half.
 @interface WPLaptopDock : UIView
 @property(nonatomic,strong) UILabel *heading;
+@property(nonatomic,strong) UISegmentedControl *mode;
+@property(nonatomic,strong) UISegmentedControl *category;
+@property(nonatomic,strong) UIButton *artworkButton;
+@property(nonatomic,strong) UIButton *laptopButton;
 @property(nonatomic,strong) UIScrollView *productionStrip;
 @property(nonatomic,strong) UIScrollView *groupsStrip;
 @property(nonatomic,strong) NSMutableArray<UIButton*> *productionButtons;
@@ -812,6 +863,18 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.heading=[UILabel new];self.heading.textColor=UIColor.whiteColor;
         self.heading.font=[UIFont systemFontOfSize:15 weight:UIFontWeightBold];
         [self addSubview:self.heading];
+        self.mode=[[UISegmentedControl alloc] initWithItems:@[@"Build",@"Commands"]];
+        self.mode.selectedSegmentIndex=0;[self.mode addTarget:self action:@selector(modeChanged:) forControlEvents:UIControlEventValueChanged];
+        self.category=[[UISegmentedControl alloc] initWithItems:@[@"Buildings",@"Infantry",@"Vehicles"]];
+        self.category.selectedSegmentIndex=0;[self.category addTarget:self action:@selector(modeChanged:) forControlEvents:UIControlEventValueChanged];
+        for(UISegmentedControl *control in @[self.mode,self.category]) {
+            control.selectedSegmentTintColor=UIColor.whiteColor;
+            [control setTitleTextAttributes:@{NSForegroundColorAttributeName:UIColor.whiteColor} forState:UIControlStateNormal];
+            [control setTitleTextAttributes:@{NSForegroundColorAttributeName:UIColor.blackColor} forState:UIControlStateSelected];
+            [self addSubview:control];
+        }
+        self.artworkButton=[self button:@"Remastered" tag:900];[self addSubview:self.artworkButton];
+        self.laptopButton=[self button:@"Laptop On" tag:901];[self addSubview:self.laptopButton];
         self.productionStrip=[UIScrollView new];self.productionStrip.showsHorizontalScrollIndicator=YES;
         [self addSubview:self.productionStrip];self.productionButtons=[NSMutableArray new];
         self.groupsStrip=[UIScrollView new];self.groupsStrip.showsHorizontalScrollIndicator=YES;
@@ -835,18 +898,26 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }return self;
 }
 - (void)pressed:(UIButton*)button {
+    if(button.tag==900||button.tag==901){WPOrders::Shared().enqueue(button.tag==900?WPOrders::ToggleArtwork:WPOrders::ToggleLaptop);return;}
     if(button.tag>=1000){
         int value=(int)button.tag-1000;
-        WPOrders::Shared().enqueueProduction(false,value/1000,value%1000);
+        bool building=false;
+        for(const auto&item:WPOrders::Shared().productionSnapshot())
+            if(item.type==value/1000&&item.id==value%1000){building=item.category==0;break;}
+        WPOrders::Shared().enqueueProduction(false,value/1000,value%1000,building);
     }else if(button.tag>=200){WPOrders::Shared().enqueue(WPOrders::Recall,(int)button.tag-200);}
     else WPOrders::Shared().enqueue((WPOrders::Kind)button.tag);
 }
 - (void)holdProduction:(UILongPressGestureRecognizer*)hold {
     if(hold.state!=UIGestureRecognizerStateBegan)return;
     int value=(int)hold.view.tag-1000;
-    if(WPOrders::Shared().enqueueProduction(true,value/1000,value%1000))
+    bool building=false;
+    for(const auto&item:WPOrders::Shared().productionSnapshot())
+        if(item.type==value/1000&&item.id==value%1000){building=item.category==0;break;}
+    if(WPOrders::Shared().enqueueProduction(true,value/1000,value%1000,building))
         [[UISelectionFeedbackGenerator new] selectionChanged];
 }
+- (void)modeChanged:(UISegmentedControl*)control { self.productionKeys=nil;[self refresh]; }
 - (void)holdGroup:(UILongPressGestureRecognizer*)hold {
     if(hold.state==UIGestureRecognizerStateBegan && WPOrders::Shared().enqueue(WPOrders::Assign,(int)hold.view.tag-200))
         [[UISelectionFeedbackGenerator new] selectionChanged];
@@ -864,37 +935,59 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.heading.text=state.rally==1?@"Infantry rally · tap battlefield":state.rally==2?@"Vehicle rally · tap battlefield":
         state.force==1?@"Force Attack · tap target":state.force==2?@"Force Move · tap target":
         [NSString stringWithFormat:@"Command deck · %d selected",state.selected];
-    auto items=WPOrders::Shared().productionSnapshot();
+    const BOOL buildMode=self.mode.selectedSegmentIndex==0;
+    self.mode.frame=CGRectMake(inset,36,width,32);
+    self.category.hidden=!buildMode;
+    self.category.frame=CGRectMake(inset,74,width,32);
+    [self.artworkButton setTitle:state.remastered?@"Remastered On":@"Remastered Off" forState:UIControlStateNormal];
+    CGFloat footerY=self.bounds.size.height-MAX(54,self.window.safeAreaInsets.bottom+50);
+    self.artworkButton.frame=CGRectMake(inset,footerY,(width-8)/2,44);
+    self.laptopButton.frame=CGRectMake(inset+(width-8)/2+8,footerY,(width-8)/2,44);
+    auto all=WPOrders::Shared().productionSnapshot();
+    std::vector<WPOrders::Production> items;
+    for(const auto&item:all)
+        if(buildMode ? item.category==self.category.selectedSegmentIndex : item.category!=0) items.push_back(item);
     NSMutableArray<NSString*> *keys=[NSMutableArray new];
-    for(const auto&item:items)[keys addObject:[NSString stringWithFormat:@"%d:%d",item.type,item.id]];
+    for(const auto&item:items)[keys addObject:[NSString stringWithFormat:@"%d:%d:%d",item.type,item.id,buildMode]];
     if(![keys isEqualToArray:self.productionKeys]) {
         for(UIButton *button in self.productionButtons)[button removeFromSuperview];
         [self.productionButtons removeAllObjects];self.productionKeys=keys;
         for(NSUInteger i=0;i<items.size();++i){UIButton *button=[self button:@"" tag:1000+items[i].type*1000+items[i].id];
             button.accessibilityHint=@"Tap to queue. Hold to cancel queued units and refund production.";
+            if(buildMode){NSString *asset=[NSString stringWithUTF8String:items[i].asset.c_str()];
+                UIImage *cameo=WPBuildCameo(asset?:@"");
+                if(cameo)[button setBackgroundImage:cameo forState:UIControlStateNormal];}
             UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdProduction:)];
             hold.minimumPressDuration=.5;hold.cancelsTouchesInView=YES;[button addGestureRecognizer:hold];
             [self.productionStrip addSubview:button];[self.productionButtons addObject:button];}
     }
-    self.productionStrip.frame=CGRectMake(inset,38,width,56);
+    self.productionStrip.frame=buildMode?CGRectMake(inset,114,width,MAX(80,footerY-122)):
+        CGRectMake(inset,76,width,56);
     for(NSUInteger i=0;i<self.productionButtons.count;++i){UIButton *button=self.productionButtons[i];
         const auto&item=items[i];NSString *name=[NSString stringWithCString:item.name.c_str() encoding:NSISOLatin1StringEncoding]?:@"Unit";
         NSString *title=item.queued?[NSString stringWithFormat:@"%@ ×%d",name,item.queued]:name;
-        [button setTitle:title forState:UIControlStateNormal];button.accessibilityLabel=title;
-        button.frame=CGRectMake(i*132,0,126,48);
+        [button setTitle:buildMode&&button.currentBackgroundImage?@"":title forState:UIControlStateNormal];button.accessibilityLabel=title;
+        if(buildMode){CGFloat cell=MIN(158,(width-24)/4);int columns=MAX(2,int((width+8)/(cell+8)));
+            button.frame=CGRectMake((i%columns)*(cell+8),(i/columns)*(cell*.75+8),cell,cell*.75);
+        }else button.frame=CGRectMake(i*132,0,126,48);
     }
-    self.productionStrip.contentSize=CGSizeMake(MAX(width,self.productionButtons.count*132),52);
+    if(buildMode){CGFloat cell=MIN(158,(width-24)/4);int columns=MAX(2,int((width+8)/(cell+8)));
+        self.productionStrip.contentSize=CGSizeMake(width,((items.size()+columns-1)/columns)*(cell*.75+8));}
+    else self.productionStrip.contentSize=CGSizeMake(MAX(width,self.productionButtons.count*132),52);
+    for(UIButton *button in self.commands)button.hidden=buildMode;
+    for(UIButton *button in self.rallies)button.hidden=buildMode;
+    self.groupsStrip.hidden=buildMode;
     CGFloat buttonWidth=(width-16)/3;
     for(int i=0;i<6;++i){UIButton *button=self.commands[i];
-        button.frame=CGRectMake(inset+(i%3)*(buttonWidth+8),102+(i/3)*49,buttonWidth,44);
+        button.frame=CGRectMake(inset+(i%3)*(buttonWidth+8),140+(i/3)*49,buttonWidth,44);
         button.enabled=i==5 || state.selected>0;button.alpha=button.enabled?1:.45;
         button.backgroundColor=((i==3&&state.force==1)||(i==4&&state.force==2))?UIColor.systemBlueColor:[UIColor colorWithWhite:.19 alpha:1];
     }
     for(int i=0;i<3;++i){UIButton *button=self.rallies[i];
-        button.frame=CGRectMake(inset+i*(buttonWidth+8),204,buttonWidth,44);
+        button.frame=CGRectMake(inset+i*(buttonWidth+8),242,buttonWidth,44);
         button.backgroundColor=((i==0&&state.rally==1)||(i==1&&state.rally==2))?UIColor.systemBlueColor:[UIColor colorWithWhite:.19 alpha:1];
     }
-    self.groupsStrip.frame=CGRectMake(inset,258,width,52);
+    self.groupsStrip.frame=CGRectMake(inset,296,width,52);
     for(int i=0;i<9;++i)self.groups[i].frame=CGRectMake(i*54,0,48,44);
     self.groupsStrip.contentSize=CGSizeMake(MAX(width,9*54),48);
 }

@@ -1102,7 +1102,14 @@ void Video_Adaptive_Size(int& width, int& height)
 {
     Update_HWCursor_Settings(true);
     const int available_w = renderer_output_w;
+    // Duo laptop posture has two wide half-screens. Size the game for the
+    // upper half, not the tall combined window, or it stays portrait and
+    // letterboxes inside the upper screen.
+#ifdef IPADOS_PORT
+    const int available_h = WPLaptop::Active() ? renderer_output_h / 2 : renderer_output_h;
+#else
     const int available_h = renderer_output_h;
+#endif
     Calculate_Adaptive_Game_Size(available_w, available_h, width, height);
 }
 

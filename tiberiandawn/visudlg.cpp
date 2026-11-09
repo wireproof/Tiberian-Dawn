@@ -88,7 +88,7 @@ int VisualControlsClass::Init(void)
     Option_Width = 216 * factor;
     Option_Height =
 #ifdef IPADOS_PORT
-        196 * factor;
+        176 * factor;
 #elif defined(IPADOS_PORT) || defined(MACOS_PORT)
         160 * factor;
 #else
@@ -106,7 +106,7 @@ int VisualControlsClass::Init(void)
     Button_X = Option_X + (63 * factor);
     Button_Y = Option_Y + (
 #ifdef IPADOS_PORT
-        176
+        156
 #elif defined(IPADOS_PORT) || defined(MACOS_PORT)
         140
 #else
@@ -204,9 +204,9 @@ void VisualControlsClass::Process(void)
     TextButtonClass accessibilitybtn(BUTTON_IPAD_ACCESSIBILITY,
                                      accessibility_text,
                                      TPF_6PT_GRAD | TPF_NOSHADOW,
-                                     Option_X + 113 * factor,
+                                     Option_X + 15 * factor,
                                      Option_Y + 94 * factor,
-                                     88 * factor,
+                                     186 * factor,
                                      11 * factor);
 #if defined(IPADOS_PORT) && !defined(VISIONOS_PORT)
     char touch_edge_text[48];
@@ -329,14 +329,17 @@ void VisualControlsClass::Process(void)
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
     presentationbtn.Add_Tail(optionsbtn);
     scalebtn.Add_Tail(optionsbtn);
+    // Artwork selection lives in the floating Options dock on touch devices.
+#ifndef IPADOS_PORT
     artworkbtn.Add_Tail(optionsbtn);
+#endif
     accessibilitybtn.Add_Tail(optionsbtn);
 #if defined(IPADOS_PORT) && !defined(VISIONOS_PORT)
     touchedgebtn.Add_Tail(optionsbtn);
     touchscrollbtn.Add_Tail(optionsbtn);
     touchselectionbtn.Add_Tail(optionsbtn);
     touchhelpbtn.Add_Tail(optionsbtn);
-    laptopbtn.Add_Tail(optionsbtn);
+    // The foldable layout switch lives beside the other floating controls.
 #endif
 #ifdef VISIONOS_PORT
     lookscrollbtn.Add_Tail(optionsbtn);

@@ -13,7 +13,7 @@ struct Command {
     int theater = 0, owner = -1;
     unsigned flags = 0;
     int clip_x = 0, clip_y = 0, clip_w = 0, clip_h = 0;
-    bool shroud = false, centered = false, sidebar = false;
+    bool shroud = false, centered = false, sidebar = false, remapped = false;
     // width/height are the original classic canvas. x/y are its top left.
     // Indexed fallback pixels already have the fading remap applied. Alpha
     // preserves coverage when an opaque source remaps to palette index zero.

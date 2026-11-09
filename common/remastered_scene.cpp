@@ -70,6 +70,9 @@ void RecordSprite(const void* pointer, int frame, int x, int y, int width, int h
     if (!Shared().capturing || !pixels || !Valid(width, height)) return;
     Command c = Base(Command::Sprite, x, y, width, height);
     c.asset = AssetName(pointer); c.frame = frame; c.flags = flags; c.centered = (flags & 0x20) != 0;
+    // Ordinary units use SHAPE_FADING|SHAPE_GHOST for house colors and a
+    // shadow table. That table must not disqualify their remastered sprite.
+    c.remapped = remap && (flags & 0x100);
     if (c.centered) { c.x -= width / 2; c.y -= height / 2; }
     const size_t size = static_cast<size_t>(width) * height;
     c.pixels.resize(size); c.alpha.resize(size);

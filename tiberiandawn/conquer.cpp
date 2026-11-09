@@ -97,10 +97,14 @@ void Keyboard_Process(KeyNumType& input);
 #include "common/wireproof_orders.h"
 #include "common/wireproof_cheats.h"
 #include "common/wireproof_viewport.h"
+#ifdef IPADOS_PORT
+#include "common/wireproof_laptop.h"
+#endif
 static void WP_ProcessOrders() {
     using namespace WPOrders;
     Shared().publish(InMainLoop && GameActive && GameInFocus && SpecialDialog==SDLG_NONE && !PlaybackGame,
                      CurrentObject.Count());
+    Shared().publishArtwork(Settings.Video.ArtworkMode != 0);
 #ifdef IPADOS_PORT
     // Single-player battlefield has no text entry. End stale SDL edit sessions
     // left behind by save/load dialogs without interrupting multiplayer chat.
@@ -116,13 +120,15 @@ static void WP_ProcessOrders() {
             const auto& strip=Map.Column[column];
             for (int index=0; index<strip.BuildableCount; ++index) {
                 const auto& item=strip.Buildables[index];
-                if (item.BuildableType!=RTTI_INFANTRYTYPE && item.BuildableType!=RTTI_UNITTYPE
+                if (item.BuildableType!=RTTI_BUILDINGTYPE && item.BuildableType!=RTTI_INFANTRYTYPE && item.BuildableType!=RTTI_UNITTYPE
                     && item.BuildableType!=RTTI_AIRCRAFTTYPE) continue;
                 const auto* techno=Fetch_Techno_Type(item.BuildableType,item.BuildableID);
                 if (techno) {
                     const char* name=Text_String(techno->Full_Name());
+                    const int category=item.BuildableType==RTTI_BUILDINGTYPE?0:
+                        item.BuildableType==RTTI_INFANTRYTYPE?1:2;
                     production.emplace_back(int(item.BuildableType),item.BuildableID,name?name:"Unit",
-                        WP_Queue_Count(item.BuildableType,item.BuildableID));
+                        techno->IniName, WP_Queue_Count(item.BuildableType,item.BuildableID),category);
                 }
             }
         }
@@ -130,6 +136,52 @@ static void WP_ProcessOrders() {
     }
     Command command;
     while (Shared().take(command)) {
+        if (command.kind==ToggleArtwork) {
+            Settings.Video.ArtworkMode=Settings.Video.ArtworkMode?0:1;
+            Map.Flag_To_Redraw(true);
+            Refresh_Video_Layout();
+            continue;
+        }
+#ifdef IPADOS_PORT
+        if (command.kind==ToggleLaptop) {
+            Settings.Touch.LaptopMode=!Settings.Touch.LaptopMode;
+            WPLaptop::SetEnabled(Settings.Touch.LaptopMode);
+            Map.Flag_To_Redraw(true);
+            Refresh_Video_Layout();
+            continue;
+        }
+#endif
+        if (command.kind==BuildItem || command.kind==CancelBuildItem) {
+            if (!PlayerPtr || command.itemType!=RTTI_BUILDINGTYPE) continue;
+            for (int column=0; column<SidebarClass::COLUMNS; ++column) {
+                const auto& strip=Map.Column[column];
+                for (int index=0; index<strip.BuildableCount; ++index) {
+                    const auto& item=strip.Buildables[index];
+                    if (int(item.BuildableType)!=command.itemType || item.BuildableID!=command.itemID) continue;
+                    FactoryClass* factory=item.Factory==-1?nullptr:Factories.Raw_Ptr(item.Factory);
+                    if (command.kind==CancelBuildItem) {
+                        if (factory) {
+                            OutList.Add(EventClass(factory->Is_Building()?EventClass::SUSPEND:EventClass::ABANDON,
+                                                   RTTI_BUILDINGTYPE,command.itemID));
+                            Map.Flag_To_Redraw(true);
+                        }
+                    } else if (factory && factory->Has_Completed()) {
+                        TechnoClass* pending=factory->Get_Object();
+                        if (pending && pending->What_Am_I()==RTTI_BUILDING) {
+                            BuildingClass* builder=pending->Who_Can_Build_Me(false,false);
+                            if (builder) PlayerPtr->Manual_Place(builder,(BuildingClass*)pending);
+                        }
+                    } else if (factory && !factory->Is_Building()) {
+                        OutList.Add(EventClass(EventClass::PRODUCE,RTTI_BUILDINGTYPE,command.itemID));
+                    } else if (!factory && PlayerPtr->BuildingFactory==-1) {
+                        OutList.Add(EventClass(EventClass::PRODUCE,RTTI_BUILDINGTYPE,command.itemID));
+                    }
+                    column=SidebarClass::COLUMNS;
+                    break;
+                }
+            }
+            continue;
+        }
         if (command.kind==QueueUnit || command.kind==CancelUnit) {
             bool available=false,building=false;
             for (int column=0; column<SidebarClass::COLUMNS; ++column) {

@@ -56,6 +56,7 @@ public:
         int ScrollSpeed;
         int SelectionTolerance;
         bool LaptopMode;
+        bool PortraitDeckAlways;
     } Touch;
 
     struct

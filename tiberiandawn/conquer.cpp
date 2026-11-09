@@ -204,6 +204,13 @@ static void WP_ProcessOrders() {
             Refresh_Video_Layout();
             continue;
         }
+        if (command.kind==TogglePortraitDeck) {
+            Settings.Touch.PortraitDeckAlways=!Settings.Touch.PortraitDeckAlways;
+            WPLaptop::SetAlwaysPortrait(Settings.Touch.PortraitDeckAlways);
+            Map.Flag_To_Redraw(true);
+            Refresh_Video_Layout();
+            continue;
+        }
 #endif
         if (command.kind==BuildItem || command.kind==CancelBuildItem) {
             if (!PlayerPtr || command.itemType!=RTTI_BUILDINGTYPE) continue;
@@ -2540,6 +2547,11 @@ void Play_Movie(char const* name, ThemeType theme, bool clrscrn)
             Set_Palette(BlackPalette);
             memset(BlackPalette, 0x00, 768);
         }
+#ifdef IPADOS_PORT
+        // A preserved briefing background can retain the battlefield's top bar.
+        // The separate deck gives movies a clean upper display in portrait.
+        if (WPLaptop::Active()) VisiblePage.Clear();
+#endif
         PreserveVQAScreen = 0;
         Keyboard->Clear();
 

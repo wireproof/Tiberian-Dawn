@@ -26,6 +26,7 @@ SettingsClass::SettingsClass()
     Touch.ScrollSpeed = 1;
     Touch.SelectionTolerance = 1;
     Touch.LaptopMode = false;
+    Touch.PortraitDeckAlways = false;
     Vision.LookToScroll = true;
     Vision.ScrollSpeed = 1;
     Vision.EdgeSensitivity = 1;
@@ -91,6 +92,8 @@ void SettingsClass::Load(INIClass& ini)
         Bound(ini.Get_Int("iPadOS", "TouchSelectionTolerance", Touch.SelectionTolerance), 0, 2);
     Touch.LaptopMode = ini.Get_Bool("iPadOS", "LaptopMode", Touch.LaptopMode);
     WPLaptop::SetEnabled(Touch.LaptopMode);
+    Touch.PortraitDeckAlways = ini.Get_Bool("iPadOS", "PortraitDeckAlways", Touch.PortraitDeckAlways);
+    WPLaptop::SetAlwaysPortrait(Touch.PortraitDeckAlways);
 
     /*
     ** Video settings
@@ -183,6 +186,7 @@ void SettingsClass::Save(INIClass& ini)
     ini.Put_Int("iPadOS", "TouchScrollSpeed", Touch.ScrollSpeed);
     ini.Put_Int("iPadOS", "TouchSelectionTolerance", Touch.SelectionTolerance);
     ini.Put_Bool("iPadOS", "LaptopMode", Touch.LaptopMode);
+    ini.Put_Bool("iPadOS", "PortraitDeckAlways", Touch.PortraitDeckAlways);
 
     /*
     ** Video settings

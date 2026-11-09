@@ -11,7 +11,7 @@ namespace WPOrders {
 #ifdef MACOS_PORT
 int LoadUIScale();
 #endif
-enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies, QueueUnit, CancelUnit, BuildItem, CancelBuildItem, ToggleArtwork, ToggleLaptop, UseSpecial, RadarCenter };
+enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies, QueueUnit, CancelUnit, BuildItem, CancelBuildItem, ToggleArtwork, ToggleLaptop, UseSpecial, RadarCenter, TogglePortraitDeck };
 struct Stick { float x=0, y=0, intensity=0; };
 struct Command {
     Kind kind; int group; int itemType; int itemID;

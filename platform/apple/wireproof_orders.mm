@@ -26,6 +26,7 @@ static void WPRefreshLaptopPosture(UIWindow *window) {
     UIEdgeInsets safe=window.safeAreaInsets;
     const bool cover=WPCamera::CoverDisplay(size.width,size.height,safe.left,safe.top,safe.right,safe.bottom);
     WPLaptop::SetFoldedPortrait(WPHingePartiallyOpen && !cover && size.height>size.width*1.05);
+    WPLaptop::SetPortraitWindow(size.height>size.width*1.05);
 }
 
 // Copy actual decoded MOUSE.SHP frames, using the active game palette.
@@ -164,6 +165,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic,strong) UIStackView *optionsPage;
 @property(nonatomic,strong) UIButton *artworkButton;
 @property(nonatomic,strong) UIButton *laptopButton;
+@property(nonatomic,strong) UIButton *portraitDeckButton;
 @property(nonatomic,strong) UIStackView *cheatStack;
 @property(nonatomic,strong) UIButton *cheatButton;
 @property(nonatomic,strong) UILabel *cheatStatus;
@@ -375,7 +377,10 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         UIStackView *uiControls=[[UIStackView alloc] initWithArrangedSubviews:@[uiButtons,[self button:@"Reset UI size" tag:702]]];uiControls.axis=UILayoutConstraintAxisVertical;uiControls.spacing=6;
         self.artworkButton=[self button:@"Graphics: Original" tag:900];
         self.laptopButton=[self button:@"Laptop deck: Off" tag:901];
-        UIStackView *displayControls=[[UIStackView alloc] initWithArrangedSubviews:@[self.artworkButton,self.laptopButton]];
+        self.portraitDeckButton=[self button:@"Always portrait: Off" tag:903];
+        self.portraitDeckButton.accessibilityLabel=@"Always show command deck in portrait, even without laptop mode";
+        UIStackView *displayControls=[[UIStackView alloc] initWithArrangedSubviews:@[
+            self.artworkButton,[self gridRow:@[self.laptopButton,self.portraitDeckButton]]]];
         displayControls.axis=UILayoutConstraintAxisVertical;displayControls.spacing=6;
         self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,uiControls,sizeControls,speedControls,displayControls]];self.optionsPage.spacing=8;
         self.groupControls=groups;
@@ -494,8 +499,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self saveZoom];
 }
 - (void)pressed:(UIButton*)button {
-    if(button.tag==900 || button.tag==901) {
-        WPOrders::Shared().enqueue(button.tag==900?WPOrders::ToggleArtwork:WPOrders::ToggleLaptop);
+    if(button.tag==900 || button.tag==901 || button.tag==903) {
+        WPOrders::Shared().enqueue(button.tag==900?WPOrders::ToggleArtwork:
+            button.tag==901?WPOrders::ToggleLaptop:WPOrders::TogglePortraitDeck);
         return;
     }
     if(button.tag>=800 && button.tag<=805){UISlider *value=self.speedSliders[(button.tag-800)/2];value.value+=(button.tag%2?1:-1);[self speedChanged:value];return;}
@@ -561,6 +567,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     auto s=WPOrders::Shared().snapshot();
     [self.artworkButton setTitle:s.remastered?@"Graphics: Remastered":@"Graphics: Original" forState:UIControlStateNormal];
     [self.laptopButton setTitle:WPLaptop::Enabled().load()?@"Laptop deck: On":@"Laptop deck: Off" forState:UIControlStateNormal];
+    [self.portraitDeckButton setTitle:WPLaptop::AlwaysPortrait().load()?@"Always portrait: On":@"Always portrait: Off" forState:UIControlStateNormal];
     auto cheats=WPCheats::Shared().snapshot();
     self.gamePage.hidden=YES;
     BOOL embedded=WPLaptop::Active() && self.laptopPage>0;
@@ -1099,7 +1106,7 @@ static UIImage *WPBuildCameo(NSString *asset) {
             if(buildMode){NSString *asset=[NSString stringWithUTF8String:items[i].asset.c_str()];
                 UIImage *cameo=WPBuildCameo(asset?:@"");
                 if(cameo){UIImageView *art=[[UIImageView alloc] initWithImage:cameo];
-                    art.tag=20004;art.contentMode=UIViewContentModeScaleAspectFill;
+                    art.tag=20004;art.contentMode=UIViewContentModeScaleAspectFit;
                     art.clipsToBounds=YES;art.userInteractionEnabled=NO;
                     button.clipsToBounds=YES;[button addSubview:art];}}
             UILabel *badge=[UILabel new];badge.tag=20001;badge.textColor=UIColor.whiteColor;

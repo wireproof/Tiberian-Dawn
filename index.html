@@ -1,9 +1,116 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tiberian Dawn — Gameplay showcase</title><style>
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101613;color:#edf3ed}body{max-width:1100px;margin:auto;padding:32px 20px}a{color:#b0e88b}header{padding:32px 0}h1{font-size:clamp(2rem,5vw,3.5rem);margin:12px 0}p{line-height:1.65;color:#c0ccc2}nav{display:flex;flex-wrap:wrap;gap:20px}section{margin:36px 0;padding:24px;border:1px solid #344239;border-radius:16px;background:#19221c;scroll-margin-top:16px}video{display:block;width:100%;max-height:75vh;background:#000;border-radius:8px}h2{margin-top:0}.eyebrow{color:#b0e88b;letter-spacing:.12em;text-transform:uppercase;font-size:.8rem}footer{border-top:1px solid #344239;padding-top:20px;font-size:.85rem}@media(max-width:600px){body{padding:16px}section{padding:14px}}
-</style></head><body><header><div class="eyebrow">Wireproof · real-device footage</div><h1>Tiberian Dawn</h1><p>Classic Command &amp; Conquer on the Duo cover and inner displays and iPad Pro 11. Explore gameplay and the native Mod Workshop with browser playback, sound, seeking, and fullscreen controls.</p><nav><a href="#cover-gameplay">Cover display</a><a href="#inner-gameplay">Inner display</a><a href="#workshop">Workshop</a><a href="#ipad-gameplay">iPad Pro 11</a><a href="https://github.com/wireproof/Tiberian-Dawn">Project &amp; downloads ↗</a></nav></header>
-<section id="cover-gameplay"><h2>Cover display</h2><p>2:03 · Audio included · Use the player controls to begin.</p><video controls playsinline preload="metadata" poster="media/cover-gameplay.jpg"><source src="media/duo-cover-gameplay.mp4" type="video/mp4">Your browser does not support HTML video.</video></section>
-<section id="inner-gameplay"><h2>Inner display</h2><p>2:57 · Audio included · Use the player controls to begin.</p><video controls playsinline preload="metadata" poster="media/inner-gameplay.jpg"><source src="media/duo-inner-gameplay.mp4" type="video/mp4">Your browser does not support HTML video.</video></section>
-<section id="workshop"><h2>Mod Workshop</h2><p>0:50 · Audio included · Use the player controls to begin.</p><video controls playsinline preload="metadata" poster="media/cover-workshop.jpg"><source src="media/duo-workshop-demo.mp4" type="video/mp4">Your browser does not support HTML video.</video></section>
-<section id="ipad-gameplay"><h2>iPad Pro 11 — gameplay and controls</h2><p>2:54 · Audio included · Supplied October 26, 2026.</p><video controls playsinline preload="metadata" poster="media/ipad-gameplay-landscape.jpg"><source src="media/ipad-pro-11-gameplay.mp4" type="video/mp4">Your browser does not support HTML video.</video></section>
-<section id="ipad-campaign"><h2>iPad Pro 11 — campaign and gameplay</h2><p>1:05 · Audio included · Supplied October 26, 2026.</p><video controls playsinline preload="metadata" poster="media/ipad-campaign.jpg"><source src="media/ipad-pro-11-campaign.mp4" type="video/mp4">Your browser does not support HTML video.</video></section>
-<footer><p>Owner-supplied footage: Duo clips from the v0.5.2 era and iPad Pro 11 clips supplied October 26, 2026. Showcase footage is not comprehensive verification of every feature or later fix. <a href="https://github.com/wireproof/Tiberian-Dawn/tree/wireproof/docs/showcase">Screenshot gallery</a> · <a href="https://github.com/wireproof/Tiberian-Dawn#validation-and-limits">Validation and limits</a></p><p>Unofficial, free, non-commercial community project. EA has not endorsed and does not support this product. Game artwork and audio belong to their respective owners. <a href="https://github.com/wireproof/Tiberian-Dawn#licensing-and-assets">Licensing and credits</a>.</p></footer><script>document.querySelectorAll('video').forEach(v=>v.addEventListener('play',()=>document.querySelectorAll('video').forEach(other=>{if(other!==v)other.pause()})))</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a14">
+  <meta name="description" content="Tiberian Dawn for iPhone and iPad: native gameplay, touch controls, Remastered graphics, and an optional Duo laptop command deck.">
+  <meta property="og:title" content="Tiberian Dawn — Wireproof">
+  <meta property="og:description" content="Native iPhone and iPad Command & Conquer gameplay with Remastered graphics and a dual-screen Duo command deck.">
+  <meta property="og:image" content="https://wireproof.github.io/Tiberian-Dawn/showcase/IMG_0468.png">
+  <link rel="canonical" href="https://wireproof.github.io/Tiberian-Dawn/">
+  <title>Tiberian Dawn — Wireproof</title>
+  <style>
+    :root { color-scheme: dark; font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0b120e; color: #e9f0e8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at 72% 0%, #1d3924 0, #0b120e 34rem); }
+    a { color: #aeeb7b; }
+    a:focus-visible, button:focus-visible { outline: 3px solid #b4ed85; outline-offset: 3px; }
+    .wrap { width: min(1160px, calc(100% - 36px)); margin: auto; }
+    header { border-bottom: 1px solid #334c37; background: #0c150fdd; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(16px); }
+    nav { min-height: 64px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+    .brand { color: #e6f8d7; text-decoration: none; font-weight: 900; letter-spacing: .04em; margin-right: auto; white-space: nowrap; }
+    nav a:not(.brand) { text-decoration: none; font-size: .92rem; }
+    .pill { display: inline-block; border: 1px solid #8cd662; color: #bdf697; border-radius: 999px; padding: 4px 11px; font-size: .77rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 800; }
+    .hero { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: 42px; padding: 78px 0 62px; }
+    h1 { font-size: clamp(2.7rem, 6.3vw, 5.8rem); line-height: .99; letter-spacing: -.055em; margin: 18px 0 22px; }
+    h1 em { font-style: normal; color: #b9ea8a; }
+    .lead { color: #c2d0c0; font-size: clamp(1.05rem, 1.7vw, 1.3rem); max-width: 39rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .button { display: inline-flex; justify-content: center; align-items: center; min-height: 46px; padding: 10px 17px; border-radius: 9px; text-decoration: none; font-weight: 750; border: 1px solid #58784f; color: #eff8e7; }
+    .button.primary { background: #a5e477; color: #13210d; border-color: #a5e477; }
+    .button:hover { filter: brightness(1.12); }
+    .hero-frame { margin: 0; padding: 8px; background: #26352b; border: 1px solid #60705d; border-radius: 12px; box-shadow: 0 25px 70px #0008; }
+    .hero-frame img { width: 100%; height: auto; display: block; border-radius: 5px; }
+    .caption { font-size: .78rem; color: #aabbaa; padding: 9px 5px 3px; }
+    main section { padding: 48px 0; border-top: 1px solid #283e2b; }
+    h2 { font-size: clamp(1.7rem, 3.4vw, 2.8rem); letter-spacing: -.035em; line-height: 1.1; margin: 0 0 18px; }
+    h3 { font-size: 1.07rem; margin: 0 0 8px; }
+    p { margin: 0 0 16px; }
+    .muted { color: #aebdad; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 25px; }
+    .card { background: #152219; border: 1px solid #3a513a; border-radius: 12px; padding: 22px; }
+    .card p { color: #b8c6b6; margin-bottom: 0; }
+    .gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 23px; }
+    .gallery figure { margin: 0; border: 1px solid #475b48; background: #111a14; border-radius: 10px; overflow: hidden; }
+    .gallery img { display: block; width: 100%; height: auto; }
+    .video-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 26px; }
+    .video-grid article { border: 1px solid #475b48; background: #111a14; border-radius: 10px; overflow: hidden; }
+    .video-grid video { display: block; width: 100%; max-height: 370px; background: #050805; }
+    .video-grid h3, .video-grid p { margin: 10px 13px; }
+    figcaption { color: #bdcbbb; font-size: .83rem; padding: 10px 13px; }
+    .release { background: #15251a; border: 1px solid #517747; padding: clamp(22px, 4vw, 40px); border-radius: 16px; }
+    .release ul { padding-left: 20px; color: #c7d8c3; }
+    .release li { margin: 5px 0; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    footer { border-top: 1px solid #2b402f; color: #a3b5a1; padding: 33px 0 55px; font-size: .87rem; }
+    @media (max-width: 760px) { .hero, .two, .cards, .gallery, .video-grid { grid-template-columns: 1fr; } .hero { padding-top: 48px; } nav { gap: 12px; } nav a:not(.brand) { font-size: .82rem; } }
+  </style>
+</head>
+<body>
+  <header><nav class="wrap" aria-label="Main navigation">
+    <a class="brand" href="#top">TIBERIAN DAWN <span class="muted">/ WIREPROOF</span></a>
+    <a href="#release">Download</a><a href="#features">Features</a><a href="#media">Gameplay</a><a href="https://github.com/wireproof/Tiberian-Dawn/issues">Issues</a><a href="https://github.com/wireproof/Tiberian-Dawn">GitHub</a>
+  </nav></header>
+  <main id="top" class="wrap">
+    <div class="hero">
+      <div>
+        <span class="pill">iOS v0.7.4 · Build 710</span>
+        <h1>Command the <em>battlefield.</em></h1>
+        <p class="lead">Classic Command &amp; Conquer, running natively on iPhone and iPad. Play with touch controls and Remastered graphics, or fold a Duo into laptop mode for a dedicated command deck.</p>
+        <div class="actions"><a class="button primary" href="https://github.com/wireproof/Tiberian-Dawn/releases/latest">Get the full iOS build</a><a class="button" href="#media">See gameplay</a></div>
+        <p class="caption">Unofficial community port. The IPA includes the game data, music, and Remastered art; device signing is required to install it.</p>
+      </div>
+      <figure class="hero-frame"><img src="https://raw.githubusercontent.com/wireproof/Tiberian-Dawn/wireproof/docs/showcase/IMG_0468.png" alt="Actual Tiberian Dawn gameplay showing a Remastered Nod base and production sidebar" width="2853" height="2007"><figcaption class="caption">Real gameplay capture. Its exact build was not recorded; this image is not a v0.7.4 verification screenshot.</figcaption></figure>
+    </div>
+    <section id="features">
+      <h2>Built for the way you play</h2>
+      <div class="cards">
+        <div class="card"><h3>Native battlefield</h3><p>The game engine runs as compiled code on iOS, with touch selection, map controls, orders, groups, saves, and optional iCloud sync.</p></div>
+        <div class="card"><h3>Remastered art</h3><p>Switch between original and Remastered graphics. Recent Duo testing confirmed improved units, structures, terrain details, and effects.</p></div>
+        <div class="card"><h3>Duo command deck</h3><p>Use the lower screen for Build, Commands, Radar, Cheats, and Options. Tap the radar to move the battlefield view.</p></div>
+      </div>
+    </section>
+    <section id="media">
+      <h2>See the game in action</h2>
+      <p class="muted">These are historical real-device captures. Their capture versions are documented where known; newer laptop-mode photos are coming after owner review.</p>
+      <div class="gallery">
+        <figure><img loading="lazy" src="https://raw.githubusercontent.com/wireproof/Tiberian-Dawn/wireproof/docs/showcase/IMG_0467.png" alt="Remastered battlefield with selected units on iOS" width="2853" height="2007"><figcaption>Remastered battlefield · capture build not recorded</figcaption></figure>
+        <figure><img loading="lazy" src="https://raw.githubusercontent.com/wireproof/Tiberian-Dawn/wireproof/docs/showcase/inner-gameplay.jpg" alt="Duo inner display running classic Tiberian Dawn gameplay" width="1280" height="900"><figcaption>Duo inner display · earlier showcase</figcaption></figure>
+      </div>
+      <div class="video-grid">
+        <article id="cover-gameplay"><video controls preload="none" poster="media/cover-gameplay.jpg" src="media/duo-cover-gameplay.mp4" aria-label="Duo cover gameplay"></video><h3>Duo cover gameplay</h3><p class="muted">2:03 · earlier showcase</p></article>
+        <article id="inner-gameplay"><video controls preload="none" poster="media/inner-gameplay.jpg" src="media/duo-inner-gameplay.mp4" aria-label="Duo inner gameplay"></video><h3>Duo inner gameplay</h3><p class="muted">2:57 · earlier showcase</p></article>
+        <article id="workshop"><video controls preload="none" poster="media/cover-workshop.jpg" src="media/duo-workshop-demo.mp4" aria-label="Mod Workshop demo"></video><h3>Mod Workshop</h3><p class="muted">0:50 · earlier showcase</p></article>
+        <article id="ipad-gameplay"><video controls preload="none" poster="media/ipad-gameplay-landscape.jpg" src="media/ipad-pro-11-gameplay.mp4" aria-label="iPad Pro gameplay"></video><h3>iPad Pro gameplay</h3><p class="muted">2:54 · October 26, 2026 capture</p></article>
+        <article id="ipad-campaign"><video controls preload="none" poster="media/ipad-campaign.jpg" src="media/ipad-pro-11-campaign.mp4" aria-label="iPad Pro campaign"></video><h3>iPad Pro campaign</h3><p class="muted">1:05 · October 26, 2026 capture</p></article>
+      </div>
+      <div class="actions"><a class="button" href="https://github.com/wireproof/Tiberian-Dawn/blob/wireproof/docs/showcase/README.md">Browse capture notes</a></div>
+    </section>
+    <section id="release">
+      <div class="release">
+        <span class="pill">Latest release</span>
+        <h2>v0.7.4 · iOS build 710</h2>
+        <p>Duo laptop layout, radar navigation, production status, and Remastered graphics refinements. The owner confirmed the recent laptop-mode and graphics fixes in Duo gameplay. iPad gameplay was not separately retested for this build.</p>
+        <ul><li>Complete unsigned IPA with classic game data, music, and Remastered art.</li><li>Update over the existing app to preserve local saves.</li><li><a href="https://github.com/wireproof/Tiberian-Dawn/issues/7">Waypoint persistence</a> and <a href="https://github.com/wireproof/Tiberian-Dawn/issues/10">Force Move/crushing</a> still need verification.</li></ul>
+        <div class="actions"><a class="button primary" href="https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4">Download and read notes</a><a class="button" href="https://github.com/wireproof/Tiberian-Dawn/issues">Report or update an issue</a></div>
+      </div>
+    </section>
+    <section class="two" aria-label="Future plans">
+      <div><h2>Next: Red Alert</h2><p class="muted">v0.7.5 targets a friendly game selector, Allied and Soviet content, skirmish, and multiplayer. It is planned work, not in v0.7.4.</p><a href="https://github.com/wireproof/Tiberian-Dawn/blob/wireproof/docs/RED-ALERT-0.7.5-PLAN.md">Read the plan →</a></div>
+      <div><h2>AYN Thor preview</h2><p class="muted">An Android port is being explored: battlefield on the upper display, command deck on the lower touch display, with handheld controls. There is no Thor APK yet.</p><a href="https://github.com/wireproof/Tiberian-Dawn/issues">Follow development →</a></div>
+    </section>
+  </main>
+  <footer><div class="wrap">Built on EA's released source, Vanilla Conquer, and Cesarus85's Apple port. <a href="https://github.com/wireproof/Tiberian-Dawn/blob/wireproof/docs/LEGAL-NOTICES.md">Legal notices</a> · <a href="https://github.com/wireproof/Tiberian-Dawn">Source</a></div></footer>
+</body>
+</html>

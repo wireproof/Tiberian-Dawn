@@ -5,27 +5,21 @@
 #include "common/ipados_audio_engine.h"
 
 // The Red Alert engine is compiled independently during bring-up. Its
-// immutable assets and saves use the existing vanillara data/user suffixes.
+// immutable disc folders are read from the app bundle; saves use the separate
+// vanillara user suffix.
 // The combined app will choose the engine before entering either game loop.
 extern "C" bool TiberianDawn_PrepareGameData(void)
 {
     @autoreleasepool {
         NSURL *bundleData = [[NSBundle mainBundle] resourceURL];
         bundleData = [bundleData URLByAppendingPathComponent:@"RAData" isDirectory:YES];
-        NSURL *support = [[[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory
-                                                                 inDomain:NSUserDomainMask
-                                                        appropriateForURL:nil
-                                                                   create:YES
-                                                                    error:nil]
-                          URLByAppendingPathComponent:@"TiberianDawn/vanillara" isDirectory:YES];
         NSFileManager *files = [NSFileManager defaultManager];
-        if (!bundleData || !support) return false;
-        if (![files createDirectoryAtURL:support withIntermediateDirectories:YES attributes:nil error:nil]) return false;
-        for (NSString *name in @[@"REDALERT.MIX", @"MAIN.MIX"]) {
+        if (!bundleData) return false;
+        for (NSString *name in @[@"REDALERT.MIX", @"allied/MAIN.MIX", @"soviet/MAIN.MIX"]) {
             NSURL *source = [bundleData URLByAppendingPathComponent:name];
-            NSURL *target = [support URLByAppendingPathComponent:name];
-            if (![files fileExistsAtPath:source.path]) return false;
-            if (![files fileExistsAtPath:target.path] && ![files copyItemAtURL:source toURL:target error:nil]) return false;
+            NSDictionary *attributes = [files attributesOfItemAtPath:source.path error:nil];
+            if (![attributes[NSFileSize] respondsToSelector:@selector(unsignedLongLongValue)]
+                || [attributes[NSFileSize] unsignedLongLongValue] == 0) return false;
         }
         return true;
     }

@@ -24,8 +24,8 @@ args = parser.parse_args()
 
 sources = {
     "REDALERT.MIX": args.allied / "INSTALL" / "REDALERT.MIX",
-    "MAIN.MIX": args.allied / "MAIN.MIX",
-    "SOVIET.MIX": args.soviet / "MAIN.MIX",
+    "allied/MAIN.MIX": args.allied / "MAIN.MIX",
+    "soviet/MAIN.MIX": args.soviet / "MAIN.MIX",
 }
 for path in sources.values():
     if not path.is_file():
@@ -34,13 +34,14 @@ if digest(args.allied / "INSTALL" / "REDALERT.MIX") != digest(
     args.soviet / "INSTALL" / "REDALERT.MIX"
 ):
     parser.error("Allied and Soviet REDALERT.MIX files differ")
-if digest(sources["MAIN.MIX"]) == digest(sources["SOVIET.MIX"]):
+if digest(sources["allied/MAIN.MIX"]) == digest(sources["soviet/MAIN.MIX"]):
     parser.error("Allied and Soviet MAIN.MIX files unexpectedly match")
 
 args.destination.mkdir(parents=True, exist_ok=True)
 manifest = {"source": "owner-supplied Red Alert 95 Allied and Soviet CDs", "files": {}}
 for name, source in sources.items():
     target = args.destination / name
+    target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, target)
     manifest["files"][name] = {"bytes": target.stat().st_size, "sha256": digest(target)}
 (args.destination / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

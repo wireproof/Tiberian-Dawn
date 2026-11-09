@@ -264,16 +264,24 @@ if(BUILD_VANILLARA)
         if(RED_ALERT_DATA_DIR)
             set(RED_ALERT_GAME_DATA
                 "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
-                "${RED_ALERT_DATA_DIR}/MAIN.MIX"
-                "${RED_ALERT_DATA_DIR}/SOVIET.MIX"
+                "${RED_ALERT_DATA_DIR}/allied/MAIN.MIX"
+                "${RED_ALERT_DATA_DIR}/soviet/MAIN.MIX"
                 "${RED_ALERT_DATA_DIR}/manifest.json")
             foreach(asset IN LISTS RED_ALERT_GAME_DATA)
                 if(NOT EXISTS "${asset}")
                     message(FATAL_ERROR "Missing staged Red Alert asset: ${asset}")
                 endif()
             endforeach()
-            set_source_files_properties(${RED_ALERT_GAME_DATA}
+            set_source_files_properties(
+                "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
+                "${RED_ALERT_DATA_DIR}/manifest.json"
                 PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData)
+            set_source_files_properties(
+                "${RED_ALERT_DATA_DIR}/allied/MAIN.MIX"
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData/allied)
+            set_source_files_properties(
+                "${RED_ALERT_DATA_DIR}/soviet/MAIN.MIX"
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData/soviet)
             target_sources(VanillaRA PRIVATE ${RED_ALERT_GAME_DATA})
         endif()
         target_link_libraries(VanillaRA

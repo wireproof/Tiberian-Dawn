@@ -134,6 +134,17 @@
             }
         },
         {
+            "name": "ipados-redalert-simulator",
+            "inherits": "ipados-simulator",
+            "displayName": "Red Alert iOS simulator probe",
+            "binaryDir": "${sourceDir}/build/ipados-redalert-simulator",
+            "cacheVariables": {
+                "BUILD_VANILLATD": "OFF",
+                "BUILD_VANILLARA": "ON",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "/private/tmp/VanillaRA-iOS-Simulator-Probe"
+            }
+        },
+        {
             "name": "visionos-simulator",
             "displayName": "Tiberian Dawn for Vision Pro — Simulator Prototype",
             "generator": "Xcode",
@@ -260,6 +271,13 @@
             "name": "ipados-redalert-probe",
             "configurePreset": "ipados-redalert-probe",
             "displayName": "Red Alert iOS engine link probe",
+            "configuration": "Release",
+            "targets": ["VanillaRA"]
+        },
+        {
+            "name": "ipados-redalert-simulator",
+            "configurePreset": "ipados-redalert-simulator",
+            "displayName": "Red Alert iOS simulator probe",
             "configuration": "Release",
             "targets": ["VanillaRA"]
         },

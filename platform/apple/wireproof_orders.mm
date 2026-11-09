@@ -1075,11 +1075,19 @@ static UIImage *WPBuildCameo(NSString *asset) {
             button.accessibilityHint=@"Tap to queue. Hold to cancel queued units and refund production.";
             if(buildMode){NSString *asset=[NSString stringWithUTF8String:items[i].asset.c_str()];
                 UIImage *cameo=WPBuildCameo(asset?:@"");
-                if(cameo)[button setBackgroundImage:cameo forState:UIControlStateNormal];}
+                if(cameo){UIImageView *art=[[UIImageView alloc] initWithImage:cameo];
+                    art.tag=20004;art.contentMode=UIViewContentModeScaleAspectFill;
+                    art.clipsToBounds=YES;art.userInteractionEnabled=NO;
+                    button.clipsToBounds=YES;[button addSubview:art];}}
             UILabel *badge=[UILabel new];badge.tag=20001;badge.textColor=UIColor.whiteColor;
             badge.backgroundColor=[UIColor colorWithWhite:0 alpha:.78];badge.font=[UIFont systemFontOfSize:11 weight:UIFontWeightBold];
             badge.textAlignment=NSTextAlignmentCenter;badge.adjustsFontSizeToFitWidth=YES;badge.minimumScaleFactor=.7;
             [button addSubview:badge];
+            UILabel *queueBadge=[UILabel new];queueBadge.tag=20003;
+            queueBadge.textColor=UIColor.whiteColor;queueBadge.backgroundColor=[UIColor colorWithWhite:0 alpha:.86];
+            queueBadge.font=[UIFont systemFontOfSize:13 weight:UIFontWeightBold];
+            queueBadge.textAlignment=NSTextAlignmentCenter;queueBadge.layer.cornerRadius=5;
+            queueBadge.clipsToBounds=YES;[button addSubview:queueBadge];
             UIProgressView *progress=[UIProgressView new];progress.tag=20002;progress.progressTintColor=UIColor.systemGreenColor;
             progress.trackTintColor=[UIColor colorWithWhite:.2 alpha:.9];[button addSubview:progress];
             if(items[i].category!=3){UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdProduction:)];
@@ -1088,23 +1096,32 @@ static UIImage *WPBuildCameo(NSString *asset) {
     }
     self.productionStrip.hidden=!buildMode;
     self.productionStrip.frame=CGRectMake(inset,114,width,MAX(80,contentBottom-122));
+    CGFloat cell=MIN(158,(width-24)/4);
+    int columns=MAX(2,int((width+8)/(cell+8)));
+    int rows=MAX(1,int((items.size()+columns-1)/columns));
+    CGFloat cellHeight=MAX(cell*.75,(self.productionStrip.bounds.size.height-(rows-1)*8)/rows);
     for(NSUInteger i=0;i<self.productionButtons.count;++i){UIButton *button=self.productionButtons[i];
         const auto&item=items[i];NSString *name=[NSString stringWithCString:item.name.c_str() encoding:NSISOLatin1StringEncoding]?:@"Unit";
         NSString *title=item.queued?[NSString stringWithFormat:@"%@ ×%d",name,item.queued]:name;
         NSString *status=item.ready?@"READY":item.category==3?@"CHARGING":item.paused?@"ON HOLD":item.progress>0?[NSString stringWithFormat:@"%d%%",MIN(100,item.progress*100/108)]:item.queued>0?@"QUEUED":@"";
-        [button setTitle:buildMode&&button.currentBackgroundImage?@"":title forState:UIControlStateNormal];
+        UIImageView *art=(UIImageView*)[button viewWithTag:20004];
+        [button setTitle:buildMode&&art?@"":title forState:UIControlStateNormal];
         button.accessibilityLabel=status.length?[NSString stringWithFormat:@"%@, %@",title,status]:title;
-        if(buildMode){CGFloat cell=MIN(158,(width-24)/4);int columns=MAX(2,int((width+8)/(cell+8)));
-            button.frame=CGRectMake((i%columns)*(cell+8),(i/columns)*(cell*.75+8),cell,cell*.75);
+        if(buildMode){
+            button.frame=CGRectMake((i%columns)*(cell+8),(i/columns)*(cellHeight+8),cell,cellHeight);
         }else button.frame=CGRectMake(i*132,0,126,48);
+        art.frame=button.bounds;
         UILabel *badge=(UILabel*)[button viewWithTag:20001];UIProgressView *progress=(UIProgressView*)[button viewWithTag:20002];
         badge.text=status;badge.hidden=status.length==0;
         badge.frame=CGRectMake(3,button.bounds.size.height-23,button.bounds.size.width-6,18);
+        UILabel *queueBadge=(UILabel*)[button viewWithTag:20003];
+        queueBadge.hidden=item.queued<=0;
+        queueBadge.text=item.queued>0?[NSString stringWithFormat:@"+%d",item.queued]:@"";
+        queueBadge.frame=CGRectMake(button.bounds.size.width-43,3,40,22);
         progress.hidden=item.progress<=0||item.ready;progress.progress=MIN(1,item.progress/108.0f);
         progress.frame=CGRectMake(3,button.bounds.size.height-4,button.bounds.size.width-6,3);
     }
-    if(buildMode){CGFloat cell=MIN(158,(width-24)/4);int columns=MAX(2,int((width+8)/(cell+8)));
-        self.productionStrip.contentSize=CGSizeMake(width,((items.size()+columns-1)/columns)*(cell*.75+8));}
+    if(buildMode)self.productionStrip.contentSize=CGSizeMake(width,rows*(cellHeight+8)-8);
     else self.productionStrip.contentSize=CGSizeMake(MAX(width,self.productionButtons.count*132),52);
     for(UIButton *button in self.commands)button.hidden=!commandsMode;
     for(UIButton *button in self.rallies)button.hidden=!commandsMode;

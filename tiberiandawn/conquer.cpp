@@ -64,6 +64,7 @@
 
 #include "function.h"
 #include "common/remastered_scene.h"
+#include "common/wireproof_laptop.h"
 #ifdef IPADOS_PORT
 #include "platform/apple/ipados_platform.h"
 #endif
@@ -2469,6 +2470,12 @@ extern void Play_Movie_GlyphX(const char* movie_name, ThemeType theme);
 
 void Play_Movie(char const* name, ThemeType theme, bool clrscrn)
 {
+#ifdef IPADOS_PORT
+    struct LaptopMovieScope {
+        LaptopMovieScope() { WPLaptop::MovieActive().store(true); }
+        ~LaptopMovieScope() { WPLaptop::MovieActive().store(false); Refresh_Video_Layout(); }
+    } laptopMovieScope;
+#endif
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
     WP_Begin_Campaign_Presentation();
 #endif

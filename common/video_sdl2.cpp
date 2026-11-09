@@ -590,7 +590,8 @@ static void Update_HWCursor_Settings(bool geometry_only = false)
                                         Presentation_Height(),
                                         battlefield_active ? IPadLayoutInsets{0,0,0,
                                             WPLaptop::Active() ? renderer_output_h/2 : 0}
-                                                           : IPadLayoutInsets{safe_left, safe_top, safe_right, safe_bottom},
+                                                           : IPadLayoutInsets{safe_left, safe_top, safe_right,
+                                            WPLaptop::Active() && WPLaptop::MovieActive().load() ? renderer_output_h/2 : safe_bottom},
                                         false, // Fractional fit avoids menu shrinkage after returning from gameplay.
                                         false, // Fixed campaign artwork always fits without stretching.
                                         !battlefield_active); // Center presentations across the full window width.

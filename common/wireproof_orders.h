@@ -97,7 +97,13 @@ public:
     Radar radarSnapshot() { std::lock_guard<std::mutex> lock(mutex);return radar; }
     bool enqueueRadarCenter(int x,int y) {
         std::lock_guard<std::mutex> lock(mutex);
-        if(!state.active || pending.size()>=32 || x<0 || y<0)return false;
+        if(!state.active || x<0 || y<0)return false;
+        // A drag should follow the latest finger position, not replay every
+        // intermediate position several frames later.
+        pending.erase(std::remove_if(pending.begin(),pending.end(),[](const Command& command) {
+            return command.kind==RadarCenter;
+        }),pending.end());
+        if(pending.size()>=32)return false;
         pending.push_back({RadarCenter,0,x,y});return true;
     }
     bool enqueueProduction(bool cancel,int type,int id,bool building=false) {

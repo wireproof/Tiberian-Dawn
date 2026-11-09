@@ -870,6 +870,7 @@ static UIImage *WPBuildCameo(NSString *asset) {
 
 @interface WPRadarMap : UIView {
     WPOrders::Radar _radar;
+    CGFloat _trackpadX, _trackpadY;
 }
 - (void)updateRadar:(WPOrders::Radar)radar;
 @end
@@ -878,12 +879,16 @@ static UIImage *WPBuildCameo(NSString *asset) {
     if((self=[super initWithFrame:frame])){
         self.backgroundColor=[UIColor colorWithWhite:.08 alpha:1];
         self.layer.borderWidth=1;self.layer.borderColor=UIColor.lightGrayColor.CGColor;
-        self.accessibilityLabel=@"Radar map. Tap to center the battlefield.";
+        self.accessibilityLabel=@"Radar map. Tap or drag to center the battlefield.";
         [self addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)]];
+        UIPanGestureRecognizer *pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panned:)];
+        pan.maximumNumberOfTouches=1;[self addGestureRecognizer:pan];
     }return self;
 }
 - (void)updateRadar:(WPOrders::Radar)radar {
-    _radar=std::move(radar);[self setNeedsDisplay];
+    _radar=std::move(radar);
+    self.accessibilityLabel=_radar.active?@"Radar map. Tap or drag to center the battlefield.":@"Map trackpad. Drag to pan the battlefield.";
+    [self setNeedsDisplay];
 }
 - (CGRect)mapRect {
     // The lower display is a wide command surface. Use the entire radar pane;
@@ -898,13 +903,31 @@ static UIImage *WPBuildCameo(NSString *asset) {
     int y=_radar.mapY+MIN(_radar.height-1,MAX(0,int((point.y-map.origin.y)*_radar.height/map.size.height)));
     WPOrders::Shared().enqueueRadarCenter(x,y);
 }
+- (void)panned:(UIPanGestureRecognizer*)pan {
+    if(_radar.width<=0||_radar.height<=0)return;
+    if(pan.state==UIGestureRecognizerStateBegan){
+        _trackpadX=_radar.mapX+_radar.cameraX+_radar.cameraWidth/2.0;
+        _trackpadY=_radar.mapY+_radar.cameraY+_radar.cameraHeight/2.0;
+        [pan setTranslation:CGPointZero inView:self];
+    }
+    if(pan.state!=UIGestureRecognizerStateBegan && pan.state!=UIGestureRecognizerStateChanged)return;
+    if(_radar.active){
+        CGRect map=[self mapRect];CGPoint point=[pan locationInView:self];
+        int x=_radar.mapX+MIN(_radar.width-1,MAX(0,int((point.x-map.origin.x)*_radar.width/map.size.width)));
+        int y=_radar.mapY+MIN(_radar.height-1,MAX(0,int((point.y-map.origin.y)*_radar.height/map.size.height)));
+        WPOrders::Shared().enqueueRadarCenter(x,y);
+    }else{
+        CGPoint delta=[pan translationInView:self];[pan setTranslation:CGPointZero inView:self];
+        _trackpadX-=delta.x*MAX(1,_radar.cameraWidth)*2.0/MAX(1,self.bounds.size.width);
+        _trackpadY-=delta.y*MAX(1,_radar.cameraHeight)*2.0/MAX(1,self.bounds.size.height);
+        int x=MIN(_radar.mapX+_radar.width-1,MAX(_radar.mapX,int(lround(_trackpadX))));
+        int y=MIN(_radar.mapY+_radar.height-1,MAX(_radar.mapY,int(lround(_trackpadY))));
+        WPOrders::Shared().enqueueRadarCenter(x,y);
+    }
+}
 - (void)drawRect:(CGRect)rect {
     [super drawRect:rect];
-    if(_radar.rgba.size()!=size_t(_radar.width)*_radar.height*4 || _radar.rgba.empty()){
-        NSString *message=_radar.existing?@"Radar needs power":@"Build a Communications Center to enable radar";
-        [message drawInRect:CGRectInset(self.bounds,12,12) withAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:15],NSForegroundColorAttributeName:UIColor.whiteColor}];
-        return;
-    }
+    if(_radar.rgba.size()!=size_t(_radar.width)*_radar.height*4 || _radar.rgba.empty())return;
     NSData *data=[NSData dataWithBytes:_radar.rgba.data() length:_radar.rgba.size()];
     CGDataProviderRef provider=CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
     CGColorSpaceRef space=CGColorSpaceCreateDeviceRGB();

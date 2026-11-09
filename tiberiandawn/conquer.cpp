@@ -272,7 +272,9 @@ static void WP_ProcessOrders() {
             continue;
         }
 #ifdef IPADOS_PORT
-        if(command.kind==RadarCenter && Map.Is_Radar_Active()){
+        // The lower radar surface also works as a relative trackpad before a
+        // Communications Center is built. Only the map image needs radar.
+        if(command.kind==RadarCenter){
             int x=std::max(Map.MapCellX,std::min(command.itemType,Map.MapCellX+Map.MapCellWidth-1));
             int y=std::max(Map.MapCellY,std::min(command.itemID,Map.MapCellY+Map.MapCellHeight-1));
             x=std::max(Map.MapCellX,x-Lepton_To_Cell(Map.TacLeptonWidth)/2);

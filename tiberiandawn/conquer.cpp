@@ -135,6 +135,14 @@ static void WP_ProcessOrders() {
             const auto& strip=Map.Column[column];
             for (int index=0; index<strip.BuildableCount; ++index) {
                 const auto& item=strip.Buildables[index];
+                if (item.BuildableType==RTTI_SPECIAL) {
+                    const int id=item.BuildableID;
+                    const char* name=id==SPC_ION_CANNON?"Ion Cannon":id==SPC_AIR_STRIKE?"Airstrike":id==SPC_NUCLEAR_BOMB?"Nuclear Bomb":nullptr;
+                    const char* asset=id==SPC_ION_CANNON?"SW_ION":id==SPC_AIR_STRIKE?"SW_AIRSTRIKE":id==SPC_NUCLEAR_BOMB?"SW_NUKE":nullptr;
+                    if(name)production.emplace_back(int(RTTI_SPECIAL),id,name,asset,0,3,0,
+                        id==SPC_ION_CANNON?PlayerPtr->IonCannon.Is_Ready():id==SPC_AIR_STRIKE?PlayerPtr->AirStrike.Is_Ready():PlayerPtr->NukeStrike.Is_Ready());
+                    continue;
+                }
                 if (item.BuildableType!=RTTI_BUILDINGTYPE && item.BuildableType!=RTTI_INFANTRYTYPE && item.BuildableType!=RTTI_UNITTYPE
                     && item.BuildableType!=RTTI_AIRCRAFTTYPE) continue;
                 const auto* techno=Fetch_Techno_Type(item.BuildableType,item.BuildableID);
@@ -152,6 +160,33 @@ static void WP_ProcessOrders() {
         }
         Shared().publishProduction(std::move(production));
     }
+#ifdef IPADOS_PORT
+    // Sample at a modest cadence; the UIKit deck never reads game objects.
+    static unsigned radarTick=0;
+    if(Shared().snapshot().active && WPLaptop::Active() && (++radarTick%12)==0) {
+        Radar radar;
+        radar.existing=Map.Is_Radar_Existing();radar.active=Map.Is_Radar_Active();
+        radar.width=Map.MapCellWidth;radar.height=Map.MapCellHeight;
+        radar.mapX=Map.MapCellX;radar.mapY=Map.MapCellY;
+        int camera=Coord_Cell(Map.TacticalCoord);
+        radar.cameraX=Cell_X(camera)-radar.mapX;radar.cameraY=Cell_Y(camera)-radar.mapY;
+        radar.cameraWidth=Lepton_To_Cell(Map.TacLeptonWidth);
+        radar.cameraHeight=Lepton_To_Cell(Map.TacLeptonHeight);
+        if(radar.active && radar.width>0 && radar.height>0 && radar.width<=256 && radar.height<=256) {
+            radar.rgba.resize(size_t(radar.width)*radar.height*4);
+            for(int y=0;y<radar.height;++y)for(int x=0;x<radar.width;++x){
+                int cell=XY_Cell(x+radar.mapX,y+radar.mapY);
+                int color=Map[cell].Is_Visible(PlayerPtr)?Map[cell].Cell_Color(true):BLACK;
+                if(color==TBLACK)color=Map[cell].Cell_Color(false);
+                unsigned char *pixel=&radar.rgba[(size_t(y)*radar.width+x)*4];
+                color=std::max(0,std::min(color,255));
+                pixel[0]=GamePalette[color*3]<<2;pixel[1]=GamePalette[color*3+1]<<2;
+                pixel[2]=GamePalette[color*3+2]<<2;pixel[3]=255;
+            }
+        }
+        Shared().publishRadar(std::move(radar));
+    }
+#endif
     Command command;
     while (Shared().take(command)) {
         if (command.kind==ToggleArtwork) {
@@ -218,6 +253,34 @@ static void WP_ProcessOrders() {
             }
             continue;
         }
+        if (command.kind==UseSpecial && PlayerPtr) {
+            bool available=false;
+            for(int column=0;column<SidebarClass::COLUMNS;++column)
+                for(int index=0;index<Map.Column[column].BuildableCount;++index)
+                    if(Map.Column[column].Buildables[index].BuildableType==RTTI_SPECIAL &&
+                       Map.Column[column].Buildables[index].BuildableID==command.itemID)available=true;
+            if(!available)continue;
+            auto *weapon=command.itemID==SPC_ION_CANNON?&PlayerPtr->IonCannon:
+                command.itemID==SPC_AIR_STRIKE?&PlayerPtr->AirStrike:
+                command.itemID==SPC_NUCLEAR_BOMB?&PlayerPtr->NukeStrike:nullptr;
+            if(!weapon)continue;
+            if(weapon->Is_Ready()){
+                Map.IsTargettingMode=(SpecialWeaponType)command.itemID;
+                Unselect_All();Speak(VOX_SELECT_TARGET);
+            }else weapon->Impatient_Click();
+            continue;
+        }
+#ifdef IPADOS_PORT
+        if(command.kind==RadarCenter && Map.Is_Radar_Active()){
+            int x=std::max(Map.MapCellX,std::min(command.itemType,Map.MapCellX+Map.MapCellWidth-1));
+            int y=std::max(Map.MapCellY,std::min(command.itemID,Map.MapCellY+Map.MapCellHeight-1));
+            x=std::max(Map.MapCellX,x-Lepton_To_Cell(Map.TacLeptonWidth)/2);
+            y=std::max(Map.MapCellY,y-Lepton_To_Cell(Map.TacLeptonHeight)/2);
+            Map.Set_Tactical_Position(Cell_Coord(XY_Cell(x,y)));
+            Map.Flag_To_Redraw(true);
+            continue;
+        }
+#endif
         if(command.kind==RallyInfantry || command.kind==RallyVehicles){Map.Cancel_Player_Action();Shared().rally(command.kind==RallyInfantry?1:2);continue;}
         if(command.kind==ClearRallies){WP_Rally_Clear();Map.Flag_To_Redraw(true);continue;}
         if (command.kind==Attack || command.kind==Move) {

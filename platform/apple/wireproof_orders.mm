@@ -148,6 +148,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @end
 
 @interface WPOrdersPanel : UIView
+@property(nonatomic) NSInteger laptopPage; // 0 hidden, 1 cheats, 2 options
+@property(nonatomic) BOOL laptopVertical;
+@property(nonatomic) BOOL wasEmbedded;
 @property(nonatomic) NSInteger layoutOrientation;
 @property(nonatomic) CGSize lastWindowSize;
 @property(nonatomic,strong) UISegmentedControl *tabs;
@@ -560,8 +563,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self.laptopButton setTitle:WPLaptop::Enabled().load()?@"Laptop deck: On":@"Laptop deck: Off" forState:UIControlStateNormal];
     auto cheats=WPCheats::Shared().snapshot();
     self.gamePage.hidden=YES;
-    self.cheatStack.hidden=self.tabs.selectedSegmentIndex!=0;
-    self.optionsPage.hidden=self.tabs.selectedSegmentIndex!=1;
+    BOOL embedded=WPLaptop::Active() && self.laptopPage>0;
+    if(self.wasEmbedded && !embedded)self.expanded=NO;
+    self.wasEmbedded=embedded;
+    NSInteger selected=embedded?self.laptopPage-1:self.tabs.selectedSegmentIndex;
+    self.cheatStack.hidden=selected!=0;
+    self.optionsPage.hidden=selected!=1;
     self.cheatStack.userInteractionEnabled=cheats.available;
     self.cheatStatus.text=[NSString stringWithFormat:@"Credits: %d\nPower: %d / %d",cheats.money,cheats.power,cheats.drain];
     self.weaponsSwitch.on=cheats.weapons;self.anywhereSwitch.on=cheats.anywhere;self.unlockSwitch.on=cheats.unlock;self.healthSwitch.on=cheats.damagedHealth;
@@ -576,27 +583,29 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.zoomLabel.text=[NSString stringWithFormat:@"%@ %.2f×",zoomTitle,quarters/4.0];
     self.zoomSlider.value=quarters; self.zoomSlider.accessibilityValue=self.zoomLabel.text;
     self.zoomMinus.enabled=quarters>2; self.zoomPlus.enabled=quarters<12;
-    self.hidden=!s.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
+    self.hidden=!s.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive || (WPLaptop::Active() && !embedded);
     if (self.hidden) {WPOrders::Shared().hold_pan(false);WPOrders::Shared().setStick(0,0);}
     if(self.window) {
         NSInteger orientation=self.window.windowScene.interfaceOrientation;
         if(!orientation)orientation=self.window.bounds.size.width>self.window.bounds.size.height?UIInterfaceOrientationLandscapeLeft:UIInterfaceOrientationPortrait;
         CGSize size=self.window.bounds.size;
         BOOL resized=self.lastWindowSize.width>0 && (fabs(size.width-self.lastWindowSize.width)>0.5 || fabs(size.height-self.lastWindowSize.height)>0.5);
-        if((self.layoutOrientation && self.layoutOrientation!=orientation) || resized)self.expanded=NO;
+        if(!embedded && ((self.layoutOrientation && self.layoutOrientation!=orientation) || resized))self.expanded=NO;
         self.lastWindowSize=size;
         self.layoutOrientation=orientation;
     }
     if (!self.configured && self.window) { self.expanded=NO; self.configured=YES; }
+    if(embedded)self.expanded=YES;
     NSString *title=[NSString stringWithFormat:@"Cheats & Options %@",self.expanded?@"▾":@"▸"];
     [self.toggle setTitle:title forState:UIControlStateNormal];
-    self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded;
+    self.panelHeader.hidden=embedded;
+    self.body.hidden=!self.expanded; self.stack.hidden=!self.expanded; self.bubble.hidden=self.expanded || embedded;
     BOOL panHeld=WPOrders::Shared().panHeld();
     self.bubble.tintColor=panHeld?UIColor.systemBlueColor:(s.force?UIColor.systemOrangeColor:UIColor.whiteColor);
     [self.bubble setImage:[UIImage systemImageNamed:panHeld?@"hand.draw.fill":@"slider.horizontal.3"] forState:UIControlStateNormal];
     self.layer.cornerRadius=self.expanded?12:28;
     CGRect safe=[self availableRect];
-    BOOL landscape=self.window.bounds.size.width>self.window.bounds.size.height;
+    BOOL landscape=self.window.bounds.size.width>self.window.bounds.size.height && !(embedded && self.laptopVertical);
     if(self.arrangement!=(landscape?2:1)) {
         self.arrangement=landscape?2:1;
         for(UIStackView *page in @[self.gamePage,self.cheatStack])for(UIView *v in [page.arrangedSubviews copy]){[page removeArrangedSubview:v];[v removeFromSuperview];}
@@ -634,7 +643,8 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.optionsPage.distribution=wideOptions?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
     self.optionsPage.alignment=wideOptions?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
     const CGFloat uiScale=1.0; // Floating controls have their own fixed touch-target size.
-    CGFloat width=self.expanded?MIN(landscape?(self.tabs.selectedSegmentIndex==1?1000:820):256,MAX(56,safe.size.width/uiScale)):56;
+    CGFloat width=embedded?MAX(56,self.window.bounds.size.width-2*safe.origin.x):
+        self.expanded?MIN(landscape?(selected==1?1000:820):256,MAX(56,safe.size.width/uiScale)):56;
     CGFloat height=56;
     __block CGFloat contentHeight=56;
     if (self.expanded) {
@@ -643,9 +653,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         contentHeight=fit.height;
         height=MIN(safe.size.height/uiScale,fit.height+12);
     }
+    if(embedded)height=MAX(60,self.window.bounds.size.height*.5-MAX(70,self.window.safeAreaInsets.bottom+62)-114);
     CGPoint position=WPLaptop::Active()?self.laptopPosition:self.position;
     CGFloat x=safe.origin.x+position.x*MAX(0,safe.size.width-width*uiScale);
     CGFloat y=safe.origin.y+position.y*MAX(0,safe.size.height-height*uiScale);
+    if(embedded){x=safe.origin.x;y=ceil(self.window.bounds.size.height*.5)+114;}
     [UIView performWithoutAnimation:^{
         self.bounds=CGRectMake(0,0,width,height);
         self.transform=CGAffineTransformMakeScale(uiScale,uiScale);
@@ -844,12 +856,71 @@ static UIImage *WPBuildCameo(NSString *asset) {
     return image;
 }
 
+@interface WPRadarMap : UIView {
+    WPOrders::Radar _radar;
+}
+- (void)updateRadar:(WPOrders::Radar)radar;
+@end
+@implementation WPRadarMap
+- (instancetype)initWithFrame:(CGRect)frame {
+    if((self=[super initWithFrame:frame])){
+        self.backgroundColor=[UIColor colorWithWhite:.08 alpha:1];
+        self.layer.borderWidth=1;self.layer.borderColor=UIColor.lightGrayColor.CGColor;
+        self.accessibilityLabel=@"Radar map. Tap to center the battlefield.";
+        [self addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)]];
+    }return self;
+}
+- (void)updateRadar:(WPOrders::Radar)radar {
+    _radar=std::move(radar);[self setNeedsDisplay];
+}
+- (CGRect)mapRect {
+    if(_radar.width<=0||_radar.height<=0)return self.bounds;
+    CGFloat scale=MIN(self.bounds.size.width/_radar.width,self.bounds.size.height/_radar.height);
+    CGSize size=CGSizeMake(_radar.width*scale,_radar.height*scale);
+    return CGRectMake((self.bounds.size.width-size.width)/2,(self.bounds.size.height-size.height)/2,size.width,size.height);
+}
+- (void)tapped:(UITapGestureRecognizer*)tap {
+    if(!_radar.active||_radar.width<=0||_radar.height<=0)return;
+    CGRect map=[self mapRect];CGPoint point=[tap locationInView:self];
+    if(!CGRectContainsPoint(map,point))return;
+    int x=_radar.mapX+MIN(_radar.width-1,MAX(0,int((point.x-map.origin.x)*_radar.width/map.size.width)));
+    int y=_radar.mapY+MIN(_radar.height-1,MAX(0,int((point.y-map.origin.y)*_radar.height/map.size.height)));
+    WPOrders::Shared().enqueueRadarCenter(x,y);
+}
+- (void)drawRect:(CGRect)rect {
+    [super drawRect:rect];
+    if(_radar.rgba.size()!=size_t(_radar.width)*_radar.height*4 || _radar.rgba.empty()){
+        NSString *message=_radar.existing?@"Radar needs power":@"Build a Communications Center to enable radar";
+        [message drawInRect:CGRectInset(self.bounds,12,12) withAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:15],NSForegroundColorAttributeName:UIColor.whiteColor}];
+        return;
+    }
+    NSData *data=[NSData dataWithBytes:_radar.rgba.data() length:_radar.rgba.size()];
+    CGDataProviderRef provider=CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
+    CGColorSpaceRef space=CGColorSpaceCreateDeviceRGB();
+    CGImageRef image=CGImageCreate(_radar.width,_radar.height,8,32,_radar.width*4,space,
+        kCGBitmapByteOrderDefault|kCGImageAlphaLast,provider,NULL,false,kCGRenderingIntentDefault);
+    CGRect map=[self mapRect];[[UIImage imageWithCGImage:image] drawInRect:map];
+    CGRect camera=CGRectMake(map.origin.x+map.size.width*_radar.cameraX/_radar.width,
+        map.origin.y+map.size.height*_radar.cameraY/_radar.height,
+        map.size.width*_radar.cameraWidth/_radar.width,
+        map.size.height*_radar.cameraHeight/_radar.height);
+    CGContextRef context=UIGraphicsGetCurrentContext();
+    CGContextSetStrokeColorWithColor(context,UIColor.systemYellowColor.CGColor);
+    CGContextSetLineWidth(context,2);CGContextStrokeRect(context,camera);
+    CGImageRelease(image);CGColorSpaceRelease(space);CGDataProviderRelease(provider);
+}
+@end
+
 // The laptop preview keeps the battlefield on the upper half of the inner
 // display and makes production and orders reachable from the lower half.
 @interface WPLaptopDock : UIView
+@property(nonatomic,weak) WPOrdersPanel *optionsPanel;
+@property(nonatomic) BOOL verticalMenu;
 @property(nonatomic,strong) UILabel *heading;
 @property(nonatomic,strong) UISegmentedControl *mode;
 @property(nonatomic,strong) UISegmentedControl *category;
+@property(nonatomic,strong) UIButton *layoutButton;
+@property(nonatomic,strong) WPRadarMap *radarMap;
 @property(nonatomic,strong) UIButton *artworkButton;
 @property(nonatomic,strong) UIButton *laptopButton;
 @property(nonatomic,strong) UIScrollView *productionStrip;
@@ -879,9 +950,9 @@ static UIImage *WPBuildCameo(NSString *asset) {
         self.heading=[UILabel new];self.heading.textColor=UIColor.whiteColor;
         self.heading.font=[UIFont systemFontOfSize:15 weight:UIFontWeightBold];
         [self addSubview:self.heading];
-        self.mode=[[UISegmentedControl alloc] initWithItems:@[@"Build",@"Commands"]];
+        self.mode=[[UISegmentedControl alloc] initWithItems:@[@"Build",@"Commands",@"Radar",@"Cheats",@"Options"]];
         self.mode.selectedSegmentIndex=0;[self.mode addTarget:self action:@selector(modeChanged:) forControlEvents:UIControlEventValueChanged];
-        self.category=[[UISegmentedControl alloc] initWithItems:@[@"Buildings",@"Infantry",@"Vehicles"]];
+        self.category=[[UISegmentedControl alloc] initWithItems:@[@"Buildings",@"Infantry",@"Vehicles",@"Powers"]];
         self.category.selectedSegmentIndex=0;[self.category addTarget:self action:@selector(modeChanged:) forControlEvents:UIControlEventValueChanged];
         for(UISegmentedControl *control in @[self.mode,self.category]) {
             control.selectedSegmentTintColor=UIColor.whiteColor;
@@ -891,6 +962,9 @@ static UIImage *WPBuildCameo(NSString *asset) {
         }
         self.artworkButton=[self button:@"Remastered" tag:900];[self addSubview:self.artworkButton];
         self.laptopButton=[self button:@"Laptop On" tag:901];[self addSubview:self.laptopButton];
+        self.verticalMenu=[NSUserDefaults.standardUserDefaults boolForKey:@"Wireproof.LaptopVerticalMenu"];
+        self.layoutButton=[self button:@"Layout: Horizontal" tag:902];[self addSubview:self.layoutButton];
+        self.radarMap=[WPRadarMap new];[self addSubview:self.radarMap];
         self.productionStrip=[UIScrollView new];self.productionStrip.showsHorizontalScrollIndicator=YES;
         [self addSubview:self.productionStrip];self.productionButtons=[NSMutableArray new];
         self.groupsStrip=[UIScrollView new];self.groupsStrip.showsHorizontalScrollIndicator=YES;
@@ -915,12 +989,16 @@ static UIImage *WPBuildCameo(NSString *asset) {
 }
 - (void)pressed:(UIButton*)button {
     if(button.tag==900||button.tag==901){WPOrders::Shared().enqueue(button.tag==900?WPOrders::ToggleArtwork:WPOrders::ToggleLaptop);return;}
+    if(button.tag==902){self.verticalMenu=!self.verticalMenu;
+        [NSUserDefaults.standardUserDefaults setBool:self.verticalMenu forKey:@"Wireproof.LaptopVerticalMenu"];
+        [self refresh];return;}
     if(button.tag>=1000){
         int value=(int)button.tag-1000;
-        bool building=false;
+        bool building=false,special=false;
         for(const auto&item:WPOrders::Shared().productionSnapshot())
-            if(item.type==value/1000&&item.id==value%1000){building=item.category==0;break;}
-        WPOrders::Shared().enqueueProduction(false,value/1000,value%1000,building);
+            if(item.type==value/1000&&item.id==value%1000){building=item.category==0;special=item.category==3;break;}
+        if(special)WPOrders::Shared().enqueueSpecial(value%1000);
+        else WPOrders::Shared().enqueueProduction(false,value/1000,value%1000,building);
     }else if(button.tag>=200){WPOrders::Shared().enqueue(WPOrders::Recall,(int)button.tag-200);}
     else WPOrders::Shared().enqueue((WPOrders::Kind)button.tag);
 }
@@ -934,7 +1012,7 @@ static UIImage *WPBuildCameo(NSString *asset) {
         [[UISelectionFeedbackGenerator new] selectionChanged];
 }
 - (void)modeChanged:(UISegmentedControl*)control {
-    if(control==self.mode)WPLaptop::BuildOpen().store(control.selectedSegmentIndex==0);
+    if(control==self.mode && control.selectedSegmentIndex<=1)WPLaptop::BuildOpen().store(control.selectedSegmentIndex==0);
     self.productionKeys=nil;[self refresh];
 }
 - (void)holdGroup:(UILongPressGestureRecognizer*)hold {
@@ -955,19 +1033,27 @@ static UIImage *WPBuildCameo(NSString *asset) {
         state.rally==1?@"Infantry rally · tap battlefield":state.rally==2?@"Vehicle rally · tap battlefield":
         state.force==1?@"Force Attack · tap target":state.force==2?@"Force Move · tap target":
         [NSString stringWithFormat:@"Command deck · %d selected",state.selected];
-    const BOOL buildMode=WPLaptop::BuildOpen().load();
-    if(self.mode.selectedSegmentIndex!=(buildMode?0:1))self.mode.selectedSegmentIndex=buildMode?0:1;
+    const NSInteger page=self.mode.selectedSegmentIndex;
+    const BOOL buildMode=page==0,commandsMode=page==1;
+    if(self.optionsPanel){self.optionsPanel.laptopPage=page==3?1:page==4?2:0;self.optionsPanel.laptopVertical=self.verticalMenu;}
     self.mode.frame=CGRectMake(inset,36,width,32);
     self.category.hidden=!buildMode;
     self.category.frame=CGRectMake(inset,74,width,32);
+    self.layoutButton.hidden=page<3;
+    self.layoutButton.frame=CGRectMake(inset,74,width,32);
+    [self.layoutButton setTitle:self.verticalMenu?@"Layout: Vertical":@"Layout: Horizontal" forState:UIControlStateNormal];
+    self.radarMap.hidden=page!=2;
     [self.artworkButton setTitle:state.remastered?@"Remastered On":@"Remastered Off" forState:UIControlStateNormal];
     CGFloat footerY=self.bounds.size.height-MAX(54,self.window.safeAreaInsets.bottom+50);
+    CGFloat radarSize=MAX(60,MIN(width,footerY-88));
+    self.radarMap.frame=CGRectMake(inset+(width-radarSize)/2,76,radarSize,radarSize);
+    if(page==2)[self.radarMap updateRadar:WPOrders::Shared().radarSnapshot()];
     self.artworkButton.frame=CGRectMake(inset,footerY,(width-8)/2,44);
     self.laptopButton.frame=CGRectMake(inset+(width-8)/2+8,footerY,(width-8)/2,44);
     auto all=WPOrders::Shared().productionSnapshot();
     std::vector<WPOrders::Production> items;
     for(const auto&item:all)
-        if(buildMode ? item.category==self.category.selectedSegmentIndex : item.category!=0) items.push_back(item);
+        if(buildMode && item.category==self.category.selectedSegmentIndex) items.push_back(item);
     NSMutableArray<NSString*> *keys=[NSMutableArray new];
     for(const auto&item:items)[keys addObject:[NSString stringWithFormat:@"%d:%d:%d",item.type,item.id,buildMode]];
     if(![keys isEqualToArray:self.productionKeys]) {
@@ -984,16 +1070,16 @@ static UIImage *WPBuildCameo(NSString *asset) {
             [button addSubview:badge];
             UIProgressView *progress=[UIProgressView new];progress.tag=20002;progress.progressTintColor=UIColor.systemGreenColor;
             progress.trackTintColor=[UIColor colorWithWhite:.2 alpha:.9];[button addSubview:progress];
-            UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdProduction:)];
-            hold.minimumPressDuration=.5;hold.cancelsTouchesInView=YES;[button addGestureRecognizer:hold];
+            if(items[i].category!=3){UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdProduction:)];
+                hold.minimumPressDuration=.5;hold.cancelsTouchesInView=YES;[button addGestureRecognizer:hold];}
             [self.productionStrip addSubview:button];[self.productionButtons addObject:button];}
     }
-    self.productionStrip.frame=buildMode?CGRectMake(inset,114,width,MAX(80,footerY-122)):
-        CGRectMake(inset,76,width,56);
+    self.productionStrip.hidden=!buildMode;
+    self.productionStrip.frame=CGRectMake(inset,114,width,MAX(80,footerY-122));
     for(NSUInteger i=0;i<self.productionButtons.count;++i){UIButton *button=self.productionButtons[i];
         const auto&item=items[i];NSString *name=[NSString stringWithCString:item.name.c_str() encoding:NSISOLatin1StringEncoding]?:@"Unit";
         NSString *title=item.queued?[NSString stringWithFormat:@"%@ ×%d",name,item.queued]:name;
-        NSString *status=item.ready?@"READY":item.paused?@"ON HOLD":item.progress>0?[NSString stringWithFormat:@"%d%%",MIN(100,item.progress*100/108)]:item.queued>0?@"QUEUED":@"";
+        NSString *status=item.ready?@"READY":item.category==3?@"CHARGING":item.paused?@"ON HOLD":item.progress>0?[NSString stringWithFormat:@"%d%%",MIN(100,item.progress*100/108)]:item.queued>0?@"QUEUED":@"";
         [button setTitle:buildMode&&button.currentBackgroundImage?@"":title forState:UIControlStateNormal];
         button.accessibilityLabel=status.length?[NSString stringWithFormat:@"%@, %@",title,status]:title;
         if(buildMode){CGFloat cell=MIN(158,(width-24)/4);int columns=MAX(2,int((width+8)/(cell+8)));
@@ -1008,9 +1094,9 @@ static UIImage *WPBuildCameo(NSString *asset) {
     if(buildMode){CGFloat cell=MIN(158,(width-24)/4);int columns=MAX(2,int((width+8)/(cell+8)));
         self.productionStrip.contentSize=CGSizeMake(width,((items.size()+columns-1)/columns)*(cell*.75+8));}
     else self.productionStrip.contentSize=CGSizeMake(MAX(width,self.productionButtons.count*132),52);
-    for(UIButton *button in self.commands)button.hidden=buildMode;
-    for(UIButton *button in self.rallies)button.hidden=buildMode;
-    self.groupsStrip.hidden=buildMode;
+    for(UIButton *button in self.commands)button.hidden=!commandsMode;
+    for(UIButton *button in self.rallies)button.hidden=!commandsMode;
+    self.groupsStrip.hidden=!commandsMode;
     CGFloat buttonWidth=(width-16)/3;
     for(int i=0;i<6;++i){UIButton *button=self.commands[i];
         button.frame=CGRectMake(inset+(i%3)*(buttonWidth+8),140+(i/3)*49,buttonWidth,44);
@@ -1057,9 +1143,10 @@ extern "C" void WP_InstallOrdersPanel(void) {
             if(!laptopDock || laptopDock.superview!=window){[laptopDock removeFromSuperview];laptopDock=[WPLaptopDock new];[window addSubview:laptopDock];}
             WPRefreshLaptopPosture(window);
             [joystick refresh];[window bringSubviewToFront:joystick];
+            laptopDock.optionsPanel=panel;
+            [laptopDock refresh];
             [panel refresh];
             [gameToolbar refresh];
-            [laptopDock refresh];
             if(!laptopDock.hidden){gameToolbar.hidden=YES;[window bringSubviewToFront:laptopDock];[window bringSubviewToFront:joystick];}
             // The root view can be reordered during keyboard/window changes.
             // Only raise inside this game window; never steal key-window focus.

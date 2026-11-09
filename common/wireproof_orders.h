@@ -6,11 +6,12 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <cstdint>
 namespace WPOrders {
 #ifdef MACOS_PORT
 int LoadUIScale();
 #endif
-enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies, QueueUnit, CancelUnit, BuildItem, CancelBuildItem, ToggleArtwork, ToggleLaptop };
+enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies, QueueUnit, CancelUnit, BuildItem, CancelBuildItem, ToggleArtwork, ToggleLaptop, UseSpecial, RadarCenter };
 struct Stick { float x=0, y=0, intensity=0; };
 struct Command {
     Kind kind; int group; int itemType; int itemID;
@@ -27,11 +28,17 @@ struct Production {
 };
 struct Snapshot { bool active; int selected; int force; int rally; bool remastered, placing, sidebar;
     Snapshot(bool a=false,int s=0,int f=0):active(a),selected(s),force(f),rally(0),remastered(false),placing(false),sidebar(false){} };
+struct Radar {
+    int width=0,height=0,mapX=0,mapY=0,cameraX=0,cameraY=0,cameraWidth=0,cameraHeight=0;
+    bool existing=false,active=false;
+    std::vector<uint8_t> rgba;
+};
 // UI threads only enqueue intentions. The game thread owns all game objects.
 class State {
     std::mutex mutex;
     std::deque<Command> pending;
     std::vector<Production> production;
+    Radar radar;
     Snapshot state = {false,0,0};
     bool pan_held = false;
     bool map_drag = false;
@@ -48,7 +55,7 @@ public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); production.clear(); state.force=0; state.rally=0; state.placing=false; pan_held=false; joystick={}; }
+        if (!active) { pending.clear(); production.clear(); radar=Radar(); state.force=0; state.rally=0; state.placing=false; pan_held=false; joystick={}; }
         if (!selected) state.force=0;
     }
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
@@ -79,10 +86,22 @@ public:
     std::vector<Production> productionSnapshot() {
         std::lock_guard<std::mutex> lock(mutex); return production;
     }
+    void publishRadar(Radar value) { std::lock_guard<std::mutex> lock(mutex);radar=std::move(value); }
+    Radar radarSnapshot() { std::lock_guard<std::mutex> lock(mutex);return radar; }
+    bool enqueueRadarCenter(int x,int y) {
+        std::lock_guard<std::mutex> lock(mutex);
+        if(!state.active || pending.size()>=32 || x<0 || y<0)return false;
+        pending.push_back({RadarCenter,0,x,y});return true;
+    }
     bool enqueueProduction(bool cancel,int type,int id,bool building=false) {
         std::lock_guard<std::mutex> lock(mutex);
         if (!state.active || pending.size()>=32 || type<0 || id<0) return false;
         pending.push_back({building?(cancel?CancelBuildItem:BuildItem):(cancel?CancelUnit:QueueUnit),0,type,id}); return true;
+    }
+    bool enqueueSpecial(int id) {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (!state.active || pending.size()>=32 || id<0) return false;
+        pending.push_back({UseSpecial,0,0,id}); return true;
     }
     bool enqueue(Kind kind, int group=0) {
         std::lock_guard<std::mutex> lock(mutex);

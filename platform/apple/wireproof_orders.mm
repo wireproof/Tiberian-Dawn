@@ -200,6 +200,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 @property(nonatomic) BOOL configured;
 @property(nonatomic,strong) UIButton *bubble;
 @property(nonatomic) CGPoint position;
+@property(nonatomic) CGPoint laptopPosition;
 @property(nonatomic,strong) WPControlPositionStore *positionStore;
 @end
 @implementation WPOrdersPanel
@@ -253,6 +254,10 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         self.position=CGPointMake(0,1);
         NSArray *saved=[[NSUserDefaults standardUserDefaults] arrayForKey:@"Wireproof.OrdersPosition"];
         if(saved.count==2)self.position=CGPointMake([saved[0] doubleValue],[saved[1] doubleValue]);
+        self.laptopPosition=CGPointMake(.08,.08);
+        NSArray *laptopSaved=[[NSUserDefaults standardUserDefaults] arrayForKey:@"Wireproof.OrdersPosition.Laptop"];
+        if(laptopSaved.count==2)self.laptopPosition=CGPointMake(MIN(1,MAX(0,[laptopSaved[0] doubleValue])),
+                                                               MIN(1,MAX(0,[laptopSaved[1] doubleValue])));
         NSMutableArray *orders=[NSMutableArray array];
         NSArray *names=@[@"Stop",@"Guard",@"Scatter",@"Force Attack",@"Force Move",@"Cancel"];
         for (NSInteger i=0;i<names.count;i++) [orders addObject:[self button:names[i] tag:i]];
@@ -404,11 +409,16 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     CGPoint delta=[pan translationInView:self.superview];
     CGFloat dx=MAX(0,safe.size.width-self.bounds.size.width);
     CGFloat dy=MAX(0,safe.size.height-self.bounds.size.height);
-    self.position=CGPointMake(dx?MIN(1,MAX(0,(self.frame.origin.x+delta.x-safe.origin.x)/dx)):0,
-                              dy?MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)):0);
+    CGPoint position=CGPointMake(dx?MIN(1,MAX(0,(self.frame.origin.x+delta.x-safe.origin.x)/dx)):0,
+                                 dy?MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)):0);
+    if(WPLaptop::Active())self.laptopPosition=position;else self.position=position;
     [pan setTranslation:CGPointZero inView:self.superview];[self refresh];
-    if(pan.state==UIGestureRecognizerStateEnded)
-        [self.positionStore save:self.position];
+    if(pan.state==UIGestureRecognizerStateEnded) {
+        if(WPLaptop::Active())
+            [NSUserDefaults.standardUserDefaults setObject:@[@(self.laptopPosition.x),@(self.laptopPosition.y)]
+                                              forKey:@"Wireproof.OrdersPosition.Laptop"];
+        else [self.positionStore save:self.position];
+    }
 }
 - (void)didMoveToWindow {
     [super didMoveToWindow];
@@ -633,12 +643,9 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         contentHeight=fit.height;
         height=MIN(safe.size.height/uiScale,fit.height+12);
     }
-    CGFloat x=safe.origin.x+self.position.x*MAX(0,safe.size.width-width*uiScale);
-    CGFloat y=safe.origin.y+self.position.y*MAX(0,safe.size.height-height*uiScale);
-    if(WPLaptop::Active()) {
-        x=safe.origin.x+(self.expanded?0:68);
-        y=safe.origin.y+(self.expanded?40:55);
-    }
+    CGPoint position=WPLaptop::Active()?self.laptopPosition:self.position;
+    CGFloat x=safe.origin.x+position.x*MAX(0,safe.size.width-width*uiScale);
+    CGFloat y=safe.origin.y+position.y*MAX(0,safe.size.height-height*uiScale);
     [UIView performWithoutAnimation:^{
         self.bounds=CGRectMake(0,0,width,height);
         self.transform=CGAffineTransformMakeScale(uiScale,uiScale);

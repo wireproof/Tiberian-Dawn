@@ -1,229 +1,116 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b0e0d">
-  <meta name="description" content="Inoffizieller nativer Apple-Port für Command &amp; Conquer: Tiberian Dawn (1995) – für iPadOS, macOS und als nativer Vision-Pro-Prototyp.">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Tiberian Dawn for Apple platforms">
-  <meta property="og:description" content="An unofficial native iPadOS, macOS, and Vision Pro prototype for Command &amp; Conquer: Tiberian Dawn (1995), with a Universal 2 Mac download. Original game data required.">
-  <meta property="og:url" content="https://cesarus85.github.io/Tiberian-Dawn-for-iPad-and-macOS/">
-  <meta property="og:image" content="https://cesarus85.github.io/Tiberian-Dawn-for-iPad-and-macOS/assets/hero-strategy-collage.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-  <title>Tiberian Dawn for iPad, macOS and Vision Pro</title>
-  <link rel="canonical" href="https://cesarus85.github.io/Tiberian-Dawn-for-iPad-and-macOS/">
-  <link rel="stylesheet" href="assets/site.css">
-  <script src="assets/site.js" defer></script>
+  <meta name="theme-color" content="#101a14">
+  <meta name="description" content="Tiberian Dawn for iPhone and iPad: native gameplay, touch controls, Remastered graphics, and an optional Duo laptop command deck.">
+  <meta property="og:title" content="Tiberian Dawn — Wireproof">
+  <meta property="og:description" content="Native iPhone and iPad Command & Conquer gameplay with Remastered graphics and a dual-screen Duo command deck.">
+  <meta property="og:image" content="https://wireproof.github.io/Tiberian-Dawn/showcase/IMG_0468.png">
+  <link rel="canonical" href="https://wireproof.github.io/Tiberian-Dawn/">
+  <title>Tiberian Dawn — Wireproof</title>
+  <style>
+    :root { color-scheme: dark; font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0b120e; color: #e9f0e8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at 72% 0%, #1d3924 0, #0b120e 34rem); }
+    a { color: #aeeb7b; }
+    a:focus-visible, button:focus-visible { outline: 3px solid #b4ed85; outline-offset: 3px; }
+    .wrap { width: min(1160px, calc(100% - 36px)); margin: auto; }
+    header { border-bottom: 1px solid #334c37; background: #0c150fdd; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(16px); }
+    nav { min-height: 64px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+    .brand { color: #e6f8d7; text-decoration: none; font-weight: 900; letter-spacing: .04em; margin-right: auto; white-space: nowrap; }
+    nav a:not(.brand) { text-decoration: none; font-size: .92rem; }
+    .pill { display: inline-block; border: 1px solid #8cd662; color: #bdf697; border-radius: 999px; padding: 4px 11px; font-size: .77rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 800; }
+    .hero { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: 42px; padding: 78px 0 62px; }
+    h1 { font-size: clamp(2.7rem, 6.3vw, 5.8rem); line-height: .99; letter-spacing: -.055em; margin: 18px 0 22px; }
+    h1 em { font-style: normal; color: #b9ea8a; }
+    .lead { color: #c2d0c0; font-size: clamp(1.05rem, 1.7vw, 1.3rem); max-width: 39rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .button { display: inline-flex; justify-content: center; align-items: center; min-height: 46px; padding: 10px 17px; border-radius: 9px; text-decoration: none; font-weight: 750; border: 1px solid #58784f; color: #eff8e7; }
+    .button.primary { background: #a5e477; color: #13210d; border-color: #a5e477; }
+    .button:hover { filter: brightness(1.12); }
+    .hero-frame { margin: 0; padding: 8px; background: #26352b; border: 1px solid #60705d; border-radius: 12px; box-shadow: 0 25px 70px #0008; }
+    .hero-frame img { width: 100%; height: auto; display: block; border-radius: 5px; }
+    .caption { font-size: .78rem; color: #aabbaa; padding: 9px 5px 3px; }
+    main section { padding: 48px 0; border-top: 1px solid #283e2b; }
+    h2 { font-size: clamp(1.7rem, 3.4vw, 2.8rem); letter-spacing: -.035em; line-height: 1.1; margin: 0 0 18px; }
+    h3 { font-size: 1.07rem; margin: 0 0 8px; }
+    p { margin: 0 0 16px; }
+    .muted { color: #aebdad; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 25px; }
+    .card { background: #152219; border: 1px solid #3a513a; border-radius: 12px; padding: 22px; }
+    .card p { color: #b8c6b6; margin-bottom: 0; }
+    .gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 23px; }
+    .gallery figure { margin: 0; border: 1px solid #475b48; background: #111a14; border-radius: 10px; overflow: hidden; }
+    .gallery img { display: block; width: 100%; height: auto; }
+    .video-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 26px; }
+    .video-grid article { border: 1px solid #475b48; background: #111a14; border-radius: 10px; overflow: hidden; }
+    .video-grid video { display: block; width: 100%; max-height: 370px; background: #050805; }
+    .video-grid h3, .video-grid p { margin: 10px 13px; }
+    figcaption { color: #bdcbbb; font-size: .83rem; padding: 10px 13px; }
+    .release { background: #15251a; border: 1px solid #517747; padding: clamp(22px, 4vw, 40px); border-radius: 16px; }
+    .release ul { padding-left: 20px; color: #c7d8c3; }
+    .release li { margin: 5px 0; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    footer { border-top: 1px solid #2b402f; color: #a3b5a1; padding: 33px 0 55px; font-size: .87rem; }
+    @media (max-width: 760px) { .hero, .two, .cards, .gallery, .video-grid { grid-template-columns: 1fr; } .hero { padding-top: 48px; } nav { gap: 12px; } nav a:not(.brand) { font-size: .82rem; } }
+  </style>
 </head>
 <body>
-  <a class="skip" href="#main" data-de="Zum Inhalt" data-en="Skip to content">Zum Inhalt</a>
-  <p class="ea-notice">EA has not endorsed and does not support this product.</p>
-  <header class="site-header">
-    <a class="brand" href="#top" aria-label="Tiberian Dawn for Apple platforms home">
-      <span class="brand-mark" aria-hidden="true">TD</span>
-      <span>Tiberian Dawn for Apple platforms</span>
-    </a>
-    <nav aria-label="Primary navigation">
-      <a href="#gameplay" data-de="Video" data-en="Video">Video</a>
-      <a href="#download" data-de="Download" data-en="Download">Download</a>
-      <a href="#features" data-de="Features" data-en="Features">Features</a>
-      <a href="#vision" data-de="Vision Pro" data-en="Vision Pro">Vision Pro</a>
-      <a href="#controls" data-de="Steuerung" data-en="Controls">Steuerung</a>
-      <a href="#updates" data-de="Neu" data-en="Updates">Neu</a>
-      <a href="#build" data-de="Bauen" data-en="Build">Bauen</a>
-      <a href="#faq">FAQ</a>
-    </nav>
-    <div class="language" role="group" aria-label="Language">
-      <button type="button" data-language="de" aria-pressed="true">DE</button>
-      <button type="button" data-language="en" aria-pressed="false">EN</button>
+  <header><nav class="wrap" aria-label="Main navigation">
+    <a class="brand" href="#top">TIBERIAN DAWN <span class="muted">/ WIREPROOF</span></a>
+    <a href="#release">Download</a><a href="#features">Features</a><a href="#media">Gameplay</a><a href="https://github.com/wireproof/Tiberian-Dawn/issues">Issues</a><a href="https://github.com/wireproof/Tiberian-Dawn">GitHub</a>
+  </nav></header>
+  <main id="top" class="wrap">
+    <div class="hero">
+      <div>
+        <span class="pill">iOS v0.7.4 · Build 710</span>
+        <h1>Command the <em>battlefield.</em></h1>
+        <p class="lead">Classic Command &amp; Conquer, running natively on iPhone and iPad. Play with touch controls and Remastered graphics, or fold a Duo into laptop mode for a dedicated command deck.</p>
+        <div class="actions"><a class="button primary" href="https://github.com/wireproof/Tiberian-Dawn/releases/latest">Get the full iOS build</a><a class="button" href="#media">See gameplay</a></div>
+        <p class="caption">Unofficial community port. The IPA includes the game data, music, and Remastered art; device signing is required to install it.</p>
+      </div>
+      <figure class="hero-frame"><img src="https://raw.githubusercontent.com/wireproof/Tiberian-Dawn/wireproof/docs/showcase/IMG_0468.png" alt="Actual Tiberian Dawn gameplay showing a Remastered Nod base and production sidebar" width="2853" height="2007"><figcaption class="caption">Real gameplay capture. Its exact build was not recorded; this image is not a v0.7.4 verification screenshot.</figcaption></figure>
     </div>
-  </header>
-
-  <main id="main">
-    <section class="hero" id="top">
-      <div class="hero-copy">
-        <p class="eyebrow" data-de="FÜR COMMAND &amp; CONQUER: TIBERIAN DAWN (1995)" data-en="FOR COMMAND &amp; CONQUER: TIBERIAN DAWN (1995)">FÜR COMMAND &amp; CONQUER: TIBERIAN DAWN (1995)</p>
-        <h1>Tiberian <span>Dawn</span></h1>
-        <p class="lead" data-de="Command &amp; Conquer: Tiberian Dawn von 1995 – nativ für iPad, Mac und als Vision-Pro-Prototyp angepasst." data-en="The 1995 Command &amp; Conquer: Tiberian Dawn experience—adapted natively for iPad, Mac, and as a Vision Pro prototype.">Command &amp; Conquer: Tiberian Dawn von 1995 – nativ für iPad, Mac und als Vision-Pro-Prototyp angepasst.</p>
-        <p class="availability" data-de="Quellcode für alle drei Apple-Ziele plus fertiger Mac-Build. Eigene C&amp;C-Gold-Daten werden benötigt." data-en="Source for all three Apple targets plus a ready-made Mac build. Your own C&amp;C Gold data is required.">Quellcode für alle drei Apple-Ziele plus fertiger Mac-Build. Eigene C&amp;C-Gold-Daten werden benötigt.</p>
-        <div class="actions">
-          <a class="button primary" href="https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS/releases/latest/download/Tiberian-Dawn-macOS-universal.zip" data-de="Mac-App laden" data-en="Download Mac app">Mac-App laden</a>
-          <a class="button secondary" href="#build" data-de="iPad &amp; Quellcode" data-en="iPad &amp; source">iPad &amp; Quellcode</a>
-          <a class="button tertiary" href="../" data-repo-root data-de="GitHub" data-en="GitHub">GitHub</a>
-        </div>
-      </div>
-      <figure class="hero-art">
-        <img src="assets/hero-strategy-collage.jpg" width="1536" height="1024" fetchpriority="high" alt="Originale Strategie-Illustration mit einem frontal blickenden Soldaten, Panzern und Flugzeugen" data-alt-de="Originale Strategie-Illustration mit einem frontal blickenden Soldaten, Panzern und Flugzeugen" data-alt-en="Original strategy illustration with a front-facing soldier, armored vehicles, and aircraft">
-        <figcaption><span>APPLE PORT // ORIGINAL ARTWORK</span><span class="signal">ONLINE</span></figcaption>
-      </figure>
-    </section>
-
-    <section class="download" id="download" aria-labelledby="download-title">
-      <div class="download-copy">
-        <p class="eyebrow" data-de="FERTIGER UNIVERSAL-2-BUILD" data-en="READY-MADE UNIVERSAL 2 BUILD">FERTIGER UNIVERSAL-2-BUILD</p>
-        <h2 id="download-title" data-de="Direkt auf dem Mac loslegen" data-en="Get started directly on Mac">Direkt auf dem Mac loslegen</h2>
-        <p data-de="Ein Download für Apple Silicon und Intel, geprüft ab macOS 11. Kein Homebrew und keine separate Laufzeitumgebung erforderlich." data-en="One download for Apple Silicon and Intel, verified on macOS 11 and newer. No Homebrew or separate runtime is required.">Ein Download für Apple Silicon und Intel, geprüft ab macOS 11. Kein Homebrew und keine separate Laufzeitumgebung erforderlich.</p>
-        <div class="actions">
-          <a class="button primary" href="https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS/releases/latest/download/Tiberian-Dawn-macOS-universal.zip" data-de="Mac-App herunterladen" data-en="Download Mac app">Mac-App herunterladen</a>
-          <a class="button secondary" href="https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS/releases/latest" data-de="Release &amp; Prüfsumme" data-en="Release &amp; checksum">Release &amp; Prüfsumme</a>
-        </div>
-      </div>
-      <ol class="download-steps">
-        <li><span>01</span><div><strong data-de="ZIP entpacken" data-en="Unzip the download">ZIP entpacken</strong><small data-de="„Tiberian Dawn.app“ nach Programme ziehen." data-en="Move “Tiberian Dawn.app” to Applications.">„Tiberian Dawn.app“ nach Programme ziehen.</small></div></li>
-        <li><span>02</span><div><strong data-de="Beim ersten Mal öffnen" data-en="Open it the first time">Beim ersten Mal öffnen</strong><small data-de="Die Developer-ID-signierte und von Apple notarisierte App normal per Doppelklick starten." data-en="Launch the Developer ID-signed and Apple-notarized app normally with a double-click.">Die Developer-ID-signierte und von Apple notarisierte App normal per Doppelklick starten.</small></div></li>
-        <li><span>03</span><div><strong data-de="Gold-CDs importieren" data-en="Import the Gold discs">Gold-CDs importieren</strong><small data-de="Eigene GDI- und Nod-ISOs auswählen; die App prüft und extrahiert sie lokal." data-en="Select your own GDI and Nod ISOs; the app validates and extracts them locally.">Eigene GDI- und Nod-ISOs auswählen; die App prüft und extrahiert sie lokal.</small></div></li>
-      </ol>
-      <p class="download-note" data-de="Keine originalen Spieldaten enthalten. Der aktuelle Download ist funktional geprüft, mit Developer ID signiert und von Apple notarisiert." data-en="No original game data is included. The current download is functionally verified, Developer ID-signed, and notarized by Apple.">Keine originalen Spieldaten enthalten. Der aktuelle Download ist funktional geprüft, mit Developer ID signiert und von Apple notarisiert.</p>
-    </section>
-
-    <section class="gameplay" id="gameplay" aria-labelledby="gameplay-title">
-      <div class="gameplay-heading">
-        <div>
-          <p class="eyebrow" data-de="AUF EINEM ECHTEN IPAD AUFGENOMMEN" data-en="RECORDED ON A PHYSICAL IPAD">AUF EINEM ECHTEN IPAD AUFGENOMMEN</p>
-          <h2 id="gameplay-title" data-de="Vom Start bis zur ersten Mission" data-en="From launch to the first mission">Vom Start bis zur ersten Mission</h2>
-        </div>
-        <p data-de="63 Sekunden ungeschnittene App-Aufnahme: Start, Menüs, Missionsbriefing und Touch-Gameplay." data-en="63 seconds of uncut app footage: launch, menus, a mission briefing, and touch gameplay.">63 Sekunden ungeschnittene App-Aufnahme: Start, Menüs, Missionsbriefing und Touch-Gameplay.</p>
-      </div>
-      <div class="video-shell">
-        <video controls playsinline preload="metadata" width="1280" height="882" poster="assets/tiberian-dawn-ipad-gameplay.jpg" aria-label="Tiberian Dawn for iPad gameplay video">
-          <source src="assets/tiberian-dawn-ipad-gameplay.mp4" type="video/mp4">
-          <span data-de="Dein Browser kann das Video nicht direkt abspielen." data-en="Your browser cannot play this video directly.">Dein Browser kann das Video nicht direkt abspielen.</span>
-          <a href="assets/tiberian-dawn-ipad-gameplay.mp4" data-de="MP4-Video öffnen" data-en="Open the MP4 video">MP4-Video öffnen</a>
-        </video>
-      </div>
-      <p class="gameplay-note" data-de="Die Aufnahme verwendet die vom Gerätebesitzer bereitgestellten Spieldaten. Das Repository enthält keine originalen Spieldaten." data-en="The recording uses game data supplied by the device owner. The repository contains no original game data.">Die Aufnahme verwendet die vom Gerätebesitzer bereitgestellten Spieldaten. Das Repository enthält keine originalen Spieldaten.</p>
-    </section>
-
-    <section class="status" aria-label="Project status">
-      <div><strong>iPadOS 15+ · macOS 11+ · visionOS</strong><span data-de="visionOS als nativer Prototyp" data-en="visionOS as a native prototype">visionOS als nativer Prototyp</span></div>
-      <div><strong>Multiplayer beta</strong><span data-de="LAN &amp; private Räume" data-en="LAN &amp; private rooms">LAN &amp; private Räume</span></div>
-      <div><strong>GPL-3.0+</strong><span data-de="Mit Zusatzbedingungen" data-en="With additional terms">Mit Zusatzbedingungen</span></div>
-      <div><strong>0 MB</strong><span data-de="Enthaltene Spieldaten" data-en="Bundled game data">Enthaltene Spieldaten</span></div>
-    </section>
-
-    <section class="section" id="features">
-      <div class="section-heading">
-        <p class="eyebrow" data-de="DAS ORIGINAL, AN APPLE-PLATTFORMEN ANGEPASST" data-en="THE ORIGINAL, ADAPTED FOR APPLE PLATFORMS">DAS ORIGINAL, AN APPLE-PLATTFORMEN ANGEPASST</p>
-        <h2 data-de="Ein klassisches RTS ohne Desktop-Zwang" data-en="A classic RTS without desktop assumptions">Ein klassisches RTS ohne Desktop-Zwang</h2>
-        <p data-de="Keine Neuinterpretation des Spiels: Die Engine und deine legal bereitgestellten Gold-Daten bleiben die Grundlage. Die Arbeit steckt in der Apple-Integration." data-en="This is not a reinterpretation: the engine and your legally supplied Gold data remain the foundation. The work is in the Apple integration.">Keine Neuinterpretation des Spiels: Die Engine und deine legal bereitgestellten Gold-Daten bleiben die Grundlage. Die Arbeit steckt in der Apple-Integration.</p>
-      </div>
-      <div class="feature-grid">
-        <article><span class="index">01</span><h3 data-de="Auflösungsanpasser" data-en="Resolution scaler">Auflösungsanpasser</h3><p data-de="Vollflächig-scharfe oder ganzzahlige pixelgenaue Darstellung, Rotation, sichere Bereiche und Stage Manager – ohne Verzerrung des klassischen 640 × 400-Bildes." data-en="Full-size sharp or integer pixel-perfect presentation, rotation, safe areas, and Stage Manager—without distorting the classic 640 × 400 image.">Vollflächig-scharfe oder ganzzahlige pixelgenaue Darstellung, Rotation, sichere Bereiche und Stage Manager – ohne Verzerrung des klassischen 640 × 400-Bildes.</p></article>
-        <article><span class="index">02</span><h3 data-de="Native Eingabe" data-en="Native input">Native Eingabe</h3><p data-de="Direkte Touch-Gesten plus präzise Unterstützung für Pencil, Maus, Trackpad, Tastatur und Controller." data-en="Direct touch gestures plus precise Pencil, mouse, trackpad, keyboard, and controller support.">Direkte Touch-Gesten plus präzise Unterstützung für Pencil, Maus, Trackpad, Tastatur und Controller.</p></article>
-        <article><span class="index">03</span><h3 data-de="Geführter Import" data-en="Guided import">Geführter Import</h3><p data-de="GDI- und Nod-Gold-ISOs gemeinsam oder auf dem Mac nacheinander auswählen, lokal prüfen und ohne gespeicherte ISO-Kopie extrahieren." data-en="Select the GDI and Nod Gold ISOs together—or sequentially on Mac—validate locally, and extract without retaining the ISO copies.">GDI- und Nod-Gold-ISOs gemeinsam oder auf dem Mac nacheinander auswählen, lokal prüfen und ohne gespeicherte ISO-Kopie extrahieren.</p></article>
-        <article><span class="index">04</span><h3 data-de="Sicheres Fortsetzen" data-en="Safe continuation">Sicheres Fortsetzen</h3><p data-de="Transaktionale Wiederherstellungsstände schützen laufende Missionen bei Unterbrechung oder Speicherbereinigung." data-en="Transactional recovery saves protect active missions during interruptions or system termination.">Transaktionale Wiederherstellungsstände schützen laufende Missionen bei Unterbrechung oder Speicherbereinigung.</p></article>
-        <article><span class="index">05</span><h3 data-de="Effiziente Darstellung" data-en="Efficient presentation">Effiziente Darstellung</h3><p data-de="60-FPS-Präsentation, 30-FPS-Batteriemodus und pausiertes Rendering bei unveränderten oder inaktiven Szenen." data-en="60 FPS presentation, 30 FPS battery mode, and suspended rendering for unchanged or inactive scenes.">60-FPS-Präsentation, 30-FPS-Batteriemodus und pausiertes Rendering bei unveränderten oder inaktiven Szenen.</p></article>
-        <article><span class="index">06</span><h3 data-de="Apple-Audioverhalten" data-en="Apple audio behavior">Apple-Audioverhalten</h3><p data-de="System-Stummschaltung, Bluetooth-Routen sowie Siri-, Anruf- und Alarm-Unterbrechungen werden berücksichtigt." data-en="System mute, Bluetooth routes, and Siri, call, and alarm interruptions are handled.">System-Stummschaltung, Bluetooth-Routen sowie Siri-, Anruf- und Alarm-Unterbrechungen werden berücksichtigt.</p></article>
-        <article><span class="index">07</span><h3 data-de="Privater Multiplayer" data-en="Private multiplayer">Privater Multiplayer</h3><p data-de="Zwei bis sechs Spieler verbinden die Apple-Ziele direkt im lokalen Netz oder über kurzlebige, verschlüsselte Internet-Räume – ohne Accounts und ohne Spieldaten-Upload." data-en="Two to six players connect the Apple targets directly on a LAN or through ephemeral encrypted Internet rooms—with no accounts and no game-data upload.">Zwei bis sechs Spieler verbinden die Apple-Ziele direkt im lokalen Netz oder über kurzlebige, verschlüsselte Internet-Räume – ohne Accounts und ohne Spieldaten-Upload.</p></article>
-        <article><span class="index">08</span><h3 data-de="Optionale moderne Grafik" data-en="Optional modern artwork">Optionale moderne Grafik</h3><p data-de="Ein umschaltbarer Grafikmodus ergänzt neue GDI-/Nod-Infanterie, frühe Fahrzeuge, mobile Bauhöfe und zentrale Gebäude – mit Originalgrafik als vollständigem Fallback." data-en="A switchable artwork mode adds new GDI/Nod infantry, early vehicles, mobile construction vehicles, and core structures—with the original artwork as a complete fallback.">Ein umschaltbarer Grafikmodus ergänzt neue GDI-/Nod-Infanterie, frühe Fahrzeuge, mobile Bauhöfe und zentrale Gebäude – mit Originalgrafik als vollständigem Fallback.</p></article>
+    <section id="features">
+      <h2>Built for the way you play</h2>
+      <div class="cards">
+        <div class="card"><h3>Native battlefield</h3><p>The game engine runs as compiled code on iOS, with touch selection, map controls, orders, groups, saves, and optional iCloud sync.</p></div>
+        <div class="card"><h3>Remastered art</h3><p>Switch between original and Remastered graphics. Recent Duo testing confirmed improved units, structures, terrain details, and effects.</p></div>
+        <div class="card"><h3>Duo command deck</h3><p>Use the lower screen for Build, Commands, Radar, Cheats, and Options. Tap the radar to move the battlefield view.</p></div>
       </div>
     </section>
-
-    <section class="section vision" id="vision" aria-labelledby="vision-title">
-      <div class="vision-copy">
-        <p class="eyebrow" data-de="NATIVER VISIONOS-PROTOTYP" data-en="NATIVE VISIONOS PROTOTYPE">NATIVER VISIONOS-PROTOTYP</p>
-        <h2 id="vision-title" data-de="Das Kommandofenster im Shared Space" data-en="The command window in Shared Space">Das Kommandofenster im Shared Space</h2>
-        <p data-de="Neben der getesteten „Designed for iPad“-Kompatibilität enthält das Repository nun einen eigenständigen nativen visionOS-Build. Er nutzt dieselbe Engine, Metal-Darstellung, Audioengine, Lokalisierung, Importe, Spielstände und Multiplayer-Basis wie iPad und Mac." data-en="Alongside the tested Designed for iPad compatibility path, the repository now includes a separate native visionOS build. It uses the same engine, Metal presentation, audio engine, localization, imports, saves, and multiplayer foundation as iPad and Mac.">Neben der getesteten „Designed for iPad“-Kompatibilität enthält das Repository nun einen eigenständigen nativen visionOS-Build. Er nutzt dieselbe Engine, Metal-Darstellung, Audioengine, Lokalisierung, Importe, Spielstände und Multiplayer-Basis wie iPad und Mac.</p>
-        <p data-de="Auf echter Vision Pro getestet: Gold-Datenimport, Kampagnen, Menüs, moderne Grafik, Blick-/Pinch-Auswahl, Auswahlrahmen und Rand-/Blickscrollen laufen im nativen Fenster." data-en="Tested on a physical Vision Pro: Gold-data import, campaigns, menus, modern artwork, gaze/pinch selection, selection boxes, and edge/look scrolling run in the native window.">Auf echter Vision Pro getestet: Gold-Datenimport, Kampagnen, Menüs, moderne Grafik, Blick-/Pinch-Auswahl, Auswahlrahmen und Rand-/Blickscrollen laufen im nativen Fenster.</p>
-        <p class="warning" data-de="Die native Version bleibt ein Prototyp: längere Komfort-, Audio-, Lebenszyklus- und Belastungstests sowie die öffentliche Distribution stehen noch aus. Deshalb gibt es noch keinen öffentlichen visionOS-Download." data-en="The native version remains a prototype: extended comfort, audio, lifecycle, and soak testing plus public distribution are still pending, so there is no public visionOS download yet.">Die native Version bleibt ein Prototyp: längere Komfort-, Audio-, Lebenszyklus- und Belastungstests sowie die öffentliche Distribution stehen noch aus. Deshalb gibt es noch keinen öffentlichen visionOS-Download.</p>
-        <div class="actions">
-          <a class="button secondary" href="../README-visionOS.md" data-repo-path="README-visionOS.md" data-de="Build-Anleitung" data-en="Build guide">Build-Anleitung</a>
-          <a class="button tertiary" href="VISIONOS-CONCEPT.md" data-repo-path="docs/VISIONOS-CONCEPT.md" data-de="Konzept &amp; Testmatrix" data-en="Concept &amp; test matrix">Konzept &amp; Testmatrix</a>
-        </div>
+    <section id="media">
+      <h2>See the game in action</h2>
+      <p class="muted">These are historical real-device captures. Their capture versions are documented where known; newer laptop-mode photos are coming after owner review.</p>
+      <div class="gallery">
+        <figure><img loading="lazy" src="https://raw.githubusercontent.com/wireproof/Tiberian-Dawn/wireproof/docs/showcase/IMG_0467.png" alt="Remastered battlefield with selected units on iOS" width="2853" height="2007"><figcaption>Remastered battlefield · capture build not recorded</figcaption></figure>
+        <figure><img loading="lazy" src="https://raw.githubusercontent.com/wireproof/Tiberian-Dawn/wireproof/docs/showcase/inner-gameplay.jpg" alt="Duo inner display running classic Tiberian Dawn gameplay" width="1280" height="900"><figcaption>Duo inner display · earlier showcase</figcaption></figure>
       </div>
-      <figure class="vision-art">
-        <img src="assets/vision-pro-tiberian-dawn-collage-v1.png" width="1229" height="1638" loading="lazy" alt="Originale Konzeptillustration eines futuristischen Kommandanten mit räumlichem Headset vor einer geteilten Strategie-Kulisse" data-alt-de="Originale Konzeptillustration eines futuristischen Kommandanten mit räumlichem Headset vor einer geteilten Strategie-Kulisse" data-alt-en="Original concept illustration of a futuristic commander wearing a spatial headset before a split strategy battlefield">
-        <figcaption><span>VISIONOS // ORIGINAL CONCEPT ART</span><span class="signal">PROTOTYPE</span></figcaption>
-      </figure>
+      <div class="video-grid">
+        <article id="cover-gameplay"><video controls preload="none" poster="media/cover-gameplay.jpg" src="media/duo-cover-gameplay.mp4" aria-label="Duo cover gameplay"></video><h3>Duo cover gameplay</h3><p class="muted">2:03 · earlier showcase</p></article>
+        <article id="inner-gameplay"><video controls preload="none" poster="media/inner-gameplay.jpg" src="media/duo-inner-gameplay.mp4" aria-label="Duo inner gameplay"></video><h3>Duo inner gameplay</h3><p class="muted">2:57 · earlier showcase</p></article>
+        <article id="workshop"><video controls preload="none" poster="media/cover-workshop.jpg" src="media/duo-workshop-demo.mp4" aria-label="Mod Workshop demo"></video><h3>Mod Workshop</h3><p class="muted">0:50 · earlier showcase</p></article>
+        <article id="ipad-gameplay"><video controls preload="none" poster="media/ipad-gameplay-landscape.jpg" src="media/ipad-pro-11-gameplay.mp4" aria-label="iPad Pro gameplay"></video><h3>iPad Pro gameplay</h3><p class="muted">2:54 · October 26, 2026 capture</p></article>
+        <article id="ipad-campaign"><video controls preload="none" poster="media/ipad-campaign.jpg" src="media/ipad-pro-11-campaign.mp4" aria-label="iPad Pro campaign"></video><h3>iPad Pro campaign</h3><p class="muted">1:05 · October 26, 2026 capture</p></article>
+      </div>
+      <div class="actions"><a class="button" href="https://github.com/wireproof/Tiberian-Dawn/blob/wireproof/docs/showcase/README.md">Browse capture notes</a></div>
     </section>
-
-    <section class="section split" id="controls">
-      <div class="section-heading sticky-heading">
-        <p class="eyebrow" data-de="BEFEHLSEINGABE" data-en="COMMAND INPUT">BEFEHLSEINGABE</p>
-        <h2 data-de="Gemacht für das Gerät in deiner Hand" data-en="Made for the device in your hands">Gemacht für das Gerät in deiner Hand</h2>
-        <p data-de="Die klassische Mauslogik bleibt erhalten, wird aber nicht einfach auf einen Touchscreen gezwungen." data-en="The classic mouse logic remains intact without being forced unchanged onto a touchscreen.">Die klassische Mauslogik bleibt erhalten, wird aber nicht einfach auf einen Touchscreen gezwungen.</p>
-      </div>
-      <div class="control-list">
-        <div><kbd>1×</kbd><span><strong data-de="Tippen" data-en="Tap">Tippen</strong><small data-de="Auswählen oder Befehl erteilen" data-en="Select or issue a command">Auswählen oder Befehl erteilen</small></span></div>
-        <div><kbd>↗</kbd><span><strong data-de="Ziehen" data-en="Drag">Ziehen</strong><small data-de="Auswahlrahmen nach Bewegungsschwelle" data-en="Selection box after a movement threshold">Auswahlrahmen nach Bewegungsschwelle</small></span></div>
-        <div><kbd>2×</kbd><span><strong data-de="Zwei Finger" data-en="Two fingers">Zwei Finger</strong><small data-de="Karte bewegen oder Rechtsklick" data-en="Pan the map or secondary click">Karte bewegen oder Rechtsklick</small></span></div>
-        <div><kbd>⌁</kbd><span><strong>Apple Pencil</strong><small data-de="Präzise Auswahl, Hover und Kurzbefehl" data-en="Precise selection, hover, and shortcut">Präzise Auswahl, Hover und Kurzbefehl</small></span></div>
-        <div><kbd>⌨</kbd><span><strong data-de="Desktop-Zubehör" data-en="Desktop accessories">Desktop-Zubehör</strong><small data-de="Maus, Trackpad und Hardware-Tastatur" data-en="Mouse, trackpad, and hardware keyboard">Maus, Trackpad und Hardware-Tastatur</small></span></div>
-        <div><kbd>▣</kbd><span><strong>Controller</strong><small data-de="Xbox-, PlayStation- und Nintendo-Beschriftung" data-en="Xbox, PlayStation, and Nintendo labels">Xbox-, PlayStation- und Nintendo-Beschriftung</small></span></div>
-        <div><kbd>◎</kbd><span><strong>Vision Pro</strong><small data-de="Blick + Pinch, Auswahlrahmen sowie Rand- und Blickscrollen" data-en="Gaze + pinch, selection boxes, plus edge and look scrolling">Blick + Pinch, Auswahlrahmen sowie Rand- und Blickscrollen</small></span></div>
+    <section id="release">
+      <div class="release">
+        <span class="pill">Latest release</span>
+        <h2>v0.7.4 · iOS build 710</h2>
+        <p>Duo laptop layout, radar navigation, production status, and Remastered graphics refinements. The owner confirmed the recent laptop-mode and graphics fixes in Duo gameplay. iPad gameplay was not separately retested for this build.</p>
+        <ul><li>Complete unsigned IPA with classic game data, music, and Remastered art.</li><li>Update over the existing app to preserve local saves.</li><li><a href="https://github.com/wireproof/Tiberian-Dawn/issues/7">Waypoint persistence</a> and <a href="https://github.com/wireproof/Tiberian-Dawn/issues/10">Force Move/crushing</a> still need verification.</li></ul>
+        <div class="actions"><a class="button primary" href="https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4">Download and read notes</a><a class="button" href="https://github.com/wireproof/Tiberian-Dawn/issues">Report or update an issue</a></div>
       </div>
     </section>
-
-    <section class="section import" id="import">
-      <div class="section-heading">
-        <p class="eyebrow" data-de="DEINE DATEN BLEIBEN DEINE DATEN" data-en="YOUR DATA STAYS YOUR DATA">DEINE DATEN BLEIBEN DEINE DATEN</p>
-        <h2 data-de="Drei Schritte bis zur ersten Mission" data-en="Three steps to your first mission">Drei Schritte bis zur ersten Mission</h2>
-      </div>
-      <ol class="steps">
-        <li><span>1</span><div><h3 data-de="Gold-CDs bereithalten" data-en="Prepare the Gold discs">Gold-CDs bereithalten</h3><p data-de="Lege die GDI- und Nod-ISO in Dateien, iCloud Drive oder auf einem USB-Laufwerk ab." data-en="Place the GDI and Nod ISOs in Files, iCloud Drive, or on a USB drive.">Lege die GDI- und Nod-ISO in Dateien, iCloud Drive oder auf einem USB-Laufwerk ab.</p></div></li>
-        <li><span>2</span><div><h3 data-de="Gemeinsam auswählen" data-en="Select both together">Gemeinsam auswählen</h3><p data-de="Der Systemdialog erlaubt Mehrfachauswahl. Der Import beginnt erst, wenn beide passenden CDs vorliegen." data-en="The system picker supports multi-selection. Import starts only when both matching discs are present.">Der Systemdialog erlaubt Mehrfachauswahl. Der Import beginnt erst, wenn beide passenden CDs vorliegen.</p></div></li>
-        <li><span>3</span><div><h3 data-de="Lokal validieren" data-en="Validate locally">Lokal validieren</h3><p data-de="Die App prüft und extrahiert auf dem Gerät. ISO-Dateien werden weder hochgeladen noch in der App behalten." data-en="The app validates and extracts on-device. ISO files are neither uploaded nor kept in the app.">Die App prüft und extrahiert auf dem Gerät. ISO-Dateien werden weder hochgeladen noch in der App behalten.</p></div></li>
-      </ol>
-      <p class="warning" data-de="Nicht unterstützt: Remastered Collection, The First Decade und The Ultimate Collection. Originale Spieldaten sind nicht Teil dieses Projekts." data-en="Not supported: Remastered Collection, The First Decade, and The Ultimate Collection. Original game data is not part of this project.">Nicht unterstützt: Remastered Collection, The First Decade und The Ultimate Collection. Originale Spieldaten sind nicht Teil dieses Projekts.</p>
-    </section>
-
-    <section class="section build" id="build">
-      <div class="section-heading">
-        <p class="eyebrow" data-de="DOWNLOAD ODER SELBST BAUEN" data-en="DOWNLOAD OR BUILD IT YOURSELF">DOWNLOAD ODER SELBST BAUEN</p>
-        <h2 data-de="iPad öffnen, Mac laden oder selbst bauen" data-en="Open for iPad, download for Mac, or build it yourself">iPad öffnen, Mac laden oder selbst bauen</h2>
-        <p data-de="Für den Mac steht oben ein fertiger Universal-2-Build bereit. Wer selbst entwickeln möchte, nutzt zwei sichere Starter: Einer öffnet das iPad-Projekt in Xcode, der andere erzeugt die Mac-App aus dem Quellcode." data-en="A ready-made Universal 2 build for Mac is available above. Developers can use two safe starters: one opens the iPad project in Xcode, while the other creates the Mac app from source.">Für den Mac steht oben ein fertiger Universal-2-Build bereit. Wer selbst entwickeln möchte, nutzt zwei sichere Starter: Einer öffnet das iPad-Projekt in Xcode, der andere erzeugt die Mac-App aus dem Quellcode.</p>
-      </div>
-      <div class="terminal" role="region" aria-label="Build commands">
-        <div class="terminal-bar"><i></i><i></i><i></i><span>Terminal</span></div>
-        <pre><code><span class="comment"># Clone the source</span>
-git clone https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS.git
-cd Tiberian-Dawn-for-iPad-and-macOS
-
-<span class="comment"># Verify, prepare and open the Xcode project</span>
-open "Open Tiberian Dawn for iPad.command"</code></pre>
-<pre><code><span class="comment"># Or build the Apple Silicon + Intel Mac app</span>
-open "Build Tiberian Dawn for macOS.command"</code></pre>
-      </div>
-      <a class="text-link" href="../README-iPadOS.md" data-repo-path="README-iPadOS.md" data-de="iPadOS-Anleitung →" data-en="iPadOS guide →">iPadOS-Anleitung →</a>
-      <a class="text-link" href="../README-macOS.md" data-repo-path="README-macOS.md" data-de="macOS-Anleitung →" data-en="macOS guide →">macOS-Anleitung →</a>
-      <a class="text-link" href="../README-visionOS.md" data-repo-path="README-visionOS.md" data-de="visionOS-Anleitung →" data-en="visionOS guide →">visionOS-Anleitung →</a>
-    </section>
-
-    <section class="section" id="updates">
-      <div class="section-heading">
-        <p class="eyebrow" data-de="VERSION 0.2.3 · BUILD 203 · 15. AUGUST 2026" data-en="VERSION 0.2.3 · BUILD 203 · AUGUST 15, 2026">VERSION 0.2.3 · BUILD 203 · 15. AUGUST 2026</p>
-        <h2 data-de="Neu in Version 0.2.3" data-en="New in version 0.2.3">Neu in Version 0.2.3</h2>
-        <p data-de="Version 0.2.3 ist als signierter und von Apple notarisierter Universal-2-Download für macOS verfügbar. Der gemeinsame Apple-Quellstand enthält außerdem die überarbeitete Touch-/Pencil-Steuerung, native Vision-Pro-Eingabe und den erweiterten modernen Grafikmodus." data-en="Version 0.2.3 is available as a signed and Apple-notarized Universal 2 download for macOS. The shared Apple source also includes refined touch/Pencil controls, native Vision Pro input, and the expanded modern-art mode.">Version 0.2.3 ist als signierter und von Apple notarisierter Universal-2-Download für macOS verfügbar. Der gemeinsame Apple-Quellstand enthält außerdem die überarbeitete Touch-/Pencil-Steuerung, native Vision-Pro-Eingabe und den erweiterten modernen Grafikmodus.</p>
-      </div>
-      <div class="feature-grid">
-        <article><span class="index">01</span><h3 data-de="iPad-Steuerung" data-en="iPad controls">iPad-Steuerung</h3><p data-de="Genauer Auswahlrahmen, Ein-/Zweifinger-Scrollen, kontextabhängige Befehlsanzeige, Pencil, Bildschirmtastatur und überspringbare Zwischensequenzen." data-en="Accurate drag selection, one-/two-finger scrolling, contextual command feedback, Pencil, software keyboard, and skippable cutscenes.">Genauer Auswahlrahmen, Ein-/Zweifinger-Scrollen, kontextabhängige Befehlsanzeige, Pencil, Bildschirmtastatur und überspringbare Zwischensequenzen.</p></article>
-        <article><span class="index">02</span><h3 data-de="Vision-Pro-Steuerung" data-en="Vision Pro controls">Vision-Pro-Steuerung</h3><p data-de="Blick-/Pinch-Auswahl, Mehrfachauswahl und Rand-/Blickscrollen bleiben über Missions-, Menü- und Multiplayer-Wechsel hinweg aktiv." data-en="Gaze/pinch selection, multi-selection, and edge/look scrolling remain active across mission, menu, and multiplayer transitions.">Blick-/Pinch-Auswahl, Mehrfachauswahl und Rand-/Blickscrollen bleiben über Missions-, Menü- und Multiplayer-Wechsel hinweg aktiv.</p></article>
-        <article><span class="index">03</span><h3 data-de="Moderne Grafik" data-en="Modern artwork">Moderne Grafik</h3><p data-de="Neue Einheiten und Kerngebäude respektieren Bewegungsrichtung, Sichtnebel, Seitenleiste, Menüs, Lebensanzeige und Bauaktivität." data-en="New units and core structures respect movement direction, fog of war, sidebar and menu clipping, health display, and construction activity.">Neue Einheiten und Kerngebäude respektieren Bewegungsrichtung, Sichtnebel, Seitenleiste, Menüs, Lebensanzeige und Bauaktivität.</p></article>
-      </div>
-      <a class="text-link" href="../CHANGELOG.md" data-repo-path="CHANGELOG.md" data-de="Vollständiges Changelog →" data-en="Full changelog →">Vollständiges Changelog →</a>
-    </section>
-
-    <section class="section" id="faq">
-      <div class="section-heading">
-        <p class="eyebrow">FAQ</p>
-        <h2 data-de="Vor dem Download wissen" data-en="Know before you download">Vor dem Download wissen</h2>
-      </div>
-      <div class="faq-list">
-        <details><summary data-de="Ist das Spiel enthalten?" data-en="Is the game included?">Ist das Spiel enthalten?</summary><p data-de="Nein. Dieses Repository enthält Portierungsquellcode. Du benötigst eigene, rechtmäßig nutzbare C&amp;C-Gold-Daten für GDI und Nod." data-en="No. This repository contains porting source code. You need your own lawfully usable C&amp;C Gold data for GDI and Nod.">Nein. Dieses Repository enthält Portierungsquellcode. Du benötigst eigene, rechtmäßig nutzbare C&amp;C-Gold-Daten für GDI und Nod.</p></details>
-        <details><summary data-de="Ist das ein offizielles EA-Projekt?" data-en="Is this an official EA project?">Ist das ein offizielles EA-Projekt?</summary><p data-de="Nein. Tiberian Dawn for iPad and macOS ist ein unabhängiger, deutlich veränderter Community-Port ohne Verbindung, Zustimmung oder Unterstützung durch Electronic Arts." data-en="No. Tiberian Dawn for iPad and macOS is an independent, clearly modified community port with no affiliation, approval, or support from Electronic Arts.">Nein. Tiberian Dawn for iPad and macOS ist ein unabhängiger, deutlich veränderter Community-Port ohne Verbindung, Zustimmung oder Unterstützung durch Electronic Arts.</p></details>
-        <details><summary data-de="Läuft Multiplayer?" data-en="Does multiplayer work?">Läuft Multiplayer?</summary><p data-de="Ja, als plattformübergreifende Beta für zwei bis sechs Spieler: direkt im lokalen Netzwerk oder über einen privaten, verschlüsselten Internet-Raum. Alle benötigen dieselbe App-Version und eigene identische Gold-Spieldaten; längere Geräte- und Belastungstests laufen weiter." data-en="Yes, as a cross-platform beta for two to six players: directly on a local network or through a private encrypted Internet room. Everyone needs the same app version and their own matching Gold game data; extended device and soak testing continues.">Ja, als plattformübergreifende Beta für zwei bis sechs Spieler: direkt im lokalen Netzwerk oder über einen privaten, verschlüsselten Internet-Raum. Alle benötigen dieselbe App-Version und eigene identische Gold-Spieldaten; längere Geräte- und Belastungstests laufen weiter.</p></details>
-        <details><summary data-de="Läuft es auch auf macOS?" data-en="Does it also run on macOS?">Läuft es auch auf macOS?</summary><p data-de="Ja. Der fertige Universal-2-Download läuft auf Apple Silicon und Intel ab macOS 11, importiert die Gold-CDs lokal und benötigt kein Homebrew. Die App ist mit Developer ID signiert, mit Hardened Runtime geschützt und von Apple notarisiert; sie kann normal per Doppelklick gestartet werden." data-en="Yes. The ready-made Universal 2 download runs on Apple Silicon and Intel with macOS 11 or newer, imports the Gold discs locally, and requires no Homebrew. The app is Developer ID-signed, protected by Hardened Runtime, and notarized by Apple, so it launches normally with a double-click.">Ja. Der fertige Universal-2-Download läuft auf Apple Silicon und Intel ab macOS 11, importiert die Gold-CDs lokal und benötigt kein Homebrew. Die App ist mit Developer ID signiert, mit Hardened Runtime geschützt und von Apple notarisiert; sie kann normal per Doppelklick gestartet werden.</p></details>
-        <details><summary data-de="Läuft es auf Apple Vision Pro?" data-en="Does it run on Apple Vision Pro?">Läuft es auf Apple Vision Pro?</summary><p data-de="Ja, als nativer, auf echter Hardware getesteter Quellcode-Prototyp mit Blick-/Pinch-Steuerung. Eine öffentliche visionOS-Binärdatei gibt es noch nicht; sie muss derzeit nach der Anleitung mit Xcode gebaut und auf einem eigenen Gerät signiert werden." data-en="Yes, as a native source prototype tested on physical hardware with gaze/pinch controls. There is no public visionOS binary yet; it currently needs to be built with Xcode and signed for your own device by following the guide.">Ja, als nativer, auf echter Hardware getesteter Quellcode-Prototyp mit Blick-/Pinch-Steuerung. Eine öffentliche visionOS-Binärdatei gibt es noch nicht; sie muss derzeit nach der Anleitung mit Xcode gebaut und auf einem eigenen Gerät signiert werden.</p></details>
-      </div>
+    <section class="two" aria-label="Future plans">
+      <div><h2>Next: Red Alert</h2><p class="muted">v0.7.5 targets a friendly game selector, Allied and Soviet content, skirmish, and multiplayer. It is planned work, not in v0.7.4.</p><a href="https://github.com/wireproof/Tiberian-Dawn/blob/wireproof/docs/RED-ALERT-0.7.5-PLAN.md">Read the plan →</a></div>
+      <div><h2>AYN Thor preview</h2><p class="muted">An Android port is being explored: battlefield on the upper display, command deck on the lower touch display, with handheld controls. There is no Thor APK yet.</p><a href="https://github.com/wireproof/Tiberian-Dawn/issues">Follow development →</a></div>
     </section>
   </main>
-
-  <footer>
-    <div><span class="brand-mark" aria-hidden="true">TD</span><strong>Tiberian Dawn for Apple platforms</strong></div>
-    <p data-de="Unabhängiger Open-Source-Port. Keine Verbindung zu oder Unterstützung durch Electronic Arts." data-en="Independent open-source port. Not affiliated with or endorsed by Electronic Arts.">Unabhängiger Open-Source-Port. Keine Verbindung zu oder Unterstützung durch Electronic Arts.</p>
-    <p class="legal" data-de="Command &amp; Conquer und zugehörige Namen sind Marken von Electronic Arts. Keine originalen Spieldaten enthalten." data-en="Command &amp; Conquer and related names are Electronic Arts trademarks. No original game data included.">Command &amp; Conquer und zugehörige Namen sind Marken von Electronic Arts. Keine originalen Spieldaten enthalten.</p>
-    <div class="footer-links"><a href="../CHANGELOG.md" data-repo-path="CHANGELOG.md">Changelog</a><a href="../License.txt" data-repo-path="License.txt" data-de="Lizenz" data-en="License">Lizenz</a><a href="../NOTICE.md" data-repo-path="NOTICE.md">Notice</a><a href="../THIRD_PARTY_NOTICES.md" data-repo-path="THIRD_PARTY_NOTICES.md">Third-party</a><a href="../IPADOS-ROADMAP.md" data-repo-path="IPADOS-ROADMAP.md">Roadmap</a></div>
-  </footer>
+  <footer><div class="wrap">Built on EA's released source, Vanilla Conquer, and Cesarus85's Apple port. <a href="https://github.com/wireproof/Tiberian-Dawn/blob/wireproof/docs/LEGAL-NOTICES.md">Legal notices</a> · <a href="https://github.com/wireproof/Tiberian-Dawn">Source</a></div></footer>
 </body>
 </html>

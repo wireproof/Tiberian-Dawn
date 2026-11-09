@@ -2,9 +2,9 @@
 
 [Watch the Duo and iPad Pro 11 gameplay, campaign, and Workshop videos in your browser](https://wireproof.github.io/Tiberian-Dawn/). The player uses H.264/AAC fast-start MP4s with native playback controls.
 
-The player source is [index.html](index.html); published media lives on the separate `gh-pages` branch to keep videos out of the main source checkout.
+The player is on the [project page](https://wireproof.github.io/Tiberian-Dawn/); published media lives on the separate `gh-pages` branch to keep videos out of the main source checkout.
 
-These are historical captures, not screenshots of the current v0.7.3 release. Version labels below come from a visible in-game version or an existing capture note; the date a file was added to Git does not establish the app build that produced it.
+These are historical captures, not screenshots of the current v0.7.4 release. Version labels below come from a visible in-game version or an existing capture note; the date a file was added to Git does not establish the app build that produced it.
 
 | Capture | Version shown or recorded |
 | --- | --- |

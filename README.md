@@ -6,9 +6,9 @@ Classic Command & Conquer, adapted for touch on iPhone and iPad and native play 
 
 An unofficial, free, community-maintained project.
 
-## Current release — v0.7.3
+## Current release — v0.7.4
 
-**Build 703 is installed on the owner's iPad and Duo. Gameplay fixes are awaiting device verification.** [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.3) · [Device test checklist](docs/TESTING-0.7.3.md) · [Open bugs and features](https://github.com/wireproof/Tiberian-Dawn/issues)
+**Build 710 brings the Duo laptop command deck and Remastered graphics refinements.** The owner verified the deck's controls, radar navigation, sidebar behavior, and recent graphics fixes during Duo gameplay. [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) · [Device test checklist](docs/TESTING-0.7.4.md) · [Bugs and features](https://github.com/wireproof/Tiberian-Dawn/issues)
 
 The project has progressed substantially since the early v0.2.7 and v0.5.2 builds. The current feature set includes:
 
@@ -20,11 +20,11 @@ The project has progressed substantially since the early v0.2.7 and v0.5.2 build
 - Save/settings import and export, with optional iCloud sync for appropriately signed builds.
 - Continued fixes for sidebar rendering, campaign presentation, resizing, touch alignment, and device-specific layouts.
 
-Version 0.7.3 adds a separate Game command toolbar and candidate fixes for rendering, rally points, game speed, combat behavior, and menu transitions. Issues marked **stage: implemented** have code changes but are still open until tested on a device; **stage: verified** requires a confirmed result. The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) records both bugs and feature requests.
+Version 0.7.4 adds an optional Duo laptop deck with pictured Build categories, Commands, Radar, Cheats, Options, production progress, special powers, and separate rally controls. The Remastered pass sharpens sprites and scenery, improves walls and effects, and keeps its controls in the deck's Options tab. The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) distinguishes code implemented from fixes verified in gameplay; [#7](https://github.com/wireproof/Tiberian-Dawn/issues/7) and [#10](https://github.com/wireproof/Tiberian-Dawn/issues/10) still need gameplay verification.
 
-The [v0.7.3 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.3) includes an iOS IPA that must be signed for your device before installation. To preserve saves, update the existing native app or existing LiveContainer data container instead of uninstalling it.
+The [v0.7.4 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) includes the complete iOS IPA with classic game data, music, and Remastered artwork. It must be signed for your device before installation. To preserve saves, update the existing app instead of uninstalling it.
 
-## HD graphics — working in-game 😎
+## HD graphics — working in-game
 
 HD graphics are already working in-game, with enhanced terrain, buildings, units, and battlefield artwork. These are actual gameplay screenshots, not mockups or concept art. Their exact capture build is not recorded; they were added October 26, 2026 and do not verify v0.7.3.
 
@@ -151,8 +151,8 @@ Keep SDL at its recorded submodule commit and apply the supplied patch through t
 
 | Area | Status |
 | --- | --- |
-| v0.7.3 source and build | iOS Release compiled and signed; build 703 installed on iPad and Duo |
-| v0.7.3 gameplay | Owner's physical-device checks are pending; see the [checklist](docs/TESTING-0.7.3.md) |
+| v0.7.4 source and build | iOS Release build 710 compiled, signed, and installed on Duo; public IPA is unsigned for device-specific signing |
+| v0.7.4 Duo gameplay | Owner verified the laptop deck controls, radar navigation, sidebar toggle, placement panning, and recent Remastered graphics fixes; see the [checklist](docs/TESTING-0.7.4.md) |
 | Duo gameplay | Owner-provided gameplay and screenshots are available above |
 | Latest layout changes | UI-size extremes, LiveContainer hinge detection, fold/rotation switching, and relaunch persistence still need physical-device confirmation |
 | Display presentation | Cover/inner zoom separation and campaign/menu/movie alignment need continued real-device regression testing |
@@ -171,6 +171,8 @@ These are planned or exploratory directions, **not shipped features or promises 
 - **Original-game reference research:** continue comparing the original C&C95 behavior with the mobile port to guide compatibility fixes and optimization. Current research is partial; it is not a complete reconstruction of the game.
 - **Remastered graphics:** continue checking asset mapping, rendering, memory use, team colors, and performance in both graphics modes. The Enhanced classic toggle and Remastered artwork already work in the owner's asset-equipped builds; public source packages do not include extracted artwork.
 - **A broader Command & Conquer library:** explore C&C DOS and Red Alert references and, eventually, a shared launcher for selecting games. Collecting/reference analysis of those files does not mean native ports are available.
+- **v0.7.5 target — Red Alert:** a visual Tiberian Dawn / Red Alert launcher, Allied and Soviet content, skirmish, and multiplayer. This is [planned work](docs/RED-ALERT-0.7.5-PLAN.md), not part of v0.7.4.
+- **AYN Thor preview:** explore a native Android port with the battlefield on the upper display and Build, Commands, Radar, Cheats, and Options on the lower display. The connected Thor exposes a second touch display, but no Android APK or Thor gameplay build exists yet.
 
 ## Credits
 

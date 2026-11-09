@@ -1,13 +1,15 @@
-# v0.7.4 (708) Duo graphics and laptop preview
+# v0.7.4 (710) device verification
 
-This is a test build. An iOS Release compile and strict signature check do not establish Duo layout or gameplay behavior.
+Build 710 compiled, passed strict signing checks, and was installed on the owner's Duo. The owner tested the current Duo gameplay and reported the laptop controls and graphics below as fixed. Installation and owner reports are distinguished from tests run by the maintainer.
 
-1. On Duo, open the floating dock's **Options** tab and turn **Laptop deck** on. Start a mission, partly fold the inner display into laptop position, and confirm the battlefield fills the wide upper half and the deck appears below. Open the Duo flat and close it to the cover display; the ordinary layout should return. Turn the option off from the dock and confirm the deck stays hidden even when partly folded.
-2. In the lower deck, switch between **Build** and **Commands**. Build should show pictured **Buildings**, **Infantry**, and **Vehicles** categories using the packaged game cameos. Start a building, then tap it when ready and confirm the upper battlefield enters placement mode. Switch to Commands and confirm the text production strip, orders, rallies, and groups are reachable.
-3. Tap an infantry and a vehicle production button several times. Check that queue counts rise, units emerge, and the credits spent match the units produced. Hold a queued unit button; check that its waiting entries cancel and that active production refunds correctly. Keep an eye on stale buttons after construction options change.
-4. Select units on the upper battlefield. Test Stop, Guard, Scatter, Force Attack, Force Move, Cancel, group recall, and hold-to-assign. Set separate infantry and vehicle rally points by tapping the upper battlefield, then produce each type and check where it travels.
-5. Use both fingers to pan the upper battlefield. Check target taps, sidebar production and building placement, top bar, save/load, and transitions into and out of menus. Repeat with Original and Remastered graphics selected from the floating dock.
-6. In laptop mode, confirm the Cheats & Options bubble can be dragged and stays where released, both collapsed and expanded. Fold flat and back; its laptop position should be remembered separately from the ordinary position. The map joystick was reported working on Duo with build 707. Start a building and check the card's percentage, READY badge, and tap-to-place behavior. The upper right-hand classic sidebar should start hidden; the top **Sidebar** tab should show and hide that sidebar while the lower Build and Commands deck stays usable. Fold flat and confirm the prior ordinary sidebar state returns. The owner verified temporary two-finger map panning during building placement on build 706.
-7. The owner reports that Remastered trees, Tiberium, projectiles, Ion Cannon, and Obelisk laser now look fixed on physical Duo with build 706. Build 707 adds a smooth beam core and glow for the Obelisk's remaining low-detail appearance; check its source and target alignment, thickness, and performance. Recheck graphics on iPad separately.
+| Area | Duo result | Other device status |
+| --- | --- | --- |
+| Laptop deck Build, Commands, Radar, Cheats, and Options | Owner reports working | iPad not retested |
+| Radar fills the lower pane and tapping it moves the battlefield | Owner verified; [#16](https://github.com/wireproof/Tiberian-Dawn/issues/16) closed | iPad not applicable |
+| Laptop/Remastered toggles stay in Options, not under Radar | Owner verified; [#16](https://github.com/wireproof/Tiberian-Dawn/issues/16) closed | iPad not applicable |
+| Sidebar toggle, movable Options panel, joystick, placement panning, production status | Owner marked [#13](https://github.com/wireproof/Tiberian-Dawn/issues/13) verified | iPad not retested |
+| Remastered trees, Tiberium, walls, projectiles, Ion Cannon, and Obelisk | Owner reported fixed on Duo; related issues closed | iPad not retested |
+| Waypoints after full app relaunch | Not verified; [#7](https://github.com/wireproof/Tiberian-Dawn/issues/7) open | Not verified |
+| Force Move and crushing infantry | Not verified; [#10](https://github.com/wireproof/Tiberian-Dawn/issues/10) open | Not verified |
 
-For each problem, record Duo inner or cover display, fold position, graphics style, stock or custom rules, steps, expected/actual result, and a screenshot or short recording. Keep GitHub issues open until the behavior is confirmed on the physical device.
+When reporting a remaining problem, note the device and screen, fold/orientation, graphics style, stock or custom rules, exact steps, expected and actual result, and a screenshot or short recording. Add a comment to the existing [issue](https://github.com/wireproof/Tiberian-Dawn/issues) when one matches.

@@ -874,10 +874,9 @@ static UIImage *WPBuildCameo(NSString *asset) {
     _radar=std::move(radar);[self setNeedsDisplay];
 }
 - (CGRect)mapRect {
-    if(_radar.width<=0||_radar.height<=0)return self.bounds;
-    CGFloat scale=MIN(self.bounds.size.width/_radar.width,self.bounds.size.height/_radar.height);
-    CGSize size=CGSizeMake(_radar.width*scale,_radar.height*scale);
-    return CGRectMake((self.bounds.size.width-size.width)/2,(self.bounds.size.height-size.height)/2,size.width,size.height);
+    // The lower display is a wide command surface. Use the entire radar pane;
+    // the same transform is applied to camera outlines and tap coordinates.
+    return CGRectInset(self.bounds,1,1);
 }
 - (void)tapped:(UITapGestureRecognizer*)tap {
     if(!_radar.active||_radar.width<=0||_radar.height<=0)return;
@@ -899,12 +898,14 @@ static UIImage *WPBuildCameo(NSString *asset) {
     CGColorSpaceRef space=CGColorSpaceCreateDeviceRGB();
     CGImageRef image=CGImageCreate(_radar.width,_radar.height,8,32,_radar.width*4,space,
         kCGBitmapByteOrderDefault|kCGImageAlphaLast,provider,NULL,false,kCGRenderingIntentDefault);
-    CGRect map=[self mapRect];[[UIImage imageWithCGImage:image] drawInRect:map];
+    CGRect map=[self mapRect];
+    CGContextRef context=UIGraphicsGetCurrentContext();
+    CGContextSetInterpolationQuality(context,kCGInterpolationNone);
+    [[UIImage imageWithCGImage:image] drawInRect:map];
     CGRect camera=CGRectMake(map.origin.x+map.size.width*_radar.cameraX/_radar.width,
         map.origin.y+map.size.height*_radar.cameraY/_radar.height,
         map.size.width*_radar.cameraWidth/_radar.width,
         map.size.height*_radar.cameraHeight/_radar.height);
-    CGContextRef context=UIGraphicsGetCurrentContext();
     CGContextSetStrokeColorWithColor(context,UIColor.systemYellowColor.CGColor);
     CGContextSetLineWidth(context,2);CGContextStrokeRect(context,camera);
     CGImageRelease(image);CGColorSpaceRelease(space);CGDataProviderRelease(provider);
@@ -1053,8 +1054,7 @@ static UIImage *WPBuildCameo(NSString *asset) {
     self.radarMap.hidden=page!=2;
     [self.artworkButton setTitle:state.remastered?@"Remastered On":@"Remastered Off" forState:UIControlStateNormal];
     CGFloat footerY=self.bounds.size.height-MAX(54,self.window.safeAreaInsets.bottom+50);
-    CGFloat radarSize=MAX(60,MIN(width,footerY-88));
-    self.radarMap.frame=CGRectMake(inset+(width-radarSize)/2,76,radarSize,radarSize);
+    self.radarMap.frame=CGRectMake(inset,76,width,MAX(60,footerY-84));
     if(page==2)[self.radarMap updateRadar:WPOrders::Shared().radarSnapshot()];
     self.artworkButton.frame=CGRectMake(inset,footerY,(width-8)/2,44);
     self.laptopButton.frame=CGRectMake(inset+(width-8)/2+8,footerY,(width-8)/2,44);

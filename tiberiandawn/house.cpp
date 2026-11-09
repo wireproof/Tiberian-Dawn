@@ -99,6 +99,9 @@
 
 #include "function.h"
 #include "wireproof_rules.h"
+#if defined(IPADOS_PORT)
+#include "common/wireproof_orders.h"
+#endif
 
 /*
 ** New sidebar for GlyphX multiplayer. ST - 3/26/2019 12:24PM
@@ -2994,6 +2997,11 @@ bool HouseClass::Manual_Place(BuildingClass* builder, BuildingClass* object)
         Map.Set_Cursor_Shape(object->Occupy_List(true));
         Map.Set_Cursor_Pos(Coord_Cell(builder->Coord));
         builder->Mark(MARK_CHANGE);
+#if defined(IPADOS_PORT)
+        // Production can hold a pending object before the player asks to place
+        // it. Change touch panning only after this explicit placement action.
+        WPOrders::Shared().armBuildingPlacement();
+#endif
         return (true);
     }
     return (false);

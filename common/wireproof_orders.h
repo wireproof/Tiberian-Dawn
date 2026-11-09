@@ -42,6 +42,7 @@ class State {
     Snapshot state = {false,0,0};
     bool pan_held = false;
     bool map_drag = false;
+    bool placement_armed = false;
     Stick joystick;
     int zoom_quarters = 6;
     int ui_scale = 100;
@@ -55,7 +56,7 @@ public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); production.clear(); radar=Radar(); state.force=0; state.rally=0; state.placing=false; pan_held=false; joystick={}; }
+        if (!active) { pending.clear(); production.clear(); radar=Radar(); state.force=0; state.rally=0; state.placing=false; placement_armed=false; pan_held=false; joystick={}; }
         if (!selected) state.force=0;
     }
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
@@ -79,7 +80,13 @@ public:
     Stick stick() { std::lock_guard<std::mutex> lock(mutex); return joystick; }
     Snapshot snapshot() { std::lock_guard<std::mutex> lock(mutex); return state; }
     void publishArtwork(bool remastered) { std::lock_guard<std::mutex> lock(mutex); state.remastered=remastered; }
-    void publishMapState(bool placing,bool sidebar) { std::lock_guard<std::mutex> lock(mutex);state.placing=placing;state.sidebar=sidebar; }
+    void armBuildingPlacement() { std::lock_guard<std::mutex> lock(mutex);placement_armed=true; }
+    void publishMapState(bool placing,bool sidebar) {
+        std::lock_guard<std::mutex> lock(mutex);
+        if(!placing)placement_armed=false;
+        state.placing=placing && placement_armed;
+        state.sidebar=sidebar;
+    }
     void publishProduction(std::vector<Production> value) {
         std::lock_guard<std::mutex> lock(mutex); production=std::move(value);
     }

@@ -8,11 +8,11 @@ An unofficial, free, community-maintained project.
 
 ## Current release — v0.7.4
 
-**Build 710 brings the Duo laptop command deck and Remastered graphics refinements.** The owner later verified the build 711 fix for duplicate Laptop and Remastered buttons with [seven Duo screenshots](docs/showcase/README.md#duo-laptop-command-deck--owner-supplied-after-build-711-installation), then verified build 712's two-column Cheats layout and restored artwork on Duo. The public v0.7.4 IPA remains build 710. [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) · [Device test checklist](docs/TESTING-0.7.4.md) · [Bugs and features](https://github.com/wireproof/Tiberian-Dawn/issues)
+**Build 714 is the current full-asset iOS download.** It includes the Duo laptop command deck, Remastered graphics refinements, the owner-verified duplicate-button and two-column Cheats fixes, and newer production and movie presentation changes. The [build 710 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) remains available for comparison. [Build 714 release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4-build714) · [Device test checklist](docs/TESTING-0.7.4.md) · [Bugs and features](https://github.com/wireproof/Tiberian-Dawn/issues)
 
 The first development build 712 install omitted packaged game artwork. The corrected full-asset build 712 restored Remastered graphics and pictured Build tiles in the owner's Duo test; [#19](https://github.com/wireproof/Tiberian-Dawn/issues/19) records the cause and fix. The owner also confirmed the two-column Cheats layout in [#18](https://github.com/wireproof/Tiberian-Dawn/issues/18). Future signed development IPAs use [the guarded packaging script](scripts/package-ipados-development.sh) to preserve GameData, ModernArt, and RemasteredArt from a complete base IPA.
 
-Development build 714 follows the owner's Duo test of build 713. It restores uncropped Build artwork, clears a retained top-bar strip during laptop-mode movies, and adds an independent “Always portrait” deck switch next to “Laptop deck” in Options. It was installed on Duo and iPad Pro, with both devices reporting build 714; gameplay verification remains pending. The public v0.7.4 IPA remains build 710. [Device checklist](docs/TESTING-0.7.4.md)
+Build 714 follows the owner's Duo test of build 713. It restores uncropped Build artwork, clears a retained top-bar strip during laptop-mode movies, and adds an independent “Always portrait” deck switch next to “Laptop deck” in Options. It was installed on Duo and iPad Pro, with both devices reporting build 714; gameplay verification of those latest changes remains pending. [Device checklist](docs/TESTING-0.7.4.md)
 
 The project has progressed substantially since the early v0.2.7 and v0.5.2 builds. The current feature set includes:
 
@@ -26,7 +26,7 @@ The project has progressed substantially since the early v0.2.7 and v0.5.2 build
 
 Version 0.7.4 adds an optional Duo laptop deck with pictured Build categories, Commands, Radar, Cheats, Options, production progress, special powers, and separate rally controls. The Remastered pass sharpens sprites and scenery and improves walls and effects. The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) distinguishes code implemented from fixes verified in gameplay; the owner verified rally point persistence after relaunch in [#7](https://github.com/wireproof/Tiberian-Dawn/issues/7) and the duplicate-controls fix in [#16](https://github.com/wireproof/Tiberian-Dawn/issues/16). [#10](https://github.com/wireproof/Tiberian-Dawn/issues/10) remains open.
 
-The [v0.7.4 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) includes the complete iOS IPA with classic game data, music, and Remastered artwork. It must be signed for your device before installation. To preserve saves, update the existing app instead of uninstalling it.
+The [build 714 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4-build714) includes the complete iOS IPA with classic game data, music, and Remastered artwork. It must be signed for your device before installation. To preserve saves, update the existing app instead of uninstalling it.
 
 ## HD graphics — working in-game
 

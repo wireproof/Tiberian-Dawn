@@ -6,7 +6,7 @@ Build 714 compiled, passed strict signing and full-asset package checks, and was
 | --- | --- | --- |
 | Laptop deck Build, Commands, Radar, Cheats, and Options | Owner reports working; duplicate bottom buttons found later | iPad not retested |
 | Radar fills the lower pane and tapping it moves the battlefield | Owner verified | iPad not applicable |
-| Laptop/Remastered toggles appear only in Options | Published build 710 has duplicate footer buttons; owner screenshots verify the build 711 correction in [#16](https://github.com/wireproof/Tiberian-Dawn/issues/16) | iPad not applicable |
+| Laptop/Remastered toggles appear only in Options | Earlier build 710 has duplicate footer buttons; owner screenshots verify the build 711 correction in [#16](https://github.com/wireproof/Tiberian-Dawn/issues/16) | iPad not applicable |
 | Sidebar toggle, movable Options panel, joystick, placement panning, production status | Owner marked [#13](https://github.com/wireproof/Tiberian-Dawn/issues/13) verified | iPad not retested |
 | Remastered trees, Tiberium, walls, projectiles, Ion Cannon, and Obelisk | Owner reported fixed on Duo; related issues closed | iPad not retested |
 | Waypoints after full app relaunch | Owner verified both rally points after quitting and reopening on Duo; [#7](https://github.com/wireproof/Tiberian-Dawn/issues/7) closed | Original iPad report not separately retested |

@@ -916,6 +916,7 @@ static UIImage *WPBuildCameo(NSString *asset) {
 @interface WPLaptopDock : UIView
 @property(nonatomic,weak) WPOrdersPanel *optionsPanel;
 @property(nonatomic) BOOL verticalMenu;
+@property(nonatomic) BOOL lastBuildOpen;
 @property(nonatomic,strong) UILabel *heading;
 @property(nonatomic,strong) UISegmentedControl *mode;
 @property(nonatomic,strong) UISegmentedControl *category;
@@ -946,6 +947,7 @@ static UIImage *WPBuildCameo(NSString *asset) {
 - (instancetype)initWithFrame:(CGRect)frame {
     if((self=[super initWithFrame:frame])) {
         self.backgroundColor=[UIColor colorWithWhite:.05 alpha:.98];
+        self.lastBuildOpen=WPLaptop::BuildOpen().load();
         self.layer.borderColor=UIColor.darkGrayColor.CGColor;self.layer.borderWidth=1;
         self.heading=[UILabel new];self.heading.textColor=UIColor.whiteColor;
         self.heading.font=[UIFont systemFontOfSize:15 weight:UIFontWeightBold];
@@ -1012,7 +1014,10 @@ static UIImage *WPBuildCameo(NSString *asset) {
         [[UISelectionFeedbackGenerator new] selectionChanged];
 }
 - (void)modeChanged:(UISegmentedControl*)control {
-    if(control==self.mode && control.selectedSegmentIndex<=1)WPLaptop::BuildOpen().store(control.selectedSegmentIndex==0);
+    if(control==self.mode && control.selectedSegmentIndex<=1){
+        self.lastBuildOpen=control.selectedSegmentIndex==0;
+        WPLaptop::BuildOpen().store(self.lastBuildOpen);
+    }
     self.productionKeys=nil;[self refresh];
 }
 - (void)holdGroup:(UILongPressGestureRecognizer*)hold {
@@ -1033,6 +1038,9 @@ static UIImage *WPBuildCameo(NSString *asset) {
         state.rally==1?@"Infantry rally · tap battlefield":state.rally==2?@"Vehicle rally · tap battlefield":
         state.force==1?@"Force Attack · tap target":state.force==2?@"Force Move · tap target":
         [NSString stringWithFormat:@"Command deck · %d selected",state.selected];
+    BOOL buildOpen=WPLaptop::BuildOpen().load();
+    if(buildOpen!=self.lastBuildOpen)self.mode.selectedSegmentIndex=buildOpen?0:1;
+    self.lastBuildOpen=buildOpen;
     const NSInteger page=self.mode.selectedSegmentIndex;
     const BOOL buildMode=page==0,commandsMode=page==1;
     if(self.optionsPanel){self.optionsPanel.laptopPage=page==3?1:page==4?2:0;self.optionsPanel.laptopVertical=self.verticalMenu;}

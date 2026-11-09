@@ -1,6 +1,6 @@
 # v0.7.4 device verification
 
-Build 710 compiled, passed strict signing checks, and was installed on the owner's Duo. The owner tested the current Duo gameplay and reported the laptop controls and graphics below as fixed. Installation and owner reports are distinguished from tests run by the maintainer.
+Build 714 compiled, passed strict signing and full-asset package checks, and was installed on the owner's Duo and iPad Pro on November 8, 2026. Both devices reported v0.7.4 build 714 afterward; neither app was opened by the maintainer. The owner tested earlier Duo builds and reported the controls and graphics below. Installation and owner reports are distinguished from tests run by the maintainer.
 
 | Area | Duo result | Other device status |
 | --- | --- | --- |

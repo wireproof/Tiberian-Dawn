@@ -12,7 +12,7 @@ An unofficial, free, community-maintained project.
 
 The first development build 712 install omitted packaged game artwork. The corrected full-asset build 712 restored Remastered graphics and pictured Build tiles in the owner's Duo test; [#19](https://github.com/wireproof/Tiberian-Dawn/issues/19) records the cause and fix. The owner also confirmed the two-column Cheats layout in [#18](https://github.com/wireproof/Tiberian-Dawn/issues/18). Future signed development IPAs use [the guarded packaging script](scripts/package-ipados-development.sh) to preserve GameData, ModernArt, and RemasteredArt from a complete base IPA.
 
-Development build 714 follows the owner's Duo test of build 713. It restores uncropped Build artwork, clears a retained top-bar strip during laptop-mode movies, and adds an independent “Always portrait” deck switch next to “Laptop deck” in Options. The radar drag, pre-radar trackpad, queue counts, and movie changes still need owner verification in build 714. The public v0.7.4 IPA remains build 710. [Device checklist](docs/TESTING-0.7.4.md)
+Development build 714 follows the owner's Duo test of build 713. It restores uncropped Build artwork, clears a retained top-bar strip during laptop-mode movies, and adds an independent “Always portrait” deck switch next to “Laptop deck” in Options. It was installed on Duo and iPad Pro, with both devices reporting build 714; gameplay verification remains pending. The public v0.7.4 IPA remains build 710. [Device checklist](docs/TESTING-0.7.4.md)
 
 The project has progressed substantially since the early v0.2.7 and v0.5.2 builds. The current feature set includes:
 

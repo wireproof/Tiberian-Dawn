@@ -11,7 +11,7 @@ This release brings a Duo laptop command deck and further Remastered graphics fi
 
 ## Verification and remaining checks
 
-The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) uses `stage: implemented` for code changes awaiting gameplay verification and `stage: verified` for owner-confirmed physical-device results. [Waypoints after relaunch #7](https://github.com/wireproof/Tiberian-Dawn/issues/7) and [Force Move/crushing #10](https://github.com/wireproof/Tiberian-Dawn/issues/10) remain open. The [v0.7.4 checklist](TESTING-0.7.4.md) keeps device-specific checks explicit.
+The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) uses `stage: implemented` for code changes awaiting gameplay verification and `stage: verified` for owner-confirmed physical-device results. [Waypoints after relaunch #7](https://github.com/wireproof/Tiberian-Dawn/issues/7) and [Force Move/crushing #10](https://github.com/wireproof/Tiberian-Dawn/issues/10) remain open. The [v0.7.4 checklist](https://github.com/wireproof/Tiberian-Dawn/blob/v0.7.4/docs/TESTING-0.7.4.md) keeps device-specific checks explicit.
 
 ## Download
 
@@ -19,4 +19,4 @@ The complete unsigned iOS IPA includes classic game data, music, and Remastered 
 
 ## Next
 
-The [v0.7.5 plan](RED-ALERT-0.7.5-PLAN.md) targets a visual Tiberian Dawn / Red Alert choice, Allied and Soviet content, skirmish, and multiplayer. An AYN Thor Android dual-screen port is being explored. Neither is included in this release.
+The [v0.7.5 plan](https://github.com/wireproof/Tiberian-Dawn/blob/v0.7.4/docs/RED-ALERT-0.7.5-PLAN.md) targets a visual Tiberian Dawn / Red Alert choice, Allied and Soviet content, skirmish, and multiplayer. An AYN Thor Android dual-screen port is being explored. Neither is included in this release.

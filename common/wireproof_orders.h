@@ -19,11 +19,14 @@ struct Command {
         : kind(command),group(selectedGroup),itemType(type),itemID(id) {}
 };
 struct Production {
-    int type; int id; std::string name, asset; int queued, category;
-    Production(int itemType,int itemID,const std::string& itemName,const std::string& assetName,int count,int group)
-        : type(itemType),id(itemID),name(itemName),asset(assetName),queued(count),category(group) {}
+    int type; int id; std::string name, asset; int queued, category, progress; bool ready, paused;
+    Production(int itemType,int itemID,const std::string& itemName,const std::string& assetName,int count,int group,
+               int completion=0,bool completed=false,bool held=false)
+        : type(itemType),id(itemID),name(itemName),asset(assetName),queued(count),category(group),
+          progress(completion),ready(completed),paused(held) {}
 };
-struct Snapshot { bool active; int selected; int force; int rally; bool remastered; Snapshot(bool a=false,int s=0,int f=0):active(a),selected(s),force(f),rally(0),remastered(false){} };
+struct Snapshot { bool active; int selected; int force; int rally; bool remastered, placing, sidebar;
+    Snapshot(bool a=false,int s=0,int f=0):active(a),selected(s),force(f),rally(0),remastered(false),placing(false),sidebar(false){} };
 // UI threads only enqueue intentions. The game thread owns all game objects.
 class State {
     std::mutex mutex;
@@ -45,7 +48,7 @@ public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); production.clear(); state.force=0; state.rally=0; pan_held=false; joystick={}; }
+        if (!active) { pending.clear(); production.clear(); state.force=0; state.rally=0; state.placing=false; pan_held=false; joystick={}; }
         if (!selected) state.force=0;
     }
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
@@ -55,7 +58,7 @@ public:
     void setJoystickSetting(bool speed,int value) { std::lock_guard<std::mutex> lock(mutex); (speed?joystick_speed:joystick_size)=std::max(speed?1:2,std::min(speed?12:8,value)); }
     void hold_pan(bool held) { std::lock_guard<std::mutex> lock(mutex); pan_held=held && state.active; }
     void setMapDrag(bool value) { std::lock_guard<std::mutex> lock(mutex);map_drag=value && state.active;joystick={}; }
-    bool mapDrag() { std::lock_guard<std::mutex> lock(mutex);return map_drag && state.active; }
+    bool mapDrag() { std::lock_guard<std::mutex> lock(mutex);return map_drag && state.active && !state.placing; }
     bool panHeld() { std::lock_guard<std::mutex> lock(mutex); return pan_held; }
     void setStick(float x,float y) {
         std::lock_guard<std::mutex> lock(mutex);
@@ -69,6 +72,7 @@ public:
     Stick stick() { std::lock_guard<std::mutex> lock(mutex); return joystick; }
     Snapshot snapshot() { std::lock_guard<std::mutex> lock(mutex); return state; }
     void publishArtwork(bool remastered) { std::lock_guard<std::mutex> lock(mutex); state.remastered=remastered; }
+    void publishMapState(bool placing,bool sidebar) { std::lock_guard<std::mutex> lock(mutex);state.placing=placing;state.sidebar=sidebar; }
     void publishProduction(std::vector<Production> value) {
         std::lock_guard<std::mutex> lock(mutex); production=std::move(value);
     }

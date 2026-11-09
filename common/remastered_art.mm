@@ -31,6 +31,12 @@ const Frame* lookup(const WPRemastered::Command& c){
  auto millis=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
  return &v[v.size()>1&&v[0].fps>0?size_t(millis*v[0].fps/1000)%v.size():0];}return nullptr;
 }
+bool naturalTerrainAsset(const WPRemastered::Command& c){
+ std::string asset=c.asset;for(char&x:asset)x=std::toupper((unsigned char)x);
+ auto dot=asset.find_last_of('.');if(dot!=std::string::npos)asset.resize(dot);
+ const char* terrain=c.theater==0?"TD_Terrain_Desert":c.theater==3?"TD_Terrain_Winter":"TD_Terrain_Temperate";
+ return frames.find(key(terrain,asset,c.frame))!=frames.end();
+}
 const char* shader=R"METAL(
 #include <metal_stdlib>
 using namespace metal;
@@ -94,7 +100,9 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
   if(c.width<=0||c.height<=0)continue;
   // The classic ghost table carries shadow/translucency semantics. Drawing a
   // full-colour remastered sprite for that pass duplicates airborne projectiles.
-  const Frame*f=(!(c.flags&0x0200)&&(c.ghost.empty()||c.remapped))?lookup(c):nullptr;
+  // Trees and Tiberium use the classic ghost table for shading, too. Their
+  // native terrain frames must remain eligible; projectile shadow passes do not.
+  const Frame*f=(!(c.flags&0x0200)&&(c.ghost.empty()||c.remapped||naturalTerrainAsset(c)))?lookup(c):nullptr;
   if(f&&f->page=="-")continue;
   id<MTLTexture>tex=nil;float x=c.x,y=c.y,w=c.width,h=c.height;
   struct Params{float a[20]={};uint32_t recolor=0;}p;

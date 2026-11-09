@@ -87,6 +87,11 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 - (void)refresh;
 @end
 @implementation WPMapJoystick
+- (CGRect)movementRect {
+    CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+    if(WPLaptop::Active())safe.size.height=MAX(1,MIN(safe.size.height,self.window.bounds.size.height*.5-safe.origin.y-8));
+    return safe;
+}
 - (instancetype)initWithFrame:(CGRect)frame {
     if((self=[super initWithFrame:frame])) {
         self.backgroundColor=[UIColor colorWithWhite:.10 alpha:.90];
@@ -109,7 +114,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.hidden=!WPOrders::Shared().snapshot().active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
     if(self.hidden){WPOrders::Shared().setStick(0,0);return;}
     BOOL compact=WPOrders::Shared().mapDrag();
-    CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+    CGRect safe=[self movementRect];
     CGFloat size=MIN(compact?56:144*WPOrders::Shared().joystickSetting(false)/4.0,MIN(safe.size.width,safe.size.height));
     self.frame=CGRectMake(safe.origin.x+self.position.x*MAX(0,safe.size.width-size),safe.origin.y+self.position.y*MAX(0,safe.size.height-size),size,size);
     self.layer.cornerRadius=size/2;self.thumb.hidden=compact;self.hand.hidden=!compact;
@@ -125,7 +130,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }
     if(self.repositioning) {
         WPOrders::Shared().setStick(0,0);
-        CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+        CGRect safe=[self movementRect];
         CGPoint delta=[pan translationInView:self.superview];CGFloat dx=MAX(0,safe.size.width-size),dy=MAX(0,safe.size.height-size);
         self.position=CGPointMake(dx?MIN(1,MAX(0,(self.frame.origin.x+delta.x-safe.origin.x)/dx)):0,dy?MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)):0);
         [pan setTranslation:CGPointZero inView:self.superview];[self refresh];
@@ -136,7 +141,7 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }
     if(pan.state==UIGestureRecognizerStateEnded || pan.state==UIGestureRecognizerStateCancelled || pan.state==UIGestureRecognizerStateFailed) {
         WPOrders::Shared().setStick(0,0);[self refresh];
-        [self.positionStore save:self.position];
+        if(!WPLaptop::Active())[self.positionStore save:self.position];
     }
 }
 - (void)didMoveToWindow { [super didMoveToWindow];if(!self.window)WPOrders::Shared().setStick(0,0); }
@@ -630,6 +635,10 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     }
     CGFloat x=safe.origin.x+self.position.x*MAX(0,safe.size.width-width*uiScale);
     CGFloat y=safe.origin.y+self.position.y*MAX(0,safe.size.height-height*uiScale);
+    if(WPLaptop::Active()) {
+        x=safe.origin.x+(self.expanded?0:68);
+        y=safe.origin.y+(self.expanded?40:55);
+    }
     [UIView performWithoutAnimation:^{
         self.bounds=CGRectMake(0,0,width,height);
         self.transform=CGAffineTransformMakeScale(uiScale,uiScale);
@@ -917,7 +926,10 @@ static UIImage *WPBuildCameo(NSString *asset) {
     if(WPOrders::Shared().enqueueProduction(true,value/1000,value%1000,building))
         [[UISelectionFeedbackGenerator new] selectionChanged];
 }
-- (void)modeChanged:(UISegmentedControl*)control { self.productionKeys=nil;[self refresh]; }
+- (void)modeChanged:(UISegmentedControl*)control {
+    if(control==self.mode)WPLaptop::BuildOpen().store(control.selectedSegmentIndex==0);
+    self.productionKeys=nil;[self refresh];
+}
 - (void)holdGroup:(UILongPressGestureRecognizer*)hold {
     if(hold.state==UIGestureRecognizerStateBegan && WPOrders::Shared().enqueue(WPOrders::Assign,(int)hold.view.tag-200))
         [[UISelectionFeedbackGenerator new] selectionChanged];
@@ -932,10 +944,12 @@ static UIImage *WPBuildCameo(NSString *asset) {
     CGFloat inset=MAX(10,self.window.safeAreaInsets.left+8);
     CGFloat width=MAX(1,size.width-inset-MAX(10,self.window.safeAreaInsets.right+8));
     self.heading.frame=CGRectMake(inset,8,width,24);
-    self.heading.text=state.rally==1?@"Infantry rally · tap battlefield":state.rally==2?@"Vehicle rally · tap battlefield":
+    self.heading.text=state.placing?@"Place building · drag with two fingers to move map":
+        state.rally==1?@"Infantry rally · tap battlefield":state.rally==2?@"Vehicle rally · tap battlefield":
         state.force==1?@"Force Attack · tap target":state.force==2?@"Force Move · tap target":
         [NSString stringWithFormat:@"Command deck · %d selected",state.selected];
-    const BOOL buildMode=self.mode.selectedSegmentIndex==0;
+    const BOOL buildMode=WPLaptop::BuildOpen().load();
+    if(self.mode.selectedSegmentIndex!=(buildMode?0:1))self.mode.selectedSegmentIndex=buildMode?0:1;
     self.mode.frame=CGRectMake(inset,36,width,32);
     self.category.hidden=!buildMode;
     self.category.frame=CGRectMake(inset,74,width,32);
@@ -957,6 +971,12 @@ static UIImage *WPBuildCameo(NSString *asset) {
             if(buildMode){NSString *asset=[NSString stringWithUTF8String:items[i].asset.c_str()];
                 UIImage *cameo=WPBuildCameo(asset?:@"");
                 if(cameo)[button setBackgroundImage:cameo forState:UIControlStateNormal];}
+            UILabel *badge=[UILabel new];badge.tag=20001;badge.textColor=UIColor.whiteColor;
+            badge.backgroundColor=[UIColor colorWithWhite:0 alpha:.78];badge.font=[UIFont systemFontOfSize:11 weight:UIFontWeightBold];
+            badge.textAlignment=NSTextAlignmentCenter;badge.adjustsFontSizeToFitWidth=YES;badge.minimumScaleFactor=.7;
+            [button addSubview:badge];
+            UIProgressView *progress=[UIProgressView new];progress.tag=20002;progress.progressTintColor=UIColor.systemGreenColor;
+            progress.trackTintColor=[UIColor colorWithWhite:.2 alpha:.9];[button addSubview:progress];
             UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdProduction:)];
             hold.minimumPressDuration=.5;hold.cancelsTouchesInView=YES;[button addGestureRecognizer:hold];
             [self.productionStrip addSubview:button];[self.productionButtons addObject:button];}
@@ -966,10 +986,17 @@ static UIImage *WPBuildCameo(NSString *asset) {
     for(NSUInteger i=0;i<self.productionButtons.count;++i){UIButton *button=self.productionButtons[i];
         const auto&item=items[i];NSString *name=[NSString stringWithCString:item.name.c_str() encoding:NSISOLatin1StringEncoding]?:@"Unit";
         NSString *title=item.queued?[NSString stringWithFormat:@"%@ ×%d",name,item.queued]:name;
-        [button setTitle:buildMode&&button.currentBackgroundImage?@"":title forState:UIControlStateNormal];button.accessibilityLabel=title;
+        NSString *status=item.ready?@"READY":item.paused?@"ON HOLD":item.progress>0?[NSString stringWithFormat:@"%d%%",MIN(100,item.progress*100/108)]:item.queued>0?@"QUEUED":@"";
+        [button setTitle:buildMode&&button.currentBackgroundImage?@"":title forState:UIControlStateNormal];
+        button.accessibilityLabel=status.length?[NSString stringWithFormat:@"%@, %@",title,status]:title;
         if(buildMode){CGFloat cell=MIN(158,(width-24)/4);int columns=MAX(2,int((width+8)/(cell+8)));
             button.frame=CGRectMake((i%columns)*(cell+8),(i/columns)*(cell*.75+8),cell,cell*.75);
         }else button.frame=CGRectMake(i*132,0,126,48);
+        UILabel *badge=(UILabel*)[button viewWithTag:20001];UIProgressView *progress=(UIProgressView*)[button viewWithTag:20002];
+        badge.text=status;badge.hidden=status.length==0;
+        badge.frame=CGRectMake(3,button.bounds.size.height-23,button.bounds.size.width-6,18);
+        progress.hidden=item.progress<=0||item.ready;progress.progress=MIN(1,item.progress/108.0f);
+        progress.frame=CGRectMake(3,button.bounds.size.height-4,button.bounds.size.width-6,3);
     }
     if(buildMode){CGFloat cell=MIN(158,(width-24)/4);int columns=MAX(2,int((width+8)/(cell+8)));
         self.productionStrip.contentSize=CGSizeMake(width,((items.size()+columns-1)/columns)*(cell*.75+8));}
@@ -1026,7 +1053,7 @@ extern "C" void WP_InstallOrdersPanel(void) {
             [panel refresh];
             [gameToolbar refresh];
             [laptopDock refresh];
-            if(!laptopDock.hidden){panel.hidden=YES;gameToolbar.hidden=YES;joystick.hidden=YES;[window bringSubviewToFront:laptopDock];}
+            if(!laptopDock.hidden){gameToolbar.hidden=YES;[window bringSubviewToFront:laptopDock];[window bringSubviewToFront:joystick];}
             // The root view can be reordered during keyboard/window changes.
             // Only raise inside this game window; never steal key-window focus.
             if (!panel.hidden) [window bringSubviewToFront:panel];

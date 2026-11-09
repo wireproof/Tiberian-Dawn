@@ -105,6 +105,7 @@ static void WP_ProcessOrders() {
     Shared().publish(InMainLoop && GameActive && GameInFocus && SpecialDialog==SDLG_NONE && !PlaybackGame,
                      CurrentObject.Count());
     Shared().publishArtwork(Settings.Video.ArtworkMode != 0);
+    Shared().publishMapState(Map.PendingObjectPtr != nullptr, Map.IsSidebarActive);
 #ifdef IPADOS_PORT
     // Single-player battlefield has no text entry. End stale SDL edit sessions
     // left behind by save/load dialogs without interrupting multiplayer chat.
@@ -127,8 +128,11 @@ static void WP_ProcessOrders() {
                     const char* name=Text_String(techno->Full_Name());
                     const int category=item.BuildableType==RTTI_BUILDINGTYPE?0:
                         item.BuildableType==RTTI_INFANTRYTYPE?1:2;
+                    FactoryClass* factory=item.Factory==-1?nullptr:Factories.Raw_Ptr(item.Factory);
                     production.emplace_back(int(item.BuildableType),item.BuildableID,name?name:"Unit",
-                        techno->IniName, WP_Queue_Count(item.BuildableType,item.BuildableID),category);
+                        techno->IniName, WP_Queue_Count(item.BuildableType,item.BuildableID),category,
+                        factory?factory->Completion():0,factory&&factory->Has_Completed(),
+                        factory&&!factory->Is_Building()&&!factory->Has_Completed());
                 }
             }
         }

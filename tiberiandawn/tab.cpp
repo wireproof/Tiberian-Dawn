@@ -37,6 +37,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#ifdef IPADOS_PORT
+#include "common/wireproof_laptop.h"
+#endif
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 #include "common/remastered_scene.h"
 #endif
@@ -264,6 +267,12 @@ void TabClass::Set_Active(int select)
         break;
 
     case 1:
+#ifdef IPADOS_PORT
+        if (WPLaptop::Active()) {
+            WPLaptop::BuildOpen().store(!WPLaptop::BuildOpen().load());
+            break;
+        }
+#endif
         Map.SidebarClass::Activate(-1);
         break;
 

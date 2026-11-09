@@ -1,4 +1,4 @@
-# v0.7.4 (705) Duo graphics and laptop preview
+# v0.7.4 (706) Duo graphics and laptop preview
 
 This is a test build. An iOS Release compile and strict signature check do not establish Duo layout or gameplay behavior.
 
@@ -7,6 +7,7 @@ This is a test build. An iOS Release compile and strict signature check do not e
 3. Tap an infantry and a vehicle production button several times. Check that queue counts rise, units emerge, and the credits spent match the units produced. Hold a queued unit button; check that its waiting entries cancel and that active production refunds correctly. Keep an eye on stale buttons after construction options change.
 4. Select units on the upper battlefield. Test Stop, Guard, Scatter, Force Attack, Force Move, Cancel, group recall, and hold-to-assign. Set separate infantry and vehicle rally points by tapping the upper battlefield, then produce each type and check where it travels.
 5. Use both fingers to pan the upper battlefield. Check target taps, sidebar production and building placement, top bar, save/load, and transitions into and out of menus. Repeat with Original and Remastered graphics selected from the floating dock.
-6. In Remastered graphics, compare infantry, vehicles, and buildings against Original from the same scene. Build 705 permits full-resolution remastered sprites when the classic draw also has a house-color and shadow table. Check the newly textured top bar and its labels. This candidate fix is not yet verified on Duo.
+6. In laptop mode, confirm the Cheats & Options bubble and map joystick remain reachable above the deck. Start a building and check the card's percentage, READY badge, and tap-to-place behavior. Use the top **Sidebar** tab to switch the deck between Build and Commands. While placing a building with one-finger map drag enabled, use two fingers to pan, then confirm one-finger map drag returns afterward.
+7. In Remastered graphics, compare trees and Tiberium against Original from the same scene. Build 706 permits remastered terrain frames when the classic draw also has a ghost shading table. Check infantry, vehicles, buildings, the top bar, and its labels. These candidate fixes are not yet verified on Duo.
 
 For each problem, record Duo inner or cover display, fold position, graphics style, stock or custom rules, steps, expected/actual result, and a screenshot or short recording. Keep GitHub issues open until the behavior is confirmed on the physical device.

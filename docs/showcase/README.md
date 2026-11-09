@@ -4,7 +4,7 @@
 
 The player is on the [project page](https://wireproof.github.io/Tiberian-Dawn/); published media lives on the separate `gh-pages` branch to keep videos out of the main source checkout.
 
-These are historical captures, not screenshots of the current v0.7.4 release. Version labels below come from a visible in-game version or an existing capture note; the date a file was added to Git does not establish the app build that produced it.
+The historical captures and new Duo laptop captures are identified below. Version labels come from a visible in-game version or an existing capture note; the date a file was added to Git does not establish the app build that produced it.
 
 | Capture | Version shown or recorded |
 | --- | --- |
@@ -13,8 +13,25 @@ These are historical captures, not screenshots of the current v0.7.4 release. Ve
 | iPad Build Anywhere | **v0.5.7**, recorded with the capture |
 | Other Duo and iPad screenshots | Exact build not recorded |
 | HD gameplay images in the main README | Exact build not recorded; added October 26, 2026 |
+| Duo laptop mode and radar, seven owner-supplied screenshots | Captured after build 711 was installed on Duo; the build number is not visible in the screenshots |
 
 For future screenshots, record the device, graphics mode, capture date, and version/build shown in the app alongside the image. A Git commit date alone is only a publication date.
+
+## Duo laptop command deck — owner-supplied after build 711 installation
+
+These seven screenshots were supplied on November 8, 2026. The owner confirmed rally points work and the images show the duplicate Remastered/Laptop footer buttons absent across the deck tabs. They show the original graphics setting; no in-game version number is visible. The Cheats screenshots show the previous one-column switch layout, before the build 712 layout change.
+
+| Options | Options, second view |
+| --- | --- |
+| ![Duo laptop Options tab, first capture](duo-laptop-options-a-build711.jpg) | ![Duo laptop Options tab, second capture](duo-laptop-options-b-build711.jpg) |
+
+| Cheats, speed controls | Cheats, resources and switches |
+| --- | --- |
+| ![Duo laptop Cheats speed controls](duo-laptop-cheats-speeds-build711.jpg) | ![Duo laptop Cheats resources and switches](duo-laptop-cheats-toggles-build711.jpg) |
+
+| Radar | Commands | Build |
+| --- | --- | --- |
+| ![Duo laptop full-width radar](duo-laptop-radar-build711.jpg) | ![Duo laptop Commands and rally controls](duo-laptop-commands-build711.jpg) | ![Duo laptop Build tab with production pictures](duo-laptop-build-build711.jpg) |
 
 ## Cover display
 

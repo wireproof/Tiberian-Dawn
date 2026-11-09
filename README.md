@@ -8,7 +8,7 @@ An unofficial, free, community-maintained project.
 
 ## Current release — v0.7.4
 
-**Build 710 brings the Duo laptop command deck and Remastered graphics refinements.** The owner verified radar navigation, sidebar behavior, and recent graphics fixes during Duo gameplay, then found duplicate Laptop and Remastered buttons below every deck tab. A build 711 correction is awaiting device verification. [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) · [Device test checklist](docs/TESTING-0.7.4.md) · [Bugs and features](https://github.com/wireproof/Tiberian-Dawn/issues)
+**Build 710 brings the Duo laptop command deck and Remastered graphics refinements.** The owner later verified the build 711 fix for duplicate Laptop and Remastered buttons with [seven Duo screenshots](docs/showcase/README.md#duo-laptop-command-deck--owner-supplied-after-build-711-installation). Build 712 arranges the laptop Cheats switches in two columns; its gameplay behavior is awaiting device verification. The public v0.7.4 IPA remains build 710. [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) · [Device test checklist](docs/TESTING-0.7.4.md) · [Bugs and features](https://github.com/wireproof/Tiberian-Dawn/issues)
 
 The project has progressed substantially since the early v0.2.7 and v0.5.2 builds. The current feature set includes:
 
@@ -20,7 +20,7 @@ The project has progressed substantially since the early v0.2.7 and v0.5.2 build
 - Save/settings import and export, with optional iCloud sync for appropriately signed builds.
 - Continued fixes for sidebar rendering, campaign presentation, resizing, touch alignment, and device-specific layouts.
 
-Version 0.7.4 adds an optional Duo laptop deck with pictured Build categories, Commands, Radar, Cheats, Options, production progress, special powers, and separate rally controls. The Remastered pass sharpens sprites and scenery and improves walls and effects. The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) distinguishes code implemented from fixes verified in gameplay; [#7](https://github.com/wireproof/Tiberian-Dawn/issues/7), [#10](https://github.com/wireproof/Tiberian-Dawn/issues/10), and the duplicate-controls follow-up in [#16](https://github.com/wireproof/Tiberian-Dawn/issues/16) remain open.
+Version 0.7.4 adds an optional Duo laptop deck with pictured Build categories, Commands, Radar, Cheats, Options, production progress, special powers, and separate rally controls. The Remastered pass sharpens sprites and scenery and improves walls and effects. The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) distinguishes code implemented from fixes verified in gameplay; [#7](https://github.com/wireproof/Tiberian-Dawn/issues/7) and [#10](https://github.com/wireproof/Tiberian-Dawn/issues/10) remain open. The owner verified the duplicate-controls fix in [#16](https://github.com/wireproof/Tiberian-Dawn/issues/16) with new screenshots.
 
 The [v0.7.4 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) includes the complete iOS IPA with classic game data, music, and Remastered artwork. It must be signed for your device before installation. To preserve saves, update the existing app instead of uninstalling it.
 
@@ -35,6 +35,8 @@ HD graphics are already working in-game, with enhanced terrain, buildings, units
 **Performance note:** HD graphics may run slowly immediately after loading, then become smoother during play. The underlying cause has not yet been confirmed, and further optimization and device testing remain ongoing.
 
 ## Gameplay showcase
+
+The [Duo laptop gallery](docs/showcase/README.md#duo-laptop-command-deck--owner-supplied-after-build-711-installation) now includes seven owner-supplied screenshots of Build, Commands, Radar, Cheats, and Options after build 711 was installed.
 
 Watch in your browser with sound, seeking, and fullscreen controls—no MOV download required.
 

@@ -606,8 +606,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     self.layer.cornerRadius=self.expanded?12:28;
     CGRect safe=[self availableRect];
     BOOL landscape=self.window.bounds.size.width>self.window.bounds.size.height && !(embedded && self.laptopVertical);
-    if(self.arrangement!=(landscape?2:1)) {
-        self.arrangement=landscape?2:1;
+    // The Duo's lower display can be wide even when UIKit reports a portrait
+    // window. Give its cheat switches two columns without changing the narrow
+    // floating panel layout.
+    NSInteger layoutMode=landscape?2:(embedded && safe.size.width>=640?3:1);
+    if(self.arrangement!=layoutMode) {
+        self.arrangement=layoutMode;
         for(UIStackView *page in @[self.gamePage,self.cheatStack])for(UIView *v in [page.arrangedSubviews copy]){[page removeArrangedSubview:v];[v removeFromSuperview];}
         NSArray *o=self.orderButtons;
         if(landscape) {
@@ -630,7 +634,15 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
             UIStackView *left=[[UIStackView alloc] initWithArrangedSubviews:[self.groupControls subarrayWithRange:NSMakeRange(0,5)]],*right=[[UIStackView alloc] initWithArrangedSubviews:[self.groupControls subarrayWithRange:NSMakeRange(5,4)]];left.axis=right.axis=UILayoutConstraintAxisVertical;left.spacing=right.spacing=6;
             UIStackView *numbers=(UIStackView*)[self gridRow:@[left,right]];numbers.alignment=UIStackViewAlignmentTop;[self.gamePage addArrangedSubview:numbers];
             for(NSArray *row in @[@[o[0],o[1]],@[o[2],o[5]],@[o[3],o[4]]])[self.gamePage addArrangedSubview:[self gridRow:row]];
-            for(UIView *v in self.cheatRows)[self.cheatStack addArrangedSubview:v];
+            if(layoutMode==3) {
+                for(NSUInteger i=0;i<3;i++)[self.cheatStack addArrangedSubview:self.cheatRows[i]];
+                for(NSUInteger i=3;i<11;i+=2)
+                    [self.cheatStack addArrangedSubview:[self gridRow:@[self.cheatRows[i],self.cheatRows[i+1]]]];
+                for(NSUInteger i=11;i<self.cheatRows.count;i++)
+                    [self.cheatStack addArrangedSubview:self.cheatRows[i]];
+            } else {
+                for(UIView *v in self.cheatRows)[self.cheatStack addArrangedSubview:v];
+            }
         }
         [self.gamePage addArrangedSubview:[self gridRow:@[o[6],o[7],o[8]]]];
     }

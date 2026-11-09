@@ -26,7 +26,7 @@ project(TiberianDawnApple VERSION 0.7.4 LANGUAGES C CXX)
 # All native Apple applications use the same public version and monotonically
 # increasing build number. Keep these values centralized so macOS, iPadOS,
 # local builds, and distributed releases cannot silently drift apart.
-set(TIBERIAN_DAWN_BUILD_VERSION "711")
+set(TIBERIAN_DAWN_BUILD_VERSION "712")
 
 option(BUILD_REMASTERTD "Build Tiberian Dawn remaster dll." OFF)
 option(BUILD_REMASTERRA "Build Red Alert remaster dll." OFF)

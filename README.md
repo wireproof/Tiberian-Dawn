@@ -10,6 +10,8 @@ An unofficial, free, community-maintained project.
 
 **Build 710 brings the Duo laptop command deck and Remastered graphics refinements.** The owner later verified the build 711 fix for duplicate Laptop and Remastered buttons with [seven Duo screenshots](docs/showcase/README.md#duo-laptop-command-deck--owner-supplied-after-build-711-installation). Build 712 arranges the laptop Cheats switches in two columns; its gameplay behavior is awaiting device verification. The public v0.7.4 IPA remains build 710. [Release notes](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4) · [Device test checklist](docs/TESTING-0.7.4.md) · [Bugs and features](https://github.com/wireproof/Tiberian-Dawn/issues)
 
+The first development build 712 install omitted packaged game artwork. A corrected full-asset build 712 is installed on Duo and awaits an in-game graphics check; the packaging regression is tracked in [#19](https://github.com/wireproof/Tiberian-Dawn/issues/19). Future signed development IPAs use [the guarded packaging script](scripts/package-ipados-development.sh) to preserve GameData, ModernArt, and RemasteredArt from a complete base IPA.
+
 The project has progressed substantially since the early v0.2.7 and v0.5.2 builds. The current feature set includes:
 
 - Adaptive portrait and landscape gameplay on iPhone and iPad, including distinct cover and inner display layouts on hinge-enabled devices.

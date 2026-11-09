@@ -923,8 +923,6 @@ static UIImage *WPBuildCameo(NSString *asset) {
 @property(nonatomic,strong) UISegmentedControl *category;
 @property(nonatomic,strong) UIButton *layoutButton;
 @property(nonatomic,strong) WPRadarMap *radarMap;
-@property(nonatomic,strong) UIButton *artworkButton;
-@property(nonatomic,strong) UIButton *laptopButton;
 @property(nonatomic,strong) UIScrollView *productionStrip;
 @property(nonatomic,strong) UIScrollView *groupsStrip;
 @property(nonatomic,strong) NSMutableArray<UIButton*> *productionButtons;
@@ -963,8 +961,6 @@ static UIImage *WPBuildCameo(NSString *asset) {
             [control setTitleTextAttributes:@{NSForegroundColorAttributeName:UIColor.blackColor} forState:UIControlStateSelected];
             [self addSubview:control];
         }
-        self.artworkButton=[self button:@"Remastered" tag:900];[self addSubview:self.artworkButton];
-        self.laptopButton=[self button:@"Laptop On" tag:901];[self addSubview:self.laptopButton];
         self.verticalMenu=[NSUserDefaults.standardUserDefaults boolForKey:@"Wireproof.LaptopVerticalMenu"];
         self.layoutButton=[self button:@"Layout: Horizontal" tag:902];[self addSubview:self.layoutButton];
         self.radarMap=[WPRadarMap new];[self addSubview:self.radarMap];
@@ -991,7 +987,6 @@ static UIImage *WPBuildCameo(NSString *asset) {
     }return self;
 }
 - (void)pressed:(UIButton*)button {
-    if(button.tag==900||button.tag==901){WPOrders::Shared().enqueue(button.tag==900?WPOrders::ToggleArtwork:WPOrders::ToggleLaptop);return;}
     if(button.tag==902){self.verticalMenu=!self.verticalMenu;
         [NSUserDefaults.standardUserDefaults setBool:self.verticalMenu forKey:@"Wireproof.LaptopVerticalMenu"];
         [self refresh];return;}
@@ -1052,12 +1047,9 @@ static UIImage *WPBuildCameo(NSString *asset) {
     self.layoutButton.frame=CGRectMake(inset,74,width,32);
     [self.layoutButton setTitle:self.verticalMenu?@"Layout: Vertical":@"Layout: Horizontal" forState:UIControlStateNormal];
     self.radarMap.hidden=page!=2;
-    [self.artworkButton setTitle:state.remastered?@"Remastered On":@"Remastered Off" forState:UIControlStateNormal];
-    CGFloat footerY=self.bounds.size.height-MAX(54,self.window.safeAreaInsets.bottom+50);
-    self.radarMap.frame=CGRectMake(inset,76,width,MAX(60,footerY-84));
+    CGFloat contentBottom=self.bounds.size.height-MAX(10,self.window.safeAreaInsets.bottom+8);
+    self.radarMap.frame=CGRectMake(inset,76,width,MAX(60,contentBottom-84));
     if(page==2)[self.radarMap updateRadar:WPOrders::Shared().radarSnapshot()];
-    self.artworkButton.frame=CGRectMake(inset,footerY,(width-8)/2,44);
-    self.laptopButton.frame=CGRectMake(inset+(width-8)/2+8,footerY,(width-8)/2,44);
     auto all=WPOrders::Shared().productionSnapshot();
     std::vector<WPOrders::Production> items;
     for(const auto&item:all)
@@ -1083,7 +1075,7 @@ static UIImage *WPBuildCameo(NSString *asset) {
             [self.productionStrip addSubview:button];[self.productionButtons addObject:button];}
     }
     self.productionStrip.hidden=!buildMode;
-    self.productionStrip.frame=CGRectMake(inset,114,width,MAX(80,footerY-122));
+    self.productionStrip.frame=CGRectMake(inset,114,width,MAX(80,contentBottom-122));
     for(NSUInteger i=0;i<self.productionButtons.count;++i){UIButton *button=self.productionButtons[i];
         const auto&item=items[i];NSString *name=[NSString stringWithCString:item.name.c_str() encoding:NSISOLatin1StringEncoding]?:@"Unit";
         NSString *title=item.queued?[NSString stringWithFormat:@"%@ ×%d",name,item.queued]:name;

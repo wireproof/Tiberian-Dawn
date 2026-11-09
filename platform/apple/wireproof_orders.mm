@@ -3,19 +3,28 @@
 #include "common/wireproof_orders.h"
 #include "common/wireproof_camera.h"
 #include "common/wireproof_cheats.h"
+#include "common/wireproof_laptop.h"
 #include "third_party/SDL2/include/SDL.h"
 #include "third_party/SDL2/include/SDL_syswm.h"
 
 // Hinge capability identifies Duo; window aspect ratio alone also matches iPads.
 // Keep the positive observation during temporary hierarchy transitions (nil hinge).
 static BOOL WPHasHinge=NO;
+static BOOL WPHingePartiallyOpen=NO;
 static void WPObserveHinge(UIView *view) {
     if (@available(iOS 27.1, *)) {
         UIHingeInteraction *interaction=[[UIHingeInteraction alloc] initWithUpdateHandler:^(UIHingeInteraction *sender, UIHingeInteractionUpdate *update) {
             if(update.hinge)WPHasHinge=YES;
+            WPHingePartiallyOpen=update.hinge && update.hinge.status==UIHingeStatusPartiallyOpen;
         }];
         [view addInteraction:interaction];
     }
+}
+static void WPRefreshLaptopPosture(UIWindow *window) {
+    CGSize size=window.bounds.size;
+    UIEdgeInsets safe=window.safeAreaInsets;
+    const bool cover=WPCamera::CoverDisplay(size.width,size.height,safe.left,safe.top,safe.right,safe.bottom);
+    WPLaptop::SetFoldedPortrait(WPHingePartiallyOpen && !cover && size.height>size.width*1.05);
 }
 
 // Copy actual decoded MOUSE.SHP frames, using the active game palette.
@@ -772,6 +781,125 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
 }
 @end
 
+// The laptop preview keeps the battlefield on the upper half of the inner
+// display and makes production and orders reachable from the lower half.
+@interface WPLaptopDock : UIView
+@property(nonatomic,strong) UILabel *heading;
+@property(nonatomic,strong) UIScrollView *productionStrip;
+@property(nonatomic,strong) UIScrollView *groupsStrip;
+@property(nonatomic,strong) NSMutableArray<UIButton*> *productionButtons;
+@property(nonatomic,strong) NSArray<UIButton*> *commands;
+@property(nonatomic,strong) NSArray<UIButton*> *rallies;
+@property(nonatomic,strong) NSArray<UIButton*> *groups;
+@property(nonatomic,copy) NSArray<NSString*> *productionKeys;
+@end
+@implementation WPLaptopDock
+- (UIButton*)button:(NSString*)title tag:(NSInteger)tag {
+    UIButton *button=[UIButton buttonWithType:UIButtonTypeSystem];button.tag=tag;
+    [button setTitle:title forState:UIControlStateNormal];
+    button.titleLabel.font=[UIFont systemFontOfSize:14 weight:UIFontWeightSemibold];
+    button.titleLabel.adjustsFontSizeToFitWidth=YES;button.titleLabel.minimumScaleFactor=.7;
+    button.titleLabel.numberOfLines=2;button.titleLabel.textAlignment=NSTextAlignmentCenter;
+    button.tintColor=UIColor.whiteColor;button.backgroundColor=[UIColor colorWithWhite:.19 alpha:1];
+    button.layer.cornerRadius=8;button.accessibilityLabel=title;
+    [button addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];
+    return button;
+}
+- (instancetype)initWithFrame:(CGRect)frame {
+    if((self=[super initWithFrame:frame])) {
+        self.backgroundColor=[UIColor colorWithWhite:.05 alpha:.98];
+        self.layer.borderColor=UIColor.darkGrayColor.CGColor;self.layer.borderWidth=1;
+        self.heading=[UILabel new];self.heading.textColor=UIColor.whiteColor;
+        self.heading.font=[UIFont systemFontOfSize:15 weight:UIFontWeightBold];
+        [self addSubview:self.heading];
+        self.productionStrip=[UIScrollView new];self.productionStrip.showsHorizontalScrollIndicator=YES;
+        [self addSubview:self.productionStrip];self.productionButtons=[NSMutableArray new];
+        self.groupsStrip=[UIScrollView new];self.groupsStrip.showsHorizontalScrollIndicator=YES;
+        [self addSubview:self.groupsStrip];
+        NSMutableArray *commands=[NSMutableArray new];
+        NSArray *names=@[@"Stop",@"Guard",@"Scatter",@"Force Attack",@"Force Move",@"Cancel"];
+        NSInteger kinds[]={WPOrders::Stop,WPOrders::Guard,WPOrders::Scatter,WPOrders::Attack,WPOrders::Move,WPOrders::Cancel};
+        for(int i=0;i<6;++i){UIButton *button=[self button:names[i] tag:kinds[i]];[self addSubview:button];[commands addObject:button];}
+        self.commands=commands;
+        NSMutableArray *rallies=[NSMutableArray new];
+        NSArray *rallyNames=@[@"Infantry rally",@"Vehicle rally",@"Clear rallies"];
+        NSInteger rallyKinds[]={WPOrders::RallyInfantry,WPOrders::RallyVehicles,WPOrders::ClearRallies};
+        for(int i=0;i<3;++i){UIButton *button=[self button:rallyNames[i] tag:rallyKinds[i]];[self addSubview:button];[rallies addObject:button];}
+        self.rallies=rallies;
+        NSMutableArray *groups=[NSMutableArray new];
+        for(int i=0;i<9;++i){UIButton *button=[self button:[NSString stringWithFormat:@"%d",i+1] tag:200+i];
+            UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdGroup:)];
+            hold.minimumPressDuration=.5;hold.cancelsTouchesInView=YES;[button addGestureRecognizer:hold];
+            [self.groupsStrip addSubview:button];[groups addObject:button];}
+        self.groups=groups;
+    }return self;
+}
+- (void)pressed:(UIButton*)button {
+    if(button.tag>=1000){
+        int value=(int)button.tag-1000;
+        WPOrders::Shared().enqueueProduction(false,value/1000,value%1000);
+    }else if(button.tag>=200){WPOrders::Shared().enqueue(WPOrders::Recall,(int)button.tag-200);}
+    else WPOrders::Shared().enqueue((WPOrders::Kind)button.tag);
+}
+- (void)holdProduction:(UILongPressGestureRecognizer*)hold {
+    if(hold.state!=UIGestureRecognizerStateBegan)return;
+    int value=(int)hold.view.tag-1000;
+    if(WPOrders::Shared().enqueueProduction(true,value/1000,value%1000))
+        [[UISelectionFeedbackGenerator new] selectionChanged];
+}
+- (void)holdGroup:(UILongPressGestureRecognizer*)hold {
+    if(hold.state==UIGestureRecognizerStateBegan && WPOrders::Shared().enqueue(WPOrders::Assign,(int)hold.view.tag-200))
+        [[UISelectionFeedbackGenerator new] selectionChanged];
+}
+- (void)refresh {
+    if(!self.window)return;
+    WPOrders::Snapshot state=WPOrders::Shared().snapshot();
+    self.hidden=!WPLaptop::Active() || !state.active || UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
+    if(self.hidden)return;
+    CGSize size=self.window.bounds.size;CGFloat top=ceil(size.height*.50);
+    self.frame=CGRectMake(0,top,size.width,size.height-top);
+    CGFloat inset=MAX(10,self.window.safeAreaInsets.left+8);
+    CGFloat width=MAX(1,size.width-inset-MAX(10,self.window.safeAreaInsets.right+8));
+    self.heading.frame=CGRectMake(inset,8,width,24);
+    self.heading.text=state.rally==1?@"Infantry rally · tap battlefield":state.rally==2?@"Vehicle rally · tap battlefield":
+        state.force==1?@"Force Attack · tap target":state.force==2?@"Force Move · tap target":
+        [NSString stringWithFormat:@"Command deck · %d selected",state.selected];
+    auto items=WPOrders::Shared().productionSnapshot();
+    NSMutableArray<NSString*> *keys=[NSMutableArray new];
+    for(const auto&item:items)[keys addObject:[NSString stringWithFormat:@"%d:%d",item.type,item.id]];
+    if(![keys isEqualToArray:self.productionKeys]) {
+        for(UIButton *button in self.productionButtons)[button removeFromSuperview];
+        [self.productionButtons removeAllObjects];self.productionKeys=keys;
+        for(NSUInteger i=0;i<items.size();++i){UIButton *button=[self button:@"" tag:1000+items[i].type*1000+items[i].id];
+            button.accessibilityHint=@"Tap to queue. Hold to cancel queued units and refund production.";
+            UILongPressGestureRecognizer *hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(holdProduction:)];
+            hold.minimumPressDuration=.5;hold.cancelsTouchesInView=YES;[button addGestureRecognizer:hold];
+            [self.productionStrip addSubview:button];[self.productionButtons addObject:button];}
+    }
+    self.productionStrip.frame=CGRectMake(inset,38,width,56);
+    for(NSUInteger i=0;i<self.productionButtons.count;++i){UIButton *button=self.productionButtons[i];
+        const auto&item=items[i];NSString *name=[NSString stringWithCString:item.name.c_str() encoding:NSISOLatin1StringEncoding]?:@"Unit";
+        NSString *title=item.queued?[NSString stringWithFormat:@"%@ ×%d",name,item.queued]:name;
+        [button setTitle:title forState:UIControlStateNormal];button.accessibilityLabel=title;
+        button.frame=CGRectMake(i*132,0,126,48);
+    }
+    self.productionStrip.contentSize=CGSizeMake(MAX(width,self.productionButtons.count*132),52);
+    CGFloat buttonWidth=(width-16)/3;
+    for(int i=0;i<6;++i){UIButton *button=self.commands[i];
+        button.frame=CGRectMake(inset+(i%3)*(buttonWidth+8),102+(i/3)*49,buttonWidth,44);
+        button.enabled=i==5 || state.selected>0;button.alpha=button.enabled?1:.45;
+        button.backgroundColor=((i==3&&state.force==1)||(i==4&&state.force==2))?UIColor.systemBlueColor:[UIColor colorWithWhite:.19 alpha:1];
+    }
+    for(int i=0;i<3;++i){UIButton *button=self.rallies[i];
+        button.frame=CGRectMake(inset+i*(buttonWidth+8),204,buttonWidth,44);
+        button.backgroundColor=((i==0&&state.rally==1)||(i==1&&state.rally==2))?UIColor.systemBlueColor:[UIColor colorWithWhite:.19 alpha:1];
+    }
+    self.groupsStrip.frame=CGRectMake(inset,258,width,52);
+    for(int i=0;i<9;++i)self.groups[i].frame=CGRectMake(i*54,0,48,44);
+    self.groupsStrip.contentSize=CGSizeMake(MAX(width,9*54),48);
+}
+@end
+
 extern "C" void WP_InstallOrdersPanel(void) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
@@ -779,8 +907,9 @@ extern "C" void WP_InstallOrdersPanel(void) {
             static WPOrdersPanel *panel;
             static WPGameToolbar *gameToolbar;
             static WPMapJoystick *joystick;
+            static WPLaptopDock *laptopDock;
             if (UIApplication.sharedApplication.applicationState!=UIApplicationStateActive) {
-                WPOrders::Shared().publish(false,0); panel.hidden=YES;gameToolbar.hidden=YES;joystick.hidden=YES; return;
+                WPOrders::Shared().publish(false,0); panel.hidden=YES;gameToolbar.hidden=YES;joystick.hidden=YES;laptopDock.hidden=YES; return;
             }
             static Uint32 gameWindowID=0;
             SDL_Window *sdl=gameWindowID?SDL_GetWindowFromID(gameWindowID):nullptr;
@@ -798,9 +927,13 @@ extern "C" void WP_InstallOrdersPanel(void) {
             }
             if(!gameToolbar || gameToolbar.superview!=window){[gameToolbar removeFromSuperview];gameToolbar=[WPGameToolbar new];[window addSubview:gameToolbar];}
             if(!joystick || joystick.superview!=window){[joystick removeFromSuperview];joystick=[WPMapJoystick new];[window addSubview:joystick];}
+            if(!laptopDock || laptopDock.superview!=window){[laptopDock removeFromSuperview];laptopDock=[WPLaptopDock new];[window addSubview:laptopDock];}
+            WPRefreshLaptopPosture(window);
             [joystick refresh];[window bringSubviewToFront:joystick];
             [panel refresh];
             [gameToolbar refresh];
+            [laptopDock refresh];
+            if(!laptopDock.hidden){panel.hidden=YES;gameToolbar.hidden=YES;joystick.hidden=YES;[window bringSubviewToFront:laptopDock];}
             // The root view can be reordered during keyboard/window changes.
             // Only raise inside this game window; never steal key-window focus.
             if (!panel.hidden) [window bringSubviewToFront:panel];

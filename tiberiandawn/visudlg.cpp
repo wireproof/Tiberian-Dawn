@@ -39,6 +39,7 @@
 #include "common/framelimit.h"
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #include "common/settings.h"
+#include "common/wireproof_laptop.h"
 #include "common/video.h"
 #ifdef VISIONOS_PORT
 #include "common/ipados_touch.h"
@@ -130,7 +131,7 @@ int VisualControlsClass::Init(void)
  *=============================================================================================*/
 void VisualControlsClass::Process(void)
 {
-    static int _titles[4] = {TXT_BRIGHTNESS, TXT_COLOR, TXT_CONTRAST, TXT_TINT};
+    static int _titles[4] = {TXT_BRIGHTNESS, TXT_CONTRAST, TXT_COLOR, TXT_TINT};
 
     enum
     {
@@ -211,6 +212,7 @@ void VisualControlsClass::Process(void)
     char touch_edge_text[48];
     char touch_scroll_text[48];
     char touch_selection_text[48];
+    char laptop_text[48];
     std::snprintf(touch_edge_text,
                   sizeof(touch_edge_text),
                   TiberianDawn_LocalizedText("touch_edge_scroll_format"),
@@ -225,6 +227,9 @@ void VisualControlsClass::Process(void)
                   Three_Level_Text(Settings.Touch.SelectionTolerance,
                                    "vision_level_precise",
                                    "vision_level_forgiving"));
+    std::snprintf(laptop_text, sizeof(laptop_text),
+                  TiberianDawn_LocalizedText("touch_laptop_format"),
+                  TiberianDawn_LocalizedText(Settings.Touch.LaptopMode ? "state_on" : "state_off"));
     TextButtonClass touchedgebtn(BUTTON_IPAD_TOUCH_EDGE_SCROLL,
                                  touch_edge_text,
                                  TPF_6PT_GRAD | TPF_NOSHADOW,
@@ -253,6 +258,10 @@ void VisualControlsClass::Process(void)
                                  Option_Y + 126 * factor,
                                  88 * factor,
                                  11 * factor);
+    TextButtonClass laptopbtn(BUTTON_IPAD_LAPTOP_MODE, laptop_text,
+                              TPF_6PT_GRAD | TPF_NOSHADOW,
+                              Option_X + 15 * factor, Option_Y + 142 * factor,
+                              186 * factor, 11 * factor);
 #endif
 #ifdef VISIONOS_PORT
     char look_scroll_text[48];
@@ -327,6 +336,7 @@ void VisualControlsClass::Process(void)
     touchscrollbtn.Add_Tail(optionsbtn);
     touchselectionbtn.Add_Tail(optionsbtn);
     touchhelpbtn.Add_Tail(optionsbtn);
+    laptopbtn.Add_Tail(optionsbtn);
 #endif
 #ifdef VISIONOS_PORT
     lookscrollbtn.Add_Tail(optionsbtn);
@@ -347,7 +357,7 @@ void VisualControlsClass::Process(void)
     /*
     **	Color (saturation) control.
     */
-    SliderClass color(BUTTON_COLOR, Slider_X, Slider_Y + (Slider_Y_Spacing * 1), Slider_Width, Slider_Height);
+    SliderClass color(BUTTON_COLOR, Slider_X, Slider_Y + (Slider_Y_Spacing * 2), Slider_Width, Slider_Height);
     color.Set_Thumb_Size(20);
     color.Set_Value(Options.Get_Color());
     color.Add_Tail(optionsbtn);
@@ -355,7 +365,7 @@ void VisualControlsClass::Process(void)
     /*
     **	Contrast control.
     */
-    SliderClass contrast(BUTTON_CONTRAST, Slider_X, Slider_Y + (Slider_Y_Spacing * 2), Slider_Width, Slider_Height);
+    SliderClass contrast(BUTTON_CONTRAST, Slider_X, Slider_Y + (Slider_Y_Spacing * 1), Slider_Width, Slider_Height);
     contrast.Set_Thumb_Size(20);
     contrast.Set_Value(Options.Get_Contrast());
     contrast.Add_Tail(optionsbtn);
@@ -396,8 +406,8 @@ void VisualControlsClass::Process(void)
     buttons[5] = &optionsbtn;
 
     buttonsliders[0] = &brightness;
-    buttonsliders[1] = &color;
-    buttonsliders[2] = &contrast;
+    buttonsliders[1] = &contrast;
+    buttonsliders[2] = &color;
     buttonsliders[3] = &tint;
     buttonsliders[4] = NULL;
     buttonsliders[5] = NULL;
@@ -518,6 +528,9 @@ void VisualControlsClass::Process(void)
                           Artwork_Mode_Text(Settings.Video.ArtworkMode));
             artworkbtn.Set_Text(artwork_text, false);
             artworkbtn.Flag_To_Redraw();
+            // The Remastered scene is captured during a complete map draw.
+            // Presenting the old framebuffer alone leaves only its filter visible.
+            Map.Flag_To_Redraw(true);
             Refresh_Video_Layout();
             break;
 
@@ -573,6 +586,16 @@ void VisualControlsClass::Process(void)
             Keyboard->Clear();
             display = true;
             partial = true;
+            break;
+        case (BUTTON_IPAD_LAPTOP_MODE | KN_BUTTON):
+            Settings.Touch.LaptopMode = !Settings.Touch.LaptopMode;
+            WPLaptop::SetEnabled(Settings.Touch.LaptopMode);
+            std::snprintf(laptop_text, sizeof(laptop_text),
+                          TiberianDawn_LocalizedText("touch_laptop_format"),
+                          TiberianDawn_LocalizedText(Settings.Touch.LaptopMode ? "state_on" : "state_off"));
+            laptopbtn.Set_Text(laptop_text, false);
+            laptopbtn.Flag_To_Redraw();
+            Refresh_Video_Layout();
             break;
 #endif
 #ifdef VISIONOS_PORT

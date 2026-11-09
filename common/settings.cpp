@@ -1,5 +1,6 @@
 #include "wwstd.h"
 #include "settings.h"
+#include "wireproof_laptop.h"
 #include "ini.h"
 #include "miscasm.h"
 
@@ -24,6 +25,7 @@ SettingsClass::SettingsClass()
     Touch.EdgeScroll = true;
     Touch.ScrollSpeed = 1;
     Touch.SelectionTolerance = 1;
+    Touch.LaptopMode = false;
     Vision.LookToScroll = true;
     Vision.ScrollSpeed = 1;
     Vision.EdgeSensitivity = 1;
@@ -87,6 +89,8 @@ void SettingsClass::Load(INIClass& ini)
     Touch.ScrollSpeed = Bound(ini.Get_Int("iPadOS", "TouchScrollSpeed", Touch.ScrollSpeed), 0, 2);
     Touch.SelectionTolerance =
         Bound(ini.Get_Int("iPadOS", "TouchSelectionTolerance", Touch.SelectionTolerance), 0, 2);
+    Touch.LaptopMode = ini.Get_Bool("iPadOS", "LaptopMode", Touch.LaptopMode);
+    WPLaptop::SetEnabled(Touch.LaptopMode);
 
     /*
     ** Video settings
@@ -178,6 +182,7 @@ void SettingsClass::Save(INIClass& ini)
     ini.Put_Bool("iPadOS", "TouchEdgeScroll", Touch.EdgeScroll);
     ini.Put_Int("iPadOS", "TouchScrollSpeed", Touch.ScrollSpeed);
     ini.Put_Int("iPadOS", "TouchSelectionTolerance", Touch.SelectionTolerance);
+    ini.Put_Bool("iPadOS", "LaptopMode", Touch.LaptopMode);
 
     /*
     ** Video settings

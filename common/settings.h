@@ -55,6 +55,7 @@ public:
         bool EdgeScroll;
         int ScrollSpeed;
         int SelectionTolerance;
+        bool LaptopMode;
     } Touch;
 
     struct

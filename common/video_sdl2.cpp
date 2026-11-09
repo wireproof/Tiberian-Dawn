@@ -60,6 +60,7 @@
 
 #ifdef IPADOS_PORT
 #include "../platform/apple/ipados_platform.h"
+#include "wireproof_laptop.h"
 #endif
 #ifdef TIBERIAN_DAWN_APPLE_PORT
 #include "hd_asset_pack.h"
@@ -587,7 +588,9 @@ static void Update_HWCursor_Settings(bool geometry_only = false)
                                         window_points_h,
                                         Presentation_Width(),
                                         Presentation_Height(),
-                                        battlefield_active ? IPadLayoutInsets{0,0,0,0} : IPadLayoutInsets{safe_left, safe_top, safe_right, safe_bottom},
+                                        battlefield_active ? IPadLayoutInsets{0,0,0,
+                                            WPLaptop::Active() ? renderer_output_h/2 : 0}
+                                                           : IPadLayoutInsets{safe_left, safe_top, safe_right, safe_bottom},
                                         false, // Fractional fit avoids menu shrinkage after returning from gameplay.
                                         false, // Fixed campaign artwork always fits without stretching.
                                         !battlefield_active); // Center presentations across the full window width.

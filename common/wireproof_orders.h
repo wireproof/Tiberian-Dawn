@@ -4,18 +4,31 @@
 #include <mutex>
 #include <deque>
 #include <cmath>
+#include <string>
+#include <vector>
 namespace WPOrders {
 #ifdef MACOS_PORT
 int LoadUIScale();
 #endif
-enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies };
+enum Kind { Stop, Guard, Scatter, Attack, Move, Cancel, Recall, Assign, Add, Center, RallyInfantry, RallyVehicles, ClearRallies, QueueUnit, CancelUnit };
 struct Stick { float x=0, y=0, intensity=0; };
-struct Command { Kind kind; int group; };
+struct Command {
+    Kind kind; int group; int itemType; int itemID;
+    Command() : kind(Cancel),group(0),itemType(0),itemID(0) {}
+    Command(Kind command,int selectedGroup,int type=0,int id=0)
+        : kind(command),group(selectedGroup),itemType(type),itemID(id) {}
+};
+struct Production {
+    int type; int id; std::string name; int queued;
+    Production(int itemType,int itemID,const std::string& itemName,int count)
+        : type(itemType),id(itemID),name(itemName),queued(count) {}
+};
 struct Snapshot { bool active; int selected; int force; int rally; Snapshot(bool a=false,int s=0,int f=0):active(a),selected(s),force(f),rally(0){} };
 // UI threads only enqueue intentions. The game thread owns all game objects.
 class State {
     std::mutex mutex;
     std::deque<Command> pending;
+    std::vector<Production> production;
     Snapshot state = {false,0,0};
     bool pan_held = false;
     bool map_drag = false;
@@ -32,7 +45,7 @@ public:
     void publish(bool active, int selected) {
         std::lock_guard<std::mutex> lock(mutex);
         state.active=active; state.selected=selected;
-        if (!active) { pending.clear(); state.force=0; state.rally=0; pan_held=false; joystick={}; }
+        if (!active) { pending.clear(); production.clear(); state.force=0; state.rally=0; pan_held=false; joystick={}; }
         if (!selected) state.force=0;
     }
     void setZoomQuarters(int value) { std::lock_guard<std::mutex> lock(mutex); zoom_quarters=value<2?2:value>12?12:value; }
@@ -55,6 +68,17 @@ public:
     }
     Stick stick() { std::lock_guard<std::mutex> lock(mutex); return joystick; }
     Snapshot snapshot() { std::lock_guard<std::mutex> lock(mutex); return state; }
+    void publishProduction(std::vector<Production> value) {
+        std::lock_guard<std::mutex> lock(mutex); production=std::move(value);
+    }
+    std::vector<Production> productionSnapshot() {
+        std::lock_guard<std::mutex> lock(mutex); return production;
+    }
+    bool enqueueProduction(bool cancel,int type,int id) {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (!state.active || pending.size()>=32 || type<0 || id<0) return false;
+        pending.push_back({cancel?CancelUnit:QueueUnit,0,type,id}); return true;
+    }
     bool enqueue(Kind kind, int group=0) {
         std::lock_guard<std::mutex> lock(mutex);
         if (!state.active || pending.size()>=32 || group<0 || group>9) return false;

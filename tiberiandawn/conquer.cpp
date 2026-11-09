@@ -110,8 +110,44 @@ static void WP_ProcessOrders() {
     WPCheats::Shared().publish(Shared().snapshot().active && GameToPlay==GAME_NORMAL && PlayerPtr,
         PlayerPtr?PlayerPtr->Available_Money():0,PlayerPtr?PlayerPtr->Power:0,PlayerPtr?PlayerPtr->Drain:0);
     if(Shared().snapshot().active) WP_Production_Tick();
+    if (Shared().snapshot().active && PlayerPtr) {
+        std::vector<Production> production;
+        for (int column=0; column<SidebarClass::COLUMNS; ++column) {
+            const auto& strip=Map.Column[column];
+            for (int index=0; index<strip.BuildableCount; ++index) {
+                const auto& item=strip.Buildables[index];
+                if (item.BuildableType!=RTTI_INFANTRYTYPE && item.BuildableType!=RTTI_UNITTYPE
+                    && item.BuildableType!=RTTI_AIRCRAFTTYPE) continue;
+                const auto* techno=Fetch_Techno_Type(item.BuildableType,item.BuildableID);
+                if (techno) {
+                    const char* name=Text_String(techno->Full_Name());
+                    production.emplace_back(int(item.BuildableType),item.BuildableID,name?name:"Unit",
+                        WP_Queue_Count(item.BuildableType,item.BuildableID));
+                }
+            }
+        }
+        Shared().publishProduction(std::move(production));
+    }
     Command command;
     while (Shared().take(command)) {
+        if (command.kind==QueueUnit || command.kind==CancelUnit) {
+            bool available=false,building=false;
+            for (int column=0; column<SidebarClass::COLUMNS; ++column) {
+                const auto& strip=Map.Column[column];
+                for (int index=0; index<strip.BuildableCount; ++index) {
+                    const auto& item=strip.Buildables[index];
+                    if (int(item.BuildableType)==command.itemType && item.BuildableID==command.itemID) {
+                        available=true;building=item.Factory!=-1;break;
+                    }
+                }
+            }
+            if (available) {
+                if (command.kind==QueueUnit) WP_Queue_Add(command.itemType,command.itemID);
+                else WP_Queue_Cancel(command.itemType,command.itemID,building);
+                Map.Flag_To_Redraw(true);
+            }
+            continue;
+        }
         if(command.kind==RallyInfantry || command.kind==RallyVehicles){Map.Cancel_Player_Action();Shared().rally(command.kind==RallyInfantry?1:2);continue;}
         if(command.kind==ClearRallies){WP_Rally_Clear();Map.Flag_To_Redraw(true);continue;}
         if (command.kind==Attack || command.kind==Move) {

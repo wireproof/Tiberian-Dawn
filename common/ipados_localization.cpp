@@ -54,6 +54,7 @@ const Translation Translations[] = {
     {"touch_scroll_speed_format", "Touch scroll: %s", "Touch-Tempo: %s"},
     {"touch_selection_format", "Selection: %s", "Auswahl: %s"},
     {"touch_help_button", "Touch controls", "Touch-Steuerung"},
+    {"touch_laptop_format", "Laptop deck: %s", "Laptop-Deck: %s"},
     {"touch_help_title", "Touch Controls", "Touch-Steuerung"},
     {"touch_help_message",
      "Tap: select or issue a command\nDrag one finger on terrain: select several units\nDrag two fingers: move the map\nDrag a selection to an edge: continue scrolling\nPress and hold or tap with two fingers: cancel / right click\n\nApple Pencil: precise selection; double-tap: cancel / right click\nPencil Pro squeeze: back; hold squeeze and move: pan the map\n\nPinch no longer changes the interface during play. UI scale remains available in Visual Controls.",

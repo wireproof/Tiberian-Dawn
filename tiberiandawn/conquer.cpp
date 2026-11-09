@@ -102,6 +102,20 @@ void Keyboard_Process(KeyNumType& input);
 #endif
 static void WP_ProcessOrders() {
     using namespace WPOrders;
+#ifdef IPADOS_PORT
+    static bool laptopWasActive=false;
+    static bool sidebarBeforeLaptop=false;
+    const bool laptopNow=InMainLoop && GameActive && WPLaptop::Active();
+    if (laptopNow && !laptopWasActive) {
+        sidebarBeforeLaptop=Map.IsSidebarActive;
+        Map.SidebarClass::Activate(WPLaptop::SidebarVisible().load()?1:0);
+    } else if (!laptopNow && laptopWasActive) {
+        Map.SidebarClass::Activate(sidebarBeforeLaptop?1:0);
+    } else if (laptopNow && Map.IsSidebarActive!=WPLaptop::SidebarVisible().load()) {
+        Map.SidebarClass::Activate(WPLaptop::SidebarVisible().load()?1:0);
+    }
+    laptopWasActive=laptopNow;
+#endif
     Shared().publish(InMainLoop && GameActive && GameInFocus && SpecialDialog==SDLG_NONE && !PlaybackGame,
                      CurrentObject.Count());
     Shared().publishArtwork(Settings.Video.ArtworkMode != 0);

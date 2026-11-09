@@ -48,6 +48,16 @@ float3 srgb(float3 c){return select((pow(max(c,0),float3(5.0/12))*211-11)/200,c*
 float3 hsv(float3 c){float4 K=float4(0,-1.0/3,2.0/3,-1);float4 p=c.g>=c.b?float4(c.gb,K.xy):float4(c.bg,K.wz);float4 q=c.r>=p.x?float4(c.r,p.yzx):float4(p.xyw,c.r);float d=q.x-min(q.w,q.y);return float3(abs(q.z+(q.w-q.y)/(6*d+1e-10)),d/(q.x+1e-10),q.x);}
 float3 levels(float3 c,float a,float b,float z,float lo,float hi){return mix(float3(lo),float3(hi),pow(clamp((c-a)/(z-a),0.0,1.0),float3(b)));}
 fragment float4 rf(V v [[stage_in]],texture2d<float> tex [[texture(0)]],constant P&p [[buffer(0)]]){
+ if(p.recolor==2){
+  float2 q=v.uv*float2(p.a[0],p.a[1]);
+  float2 a=float2(p.a[2],p.a[3]),b=float2(p.a[4],p.a[5]),ab=b-a;
+  float t=clamp(dot(q-a,ab)/max(dot(ab,ab),.0001),0.0,1.0);
+  float d=length(q-(a+t*ab));
+  float core=1.0-smoothstep(.25,.95,d),glow=1.0-smoothstep(.7,3.5,d);
+  float alpha=max(core,glow*.4)*p.a[9];if(alpha<.01)discard_fragment();
+  float3 rgb=mix(float3(p.a[6],p.a[7],p.a[8]),float3(1,.72,.72),core*.65);
+  return float4(rgb,alpha);
+ }
  constexpr sampler s(coord::normalized,address::clamp_to_edge,filter::linear);float4 c=tex.sample(s,v.uv);if(c.a<.001)discard_fragment();
  if(p.recolor){float3 rgb=linearize(c.rgb);float3 h=hsv(rgb);float lo=hsv(floor(float3(p.a[0],p.a[1],p.a[2])*255)/255).x;float hi=hsv(floor(float3(p.a[3],p.a[4],p.a[5])*255)/255).x;
  if(h.x>=lo&&h.x<=hi&&hi>lo){h.x=h.x/(hi-lo)*(hi-lo+2*p.a[6]);h+=float3(p.a[7],p.a[8],p.a[9]);float3 m=abs(fract(h.xxx+float3(1,2.0/3,1.0/3))*6-3);rgb=h.z*mix(float3(1),clamp(m-1,0.0,1.0),h.y);rgb=levels(rgb,p.a[10],p.a[11],p.a[12],p.a[13],p.a[14]);}
@@ -189,24 +199,25 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
  }
  }
  if(!healthOnly)return;
- // The Obelisk beam is a classic vector line, not a sprite. Its indexed
- // pixels sit underneath the remastered terrain, so composite the captured
- // line after world artwork using the same battlefield transform.
+ // The Obelisk beam is a classic vector line rather than an atlas sprite.
+ // Shade it at output resolution so the remastered beam has a smooth core and
+ // glow instead of magnified Bresenham pixels.
+ const std::vector<uint8_t> laserDummy={255,255,255,255};
+ id<MTLTexture>laserTexture=overlayTexture(device,1,1,laserDummy);
  for(const auto&line:scene.laserLines){
-  int x0=std::min(line.x,line.x1),y0=std::min(line.y,line.y1);
-  int w=std::abs(line.x1-line.x)+1,h=std::abs(line.y1-line.y)+1;
+  const int pad=4;
+  int x0=std::min(line.x,line.x1)-pad,y0=std::min(line.y,line.y1)-pad;
+  int w=std::abs(line.x1-line.x)+1+pad*2,h=std::abs(line.y1-line.y)+1+pad*2;
   if(w<=0||h<=0||w>2048||h>2048||size_t(w)*h>1024*1024)continue;
-  std::vector<uint8_t>rgba(size_t(w)*h*4,0);
-  int x=line.x-x0,y=line.y-y0,ex=line.x1-x0,ey=line.y1-y0;
-  int dx=std::abs(ex-x),dy=std::abs(ey-y),stepX=x<ex?1:-1,stepY=y<ey?1:-1,err=dx-dy;
-  while(true){size_t i=(size_t(y)*w+x)*4;rgba[i]=palette[line.color*3]<<2;rgba[i+1]=palette[line.color*3+1]<<2;rgba[i+2]=palette[line.color*3+2]<<2;rgba[i+3]=255;
-   if(x==ex&&y==ey)break;int e=2*err;if(e>-dy){err-=dy;x+=stepX;}if(e<dx){err+=dx;y+=stepY;}}
-  id<MTLTexture>tex=overlayTexture(device,w,h,rgba);if(!tex)continue;
+  if(!laserTexture)continue;
   int left=std::max(0,ox),top=std::max(0,int(oy+mapTop*sy)),right=std::min(dw,int(ox+mapRight*sx)),bottom=std::min(dh,int(oy+mapBottom*sy));if(right<=left||bottom<=top)continue;
-  struct Params{float a[20]={};uint32_t recolor=0;}p;
+  struct Params{float a[20]={};uint32_t recolor=2;}p;
+  p.a[0]=w;p.a[1]=h;p.a[2]=line.x-x0;p.a[3]=line.y-y0;p.a[4]=line.x1-x0;p.a[5]=line.y1-y0;
+  p.a[6]=(palette[line.color*3]<<2)/255.0f;p.a[7]=(palette[line.color*3+1]<<2)/255.0f;
+  p.a[8]=(palette[line.color*3+2]<<2)/255.0f;p.a[9]=line.color==0x7F?1.0f:.55f;
   [encoder setViewport:MTLViewport{ox+x0*zoom*sx,oy+(mapTop+(y0-mapTop)*zoom)*sy,w*zoom*sx,h*zoom*sy,0,1}];
   [encoder setScissorRect:MTLScissorRect{NSUInteger(left),NSUInteger(top),NSUInteger(right-left),NSUInteger(bottom-top)}];
-  [encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+  [encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:laserTexture atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
  }
  for(const auto&bar:scene.health){
   if(bar.width<=0)continue;std::vector<uint8_t>rgba(bar.width*4*4,0);

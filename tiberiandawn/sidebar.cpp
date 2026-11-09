@@ -79,6 +79,9 @@
 
 #include "function.h"
 #include "settings.h"
+#ifdef IPADOS_PORT
+#include "common/wireproof_laptop.h"
+#endif
 #if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
 #include "common/remastered_scene.h"
 static std::vector<uint8_t> WP_Sidebar_Pixels(int x, int y, int width, int height)
@@ -714,6 +717,11 @@ bool SidebarClass::Add(RTTIType type, int id, bool via_capture)
         int column = Which_Column(type);
 
         if (Column[column].Add(type, id, via_capture)) {
+#ifdef IPADOS_PORT
+            // Laptop production lives in the lower deck. New buildables must
+            // not reopen the classic sidebar over the upper battlefield.
+            if (!WPLaptop::Active() || WPLaptop::SidebarVisible().load())
+#endif
             Activate(1);
             IsToRedraw = true;
             Flag_To_Redraw(false);

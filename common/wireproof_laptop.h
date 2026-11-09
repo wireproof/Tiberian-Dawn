@@ -7,6 +7,8 @@ namespace WPLaptop {
 inline std::atomic<bool>& Enabled() { static std::atomic<bool> value{false}; return value; }
 inline std::atomic<bool>& FoldedPortrait() { static std::atomic<bool> value{false}; return value; }
 inline std::atomic<bool>& BuildOpen() { static std::atomic<bool> value{true}; return value; }
+// The lower production deck remains available when the classic upper sidebar is hidden.
+inline std::atomic<bool>& SidebarVisible() { static std::atomic<bool> value{false}; return value; }
 inline void SetEnabled(bool value) { Enabled().store(value, std::memory_order_relaxed); }
 inline void SetFoldedPortrait(bool value) { FoldedPortrait().store(value, std::memory_order_relaxed); }
 inline bool Active() {

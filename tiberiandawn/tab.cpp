@@ -269,7 +269,9 @@ void TabClass::Set_Active(int select)
     case 1:
 #ifdef IPADOS_PORT
         if (WPLaptop::Active()) {
-            WPLaptop::BuildOpen().store(!WPLaptop::BuildOpen().load());
+            const bool visible=!WPLaptop::SidebarVisible().load();
+            WPLaptop::SidebarVisible().store(visible);
+            Map.SidebarClass::Activate(visible?1:0);
             break;
         }
 #endif

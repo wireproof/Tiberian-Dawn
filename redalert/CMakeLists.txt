@@ -260,7 +260,6 @@ if(BUILD_VANILLARA)
             XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.wireproof.redalert.probe"
             XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
             XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST "NO")
-        set(RED_ALERT_DATA_DIR "" CACHE PATH "Private staged original Red Alert CD data")
         if(RED_ALERT_DATA_DIR)
             set(RED_ALERT_GAME_DATA
                 "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
@@ -329,4 +328,26 @@ if(BUILD_VANILLARA)
                     -g3 -fno-omit-frame-pointer)
             target_link_options(VanillaRA PUBLIC -fsanitize=address)
     endif()
+endif()
+
+if(RED_ALERT_COMBINED_APP)
+    # Keep Red Alert's globals in a separately loaded Mach-O image. The two
+    # engines define many of the same C++ symbols and cannot share one link.
+    set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=RedAlertEngineMain")
+    add_library(RedAlertEngine SHARED
+        ${REDALERT_SRC} ${REDALERT_NET_SRC} ${REDALERT_HEADERS}
+        ipados_bridge.mm ipados_engine_entry.cpp
+        ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp)
+    set_source_files_properties(ipados_bridge.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+    set(RA_ENGINE_LIBS ${VANILLA_LIBS})
+    list(REMOVE_ITEM RA_ENGINE_LIBS SDL2::SDL2main)
+    target_compile_definitions(RedAlertEngine PRIVATE ${VANILLA_DEFS} SDL_MAIN_HANDLED)
+    target_include_directories(RedAlertEngine PRIVATE ${CMAKE_SOURCE_DIR} .)
+    target_link_libraries(RedAlertEngine commonv ${RA_ENGINE_LIBS} ${STATIC_LIBS}
+        "-framework UIKit" "-framework AVFAudio" "-framework Metal"
+        "-framework MetalKit" "-framework ImageIO" "-framework QuartzCore"
+        "-framework UniformTypeIdentifiers")
+    set_target_properties(RedAlertEngine PROPERTIES
+        OUTPUT_NAME RedAlertEngine
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.wireproof.tiberiandawn.redalert-engine")
 endif()

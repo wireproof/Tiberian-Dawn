@@ -207,8 +207,16 @@ int DLL_Startup(const char* command_line_in)
 }
 #endif // REMASTER_BUILD
 
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+extern "C" bool WireproofChooseAndRunGame(int, char**, int*);
+#endif
+
 int main(int argc, char** argv)
 {
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+    int redAlertResult = EXIT_FAILURE;
+    if (WireproofChooseAndRunGame(argc, argv, &redAlertResult)) return redAlertResult;
+#endif
     UtfArgs args(argc, argv);
     CCDebugString("C&C95 - Starting up.\n");
 

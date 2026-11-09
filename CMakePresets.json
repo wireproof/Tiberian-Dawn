@@ -145,6 +145,18 @@
             }
         },
         {
+            "name": "ipados-combined-simulator",
+            "inherits": "ipados-simulator",
+            "displayName": "Tiberian Dawn and Red Alert combined iOS simulator probe",
+            "binaryDir": "${sourceDir}/build/ipados-combined-simulator",
+            "cacheVariables": {
+                "BUILD_VANILLATD": "ON",
+                "BUILD_VANILLARA": "OFF",
+                "RED_ALERT_COMBINED_APP": "ON",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "/private/tmp/TiberianDawnApple-Combined-Simulator-Products"
+            }
+        },
+        {
             "name": "visionos-simulator",
             "displayName": "Tiberian Dawn for Vision Pro — Simulator Prototype",
             "generator": "Xcode",
@@ -280,6 +292,13 @@
             "displayName": "Red Alert iOS simulator probe",
             "configuration": "Release",
             "targets": ["VanillaRA"]
+        },
+        {
+            "name": "ipados-combined-simulator",
+            "configurePreset": "ipados-combined-simulator",
+            "displayName": "Tiberian Dawn and Red Alert combined iOS simulator probe",
+            "configuration": "Release",
+            "targets": ["TiberianDawn"]
         },
         {
             "name": "visionos-simulator",

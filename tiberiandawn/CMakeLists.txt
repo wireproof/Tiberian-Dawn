@@ -261,6 +261,19 @@ if(BUILD_VANILLATD)
     # A target must include the icon for the custom command to run.
     add_executable(TiberianDawn ${TIBDAWN_SRC} ${TIBDAWN_NET_SRC} ${TIBDAWN_HEADERS} ${VANILLATD_RC} ${VANILLATD_ICON})
 
+    if(RED_ALERT_COMBINED_APP)
+        target_sources(TiberianDawn PRIVATE ${CMAKE_SOURCE_DIR}/platform/apple/game_selector.mm)
+        set_source_files_properties(${CMAKE_SOURCE_DIR}/platform/apple/game_selector.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+        target_compile_definitions(TiberianDawn PRIVATE WP_COMBINED_APP)
+        add_custom_command(TARGET TiberianDawn POST_BUILD
+            COMMAND ${CMAKE_COMMAND}
+                "-DRED_ALERT_ENGINE_ROOT=${CMAKE_BINARY_DIR}/redalert"
+                "-DRED_ALERT_CONFIGURATION=$<CONFIG>"
+                "-DRED_ALERT_APP=$<TARGET_BUNDLE_DIR:TiberianDawn>"
+                -P "${CMAKE_SOURCE_DIR}/platform/apple/copy_redalert_engine.cmake"
+            VERBATIM)
+    endif()
+
     # Optional: source/ad-hoc builds remain usable without an Apple cloud profile.
     set(WIREPROOF_ICLOUD_ENTITLEMENTS "" CACHE FILEPATH "Entitlements for an iCloud-provisioned Apple build")
     if(APPLE_NATIVE_PORT AND WIREPROOF_ICLOUD_ENTITLEMENTS)

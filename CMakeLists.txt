@@ -119,6 +119,13 @@ add_feature_info(RemasterTD BUILD_REMASTERTD, "Remastered Tiberian Dawn dll")
 add_feature_info(RemasterRA BUILD_REMASTERRA "Remastered Red Alert dll")
 add_feature_info(TiberianDawn BUILD_VANILLATD "Tiberian Dawn executable")
 add_feature_info(VanillaRA BUILD_VANILLARA "Red Alert executable")
+option(RED_ALERT_COMBINED_APP "Build the experimental iOS game chooser with both engines" OFF)
+add_feature_info(RedAlertCombinedApp RED_ALERT_COMBINED_APP "Experimental combined Tiberian Dawn and Red Alert iOS app")
+if(RED_ALERT_COMBINED_APP AND (NOT IPADOS_PORT OR NOT BUILD_VANILLATD))
+    message(FATAL_ERROR "RED_ALERT_COMBINED_APP requires IPADOS_PORT and BUILD_VANILLATD")
+endif()
+set(RED_ALERT_DATA_DIR "" CACHE PATH "Private staged original Red Alert CD data")
+set(TIBERIAN_DAWN_DATA_DIR "" CACHE PATH "Private prepared original Tiberian Dawn game data for combined iOS app")
 add_feature_info(MapEditorTD MAP_EDITORTD "Include internal scenario editor in TiberianDawn")
 add_feature_info(MapEditorRA MAP_EDITORRA "Include internal scenario editor in VanillaRA")
 add_feature_info(Networking NETWORKING "Networking support")
@@ -272,6 +279,53 @@ add_subdirectory(common)
 add_subdirectory(tiberiandawn)
 add_subdirectory(redalert)
 add_subdirectory(tools)
+
+if(RED_ALERT_COMBINED_APP)
+    if(TIBERIAN_DAWN_DATA_DIR)
+        file(GLOB_RECURSE TIBERIAN_DAWN_GAME_DATA CONFIGURE_DEPENDS
+            "${TIBERIAN_DAWN_DATA_DIR}/*.MIX")
+        if(NOT TIBERIAN_DAWN_GAME_DATA)
+            message(FATAL_ERROR "No Tiberian Dawn MIX files found in ${TIBERIAN_DAWN_DATA_DIR}")
+        endif()
+        foreach(asset IN LISTS TIBERIAN_DAWN_GAME_DATA)
+            file(RELATIVE_PATH relative_asset "${TIBERIAN_DAWN_DATA_DIR}" "${asset}")
+            get_filename_component(relative_directory "${relative_asset}" DIRECTORY)
+            if(relative_directory)
+                set(bundle_location "Resources/GameData/${relative_directory}")
+            else()
+                set(bundle_location "Resources/GameData")
+            endif()
+            set_source_files_properties("${asset}" TARGET_DIRECTORY TiberianDawn
+                PROPERTIES MACOSX_PACKAGE_LOCATION "${bundle_location}")
+        endforeach()
+        target_sources(TiberianDawn PRIVATE ${TIBERIAN_DAWN_GAME_DATA})
+    endif()
+    set(RED_ALERT_GAME_DATA
+        "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
+        "${RED_ALERT_DATA_DIR}/allied/MAIN.MIX"
+        "${RED_ALERT_DATA_DIR}/soviet/MAIN.MIX"
+        "${RED_ALERT_DATA_DIR}/manifest.json")
+    foreach(asset IN LISTS RED_ALERT_GAME_DATA)
+        if(NOT EXISTS "${asset}")
+            message(FATAL_ERROR "Missing staged Red Alert asset: ${asset}")
+        endif()
+    endforeach()
+    set_source_files_properties(
+        "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
+        "${RED_ALERT_DATA_DIR}/manifest.json"
+        TARGET_DIRECTORY TiberianDawn
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData)
+    set_source_files_properties(
+        "${RED_ALERT_DATA_DIR}/allied/MAIN.MIX"
+        TARGET_DIRECTORY TiberianDawn
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData/allied)
+    set_source_files_properties(
+        "${RED_ALERT_DATA_DIR}/soviet/MAIN.MIX"
+        TARGET_DIRECTORY TiberianDawn
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData/soviet)
+    target_sources(TiberianDawn PRIVATE ${RED_ALERT_GAME_DATA})
+    add_dependencies(TiberianDawn RedAlertEngine)
+endif()
 
 feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled features:")
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "Disabled features:")

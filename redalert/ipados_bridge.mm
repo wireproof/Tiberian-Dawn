@@ -14,13 +14,20 @@ extern "C" bool TiberianDawn_PrepareGameData(void)
         NSURL *bundleData = [[NSBundle mainBundle] resourceURL];
         bundleData = [bundleData URLByAppendingPathComponent:@"RAData" isDirectory:YES];
         NSFileManager *files = [NSFileManager defaultManager];
-        if (!bundleData) return false;
+        if (!bundleData) {
+            NSLog(@"Red Alert bundle data directory is unavailable");
+            return false;
+        }
         for (NSString *name in @[@"REDALERT.MIX", @"allied/MAIN.MIX", @"soviet/MAIN.MIX"]) {
             NSURL *source = [bundleData URLByAppendingPathComponent:name];
             NSDictionary *attributes = [files attributesOfItemAtPath:source.path error:nil];
             if (![attributes[NSFileSize] respondsToSelector:@selector(unsignedLongLongValue)]
-                || [attributes[NSFileSize] unsignedLongLongValue] == 0) return false;
+                || [attributes[NSFileSize] unsignedLongLongValue] == 0) {
+                NSLog(@"Red Alert bundle asset missing: %@", name);
+                return false;
+            }
         }
+        NSLog(@"Red Alert bundle data is available");
         return true;
     }
 }

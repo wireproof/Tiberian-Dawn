@@ -57,6 +57,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#endif
 #include "language.h"
 #include "msgbox.h"
 #include "loaddlg.h"
@@ -365,6 +368,9 @@ bool Init_Game(int, char*[])
     **	before the regular game starts.
     */
     Init_Bulk_Data();
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    RA_InitRules(); // Capture stock types after RULES/Aftermath and localized strings.
+#endif
 
     /*
     **	Initialize the multiplayer score values
@@ -824,6 +830,12 @@ bool Select_Game(bool fade)
             **	network play.
             */
             case SEL_MULTIPLAYER_GAME:
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+                if (RA_RulesRequireSinglePlayer() && Session.Type != GAME_NORMAL && Session.Type != GAME_SKIRMISH) {
+                    RA_ShowMultiplayerRestriction();
+                    Session.Type = GAME_NORMAL; display = true; selection = SEL_NONE; break;
+                }
+#endif
 #ifdef WOLAPI_INTEGRATION
                 if (!pWolapi) {
 #endif
@@ -836,6 +848,11 @@ bool Select_Game(bool fade)
                     */
                     case GAME_NORMAL:
                         Session.Type = Select_MPlayer_Game();
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+                        if (RA_RulesRequireSinglePlayer() && Session.Type != GAME_NORMAL && Session.Type != GAME_SKIRMISH) {
+                            RA_ShowMultiplayerRestriction(); Session.Type = GAME_NORMAL;
+                        }
+#endif
                         if (Session.Type == GAME_NORMAL) { // 'Cancel'
                             display = true;
                             selection = SEL_NONE;

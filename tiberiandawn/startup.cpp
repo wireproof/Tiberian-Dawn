@@ -208,14 +208,37 @@ int DLL_Startup(const char* command_line_in)
 #endif // REMASTER_BUILD
 
 #if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
-extern "C" bool WireproofChooseAndRunGame(int, char**, int*);
+extern "C" int WireproofRunGameLibrary(int, char**, int (*)(int, char**));
+#include "common/ipados_audio_engine.h"
+#include "common/wireproof_orders.h"
+static int WireproofRunTiberianSession(int, char**);
 #endif
 
 int main(int argc, char** argv)
 {
 #if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
-    int redAlertResult = EXIT_FAILURE;
-    if (WireproofChooseAndRunGame(argc, argv, &redAlertResult)) return redAlertResult;
+    return WireproofRunGameLibrary(argc, argv, WireproofRunTiberianSession);
+}
+
+// Retain one initialized engine per game. Re-running legacy initialization
+// leaves cached type pointers dangling, while recursive launches grow the stack.
+static int WireproofRunTiberianSession(int argc, char** argv)
+{
+    static bool prepared = false;
+    if (prepared) {
+        Video_Set_Game_Window_Visible(true);
+        IPad_Audio_Resume();
+        Main_Game(argc, argv);
+        CCFileClass config("CONQUER.INI");
+        INIClass settings;
+        settings.Load(config);
+        Settings.Save(settings);
+        settings.Save(config);
+        WPOrders::Shared().publish(false, 0);
+        IPad_Audio_Pause();
+        Video_Set_Game_Window_Visible(false);
+        return EXIT_SUCCESS;
+    }
 #endif
     UtfArgs args(argc, argv);
     CCDebugString("C&C95 - Starting up.\n");
@@ -350,8 +373,12 @@ int main(int argc, char** argv)
             MessageBoxA(
                 MainWindow, "Error - Unable to set the video mode.", "Command & Conquer", MB_ICONEXCLAMATION | MB_OK);
 #endif
-            if (Palette)
-                delete[] Palette;
+            delete[] Palette;
+            Palette = nullptr;
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+            Sound_End();
+            SoundOn = false;
+#endif
             return (EXIT_FAILURE);
         }
 
@@ -379,8 +406,17 @@ int main(int argc, char** argv)
                         "Command & Conquer",
                         MB_ICONEXCLAMATION | MB_OK);
 #endif
-            if (Palette)
-                delete[] Palette;
+            delete[] Palette;
+            Palette = nullptr;
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+            // The library can retry this engine without restarting the app.
+            // Dispose partial startup resources before creating replacements.
+            VisiblePage.Un_Init();
+            HiddenPage.Un_Init();
+            Reset_Video_Mode();
+            Sound_End();
+            SoundOn = false;
+#endif
             return (EXIT_FAILURE);
         }
 
@@ -484,6 +520,13 @@ int main(int argc, char** argv)
         Settings.Save(ini);
         ini.Save(cfile);
 
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+        prepared = true;
+        WPOrders::Shared().publish(false, 0);
+        IPad_Audio_Pause();
+        Video_Set_Game_Window_Visible(false);
+        return EXIT_SUCCESS;
+#endif
         VisiblePage.Clear();
         HiddenPage.Clear();
 

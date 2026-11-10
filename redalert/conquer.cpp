@@ -66,7 +66,10 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "common/remastered_scene.h"
+#include "common/video.h"
 #include "msgbox.h"
+#include "wireproof_controls.h"
 #include "keyframe.h"
 #include "language.h"
 
@@ -193,9 +196,17 @@ void Main_Game(int argc, char* argv[])
     /*
     **	Perform one-time-only initializations
     */
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+    static bool initialized = false;
+    if (!initialized) {
+        if (!Init_Game(argc, argv)) return;
+        initialized = true;
+    }
+#else
     if (!Init_Game(argc, argv)) {
         return;
     }
+#endif
 
     /*
     **	Game processing loop:
@@ -440,7 +451,9 @@ void Main_Game(int argc, char* argv[])
     /*
     **	Free the scenario description buffers
     */
+#if !defined(IPADOS_PORT) || !defined(WP_COMBINED_APP)
     Session.Free_Scenario_Descriptions();
+#endif
 }
 
 /***********************************************************************************************
@@ -1733,6 +1746,8 @@ bool Main_Loop()
     if (!GameActive)
         return (!GameActive);
 
+    RA_ProcessControls();
+
     /*
     ** Call the focus loss handler
     */
@@ -2375,6 +2390,7 @@ extern void Play_Movie_GlyphX(const char* movie_name, ThemeType theme, bool imme
 
 void Play_Movie(char const* name, ThemeType theme, bool clrscrn, bool immediate)
 {
+    RA_BeginPresentation();
 #ifdef REMASTER_BUILD
     if (strcmp(name, "x") == 0 || strcmp(name, "X") == 0) {
         return;
@@ -2802,7 +2818,13 @@ void CC_Draw_Shape(const ObjectClass* object,
         return;
     }
 #endif
+    const int previous_owner = WPRemastered::Shared().owner;
+    if (object && object->Owner() != HOUSE_NONE) {
+        const HouseClass* house = HouseClass::As_Pointer(object->Owner());
+        if (house) WPRemastered::Shared().owner = static_cast<int>(house->RemapColor);
+    }
     CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
+    WPRemastered::Shared().owner = previous_owner;
 }
 
 void CC_Draw_Shape(const ObjectClass* object,
@@ -2828,7 +2850,13 @@ void CC_Draw_Shape(const ObjectClass* object,
         return;
     }
 #endif
+    const int previous_owner = WPRemastered::Shared().owner;
+    if (object && object->Owner() != HOUSE_NONE) {
+        const HouseClass* house = HouseClass::As_Pointer(object->Owner());
+        if (house) WPRemastered::Shared().owner = static_cast<int>(house->RemapColor);
+    }
     CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
+    WPRemastered::Shared().owner = previous_owner;
 }
 
 void CC_Draw_Pip(const ObjectClass* object,
@@ -2988,6 +3016,19 @@ void CC_Draw_Shape(void const* shapefile,
                 flags = flags & ~(SHAPE_FADING | SHAPE_PREDATOR);
                 flags = flags | SHAPE_GHOST;
                 ghostdata = DisplayClass::SpecialGhost;
+            }
+
+            if (window == WINDOW_TACTICAL && WPRemastered::Shared().capturing) {
+                // Rotated effects retain the engine's exact transformed pixels.
+                // They must not be replaced by an unrotated atlas frame.
+                const void* asset = rotation == DIR_N ? shapefile : nullptr;
+                const uint8_t* pixels = rotation == DIR_N
+                    ? static_cast<const uint8_t*>(Get_Shape_Header_Data((void*)shape_pointer)) : buffer;
+                WPRemastered::RecordSprite(asset, shapenum,
+                    x + WindowList[window][WINDOWX] + LogicPage->Get_XPos(),
+                    y + WindowList[window][WINDOWY] + LogicPage->Get_YPos(),
+                    width, height, static_cast<unsigned>(flags), pixels,
+                    static_cast<const uint8_t*>(fadingdata), static_cast<const uint8_t*>(ghostdata));
             }
 
             predoffset = Frame;

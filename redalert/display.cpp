@@ -86,6 +86,15 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
+#include "wireproof_production.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "common/wireproof_orders.h"
+#endif
+#include "common/remastered_scene.h"
+#include "common/video.h"
+#include "common/remastered_scene.h"
+#include "common/video.h"
 #include "vortex.h"
 #include "xpipe.h"
 #include "common/fading.h"
@@ -686,7 +695,7 @@ bool DisplayClass::Passes_Proximity_Check(ObjectTypeClass const* object,
     /*
     ** In editor mode, the proximity check always passes.
     */
-    if (Debug_Map) {
+    if (Debug_Map || (PlayerPtr && house==PlayerPtr->Class->House && RA_BuildAnywhere(PlayerPtr))) {
         return (true);
     }
 
@@ -1889,6 +1898,33 @@ void DisplayClass::Draw_It(bool forced)
 {
     int x, y; // Working cell index values.
 
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    const bool remastered_requested = Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork();
+    // The vortex distorts the indexed destination itself, not a source sprite.
+    // Preserve that gameplay effect with a fully redrawn classic frame while
+    // active, rather than painting HD terrain over an invisible vortex.
+    const bool remastered_frame = remastered_requested && !ChronalVortex.Is_Active();
+    if (remastered_requested) forced = true;
+    if (remastered_frame) {
+        forced = true;
+        WPRemastered::Begin(static_cast<int>(Scen.Theater),
+            WindowList[WINDOW_TACTICAL][WINDOWX] + LogicPage->Get_XPos(),
+            WindowList[WINDOW_TACTICAL][WINDOWY] + LogicPage->Get_YPos(),
+            WindowList[WINDOW_TACTICAL][WINDOWWIDTH], WindowList[WINDOW_TACTICAL][WINDOWHEIGHT]);
+    } else {
+        WPRemastered::Clear();
+    }
+#endif
+
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    // Presentation-layer world artwork must obey the same tactical-window
+    // boundary as classic sprites, especially when the sidebar is open.
+    Video_Set_HD_Artwork_Clip(WindowList[WINDOW_TACTICAL][WINDOWX] + LogicPage->Get_XPos(),
+                              WindowList[WINDOW_TACTICAL][WINDOWY] + LogicPage->Get_YPos(),
+                              WindowList[WINDOW_TACTICAL][WINDOWWIDTH],
+                              WindowList[WINDOW_TACTICAL][WINDOWHEIGHT]);
+#endif
+
     MapClass::Draw_It(forced);
 
     if (IsToRedraw || forced) {
@@ -2229,7 +2265,9 @@ void DisplayClass::Draw_It(bool forced)
             **	Finally, redraw the shadow overlay as necessary.
             */
             BStart(BENCH_SHROUD);
+            WPRemastered::Shared().shroud = true;
             Redraw_Shadow();
+            WPRemastered::Shared().shroud = false;
             BEnd(BENCH_SHROUD);
         }
         HidPage.Unlock();
@@ -2268,6 +2306,9 @@ void DisplayClass::Draw_It(bool forced)
 #endif
         BEnd(BENCH_TACTICAL);
     }
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if (remastered_frame) WPRemastered::End();
+#endif
 }
 
 /***********************************************************************************************
@@ -2428,6 +2469,7 @@ void DisplayClass::Redraw_Shadow(void)
                                               Lepton_To_Pixel(TacLeptonWidth),
                                               Lepton_To_Pixel(TacLeptonHeight))
                                     >= 0) {
+                                    WPRemastered::RecordFill(TacPixelX + xpixel, TacPixelY + ypixel, ww, hh, BLACK);
                                     LogicPage->Fill_Rect(TacPixelX + xpixel,
                                                          TacPixelY + ypixel,
                                                          TacPixelX + xpixel + ww - 1,
@@ -3821,6 +3863,11 @@ void DisplayClass::Mouse_Left_Up(CELL cell, bool shadow, ObjectClass* object, Ac
  *=============================================================================================*/
 void DisplayClass::Mouse_Left_Release(CELL cell, int x, int y, ObjectClass* object, ActionType action, bool wsmall)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    struct ResetTouchForce {~ResetTouchForce(){WPOrders::Shared().force(0);}} resetTouchForce;
+    if(RA_RallyClick(cell))return;
+#endif
+
     if (PendingObjectPtr) {
         /*
         **	Try to place the pending object onto the map.

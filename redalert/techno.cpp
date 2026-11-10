@@ -131,6 +131,14 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "common/wireproof_orders.h"
+#endif
+#include "common/remastered_scene.h"
+#include "common/wireproof_cheats.h"
+#include "wireproof_health.h"
+#include "common/video.h"
 #include "utracker.h"
 
 /***************************************************************************
@@ -1146,9 +1154,21 @@ void TechnoClass::Draw_It(int x, int y, WindowNumberType window) const
     int width, height;
     Class_Of().Dimensions(width, height);
 
+    bool native_damaged_health = false;
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    if (GameActive && PlayerPtr && What_Am_I() == RTTI_BUILDING && !IsInLimbo
+        && (HouseClass*)House == PlayerPtr) {
+        const auto preferences = WPCheats::Shared().snapshot();
+        native_damaged_health = RAHealth::ShowDamagedBuilding(
+            preferences.available, preferences.damagedHealth,
+            !Session.Play && (Session.Type == GAME_NORMAL || Session.Type == GAME_SKIRMISH),
+            true, Map[Coord_Cell(Center_Coord())].Is_Visible(PlayerPtr), true,
+            Strength, Techno_Type_Class()->MaxStrength);
+    }
+#endif
     const bool show_health_bar =
         (Strength > 0) && !Is_Cloaked(PlayerPtr)
-        && (Is_Selected_By_Player()
+        && (Is_Selected_By_Player() || native_damaged_health
             || ((Rule.HealthBarDisplayMode == RulesClass::HB_DAMAGED) && (Strength < Techno_Type_Class()->MaxStrength))
             || (Rule.HealthBarDisplayMode == RulesClass::HB_ALWAYS));
 
@@ -1218,12 +1238,23 @@ void TechnoClass::Draw_It(int x, int y, WindowNumberType window) const
                 color = RED;
             }
             draw_window.Fill_Rect(xx + 1, yy + 1, xx + pwidth, yy + (3 - 1), color);
+            if (window == WINDOW_TACTICAL) {
+                WPRemastered::RecordHealth(
+                    WindowList[window][WINDOWX] + LogicPage->Get_XPos() + xx,
+                    WindowList[window][WINDOWY] + LogicPage->Get_YPos() + yy,
+                    width, pwidth, static_cast<unsigned char>(color));
+            }
         }
 
         /*
         **	Draw the selected object graphic.
         */
         if (Is_Selected_By_Player()) {
+            if (window == WINDOW_TACTICAL) {
+                WPRemastered::RecordSelection(WindowList[window][WINDOWX] + LogicPage->Get_XPos() + x - lx,
+                    WindowList[window][WINDOWY] + LogicPage->Get_YPos() + fudge + y - ly,
+                    lx * 2 + 1, ly * 2 - fudge + 1, WHITE);
+            }
             // Upper left corner.
             draw_window.Draw_Line(x - lx, fudge + y - ly, x - lx + dx, fudge + y - ly, WHITE);
             draw_window.Draw_Line(x - lx, fudge + y - ly, x - lx, fudge + y - ly + dy, WHITE);
@@ -3577,6 +3608,10 @@ bool TechnoClass::Evaluate_Object(ThreatType method,
 #ifdef REMASTER_BUILD
             // bool altdown = (Keyboard->Down(Options.KeyForceMove1) || Keyboard->Down(Options.KeyForceMove2));
             // bool ctrldown = (Keyboard->Down(Options.KeyForceAttack1) || Keyboard->Down(Options.KeyForceAttack2));
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        altdown = altdown || WPOrders::Shared().snapshot().force==2;
+        ctrldown = ctrldown || WPOrders::Shared().snapshot().force==1;
+#endif
             // bool shiftdown = (Keyboard->Down(Options.KeySelect1) || Keyboard->Down(Options.KeySelect2));
             // Added for getting the input for special character keys from the client
             // - 6/26/2019 JAS
@@ -3586,6 +3621,10 @@ bool TechnoClass::Evaluate_Object(ThreatType method,
 #else
         bool altdown = (Keyboard->Down(Options.KeyForceMove1) || Keyboard->Down(Options.KeyForceMove2));
         bool ctrldown = (Keyboard->Down(Options.KeyForceAttack1) || Keyboard->Down(Options.KeyForceAttack2));
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        altdown = altdown || WPOrders::Shared().snapshot().force==2;
+        ctrldown = ctrldown || WPOrders::Shared().snapshot().force==1;
+#endif
         bool shiftdown = (Keyboard->Down(Options.KeySelect1) || Keyboard->Down(Options.KeySelect2));
 #endif
             /*
@@ -3707,6 +3746,10 @@ bool TechnoClass::Evaluate_Object(ThreatType method,
 #ifdef REMASTER_BUILD
         // bool altdown = (Keyboard->Down(Options.KeyForceMove1) || Keyboard->Down(Options.KeyForceMove2));
         // bool ctrldown = (Keyboard->Down(Options.KeyForceAttack1) || Keyboard->Down(Options.KeyForceAttack2));
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        altdown = altdown || WPOrders::Shared().snapshot().force==2;
+        ctrldown = ctrldown || WPOrders::Shared().snapshot().force==1;
+#endif
         // bool shiftdown = (Keyboard->Down(Options.KeySelect1) || Keyboard->Down(Options.KeySelect2));
         // Added for getting the input for special character keys from the client
         // - 6/26/2019 JAS
@@ -3716,6 +3759,10 @@ bool TechnoClass::Evaluate_Object(ThreatType method,
 #else
     bool altdown = (Keyboard->Down(Options.KeyForceMove1) || Keyboard->Down(Options.KeyForceMove2));
     bool ctrldown = (Keyboard->Down(Options.KeyForceAttack1) || Keyboard->Down(Options.KeyForceAttack2));
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        altdown = altdown || WPOrders::Shared().snapshot().force==2;
+        ctrldown = ctrldown || WPOrders::Shared().snapshot().force==1;
+#endif
     bool shiftdown = (Keyboard->Down(Options.KeySelect1) || Keyboard->Down(Options.KeySelect2));
 #endif
         /*
@@ -4095,6 +4142,7 @@ bool TechnoClass::Evaluate_Object(ThreatType method,
         **	If not a forced damage condition, adjust damage according to house override armor
         **	value.
         */
+        if (damage > 0 && RA_PlayerInvincible(House)) { damage=0; return RESULT_NONE; }
         if (!forced && damage > 0) {
             damage = damage * ArmorBias * House->ArmorBias;
         }

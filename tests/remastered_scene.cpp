@@ -1,4 +1,5 @@
 #include "common/remastered_scene.h"
+#include "redalert/wireproof_health.h"
 #include "common/wireproof_production_queue.h"
 #include <cstdio>
 #include <cstdlib>
@@ -6,6 +7,14 @@
 // Explicit checks remain enabled in Release/RelWithDebInfo builds.
 #define CHECK(condition) do { if (!(condition)) { std::fprintf(stderr, "line %d: %s\n", __LINE__, #condition); return EXIT_FAILURE; } } while (false)
 int main() {
+    CHECK(RAHealth::ShowDamagedBuilding(true,true,true,true,true,true,50,100));
+    for (int flag=0;flag<6;++flag) {
+        bool eligible[]={true,true,true,true,true,true}; eligible[flag]=false;
+        CHECK(!RAHealth::ShowDamagedBuilding(eligible[0],eligible[1],eligible[2],eligible[3],eligible[4],eligible[5],50,100));
+    }
+    CHECK(!RAHealth::ShowDamagedBuilding(true,true,true,true,true,true,100,100));
+    CHECK(!RAHealth::ShowDamagedBuilding(true,true,true,true,true,true,0,100));
+    CHECK(!RAHealth::ShowDamagedBuilding(true,true,true,true,true,true,-1,100));
     WPProduction::Queue q;
     CHECK(q.add(2)&&q.add(2)&&q.add(3));CHECK(q.count(2)==2);
     CHECK(q.next(true)==-1);CHECK(q.next(false)==2);CHECK(q.next(false)==-1);
@@ -35,6 +44,8 @@ int main() {
     CHECK(Shared().commands.empty() && Shared().health.empty());
     Begin(1, 10, 20, 100, 200);
     RecordPlacement(24,48,true);CHECK(Shared().placement.size()==1 && Shared().placement[0].valid);
+    RecordSelection(10,20,25,31,7);
+    CHECK(Shared().selections.size()==1 && Shared().selections.front().width==25);
     Shared().owner = 1;
     RecordSprite(&identity, 32, 40, 50, 2, 2, 0x120, pixels, remap, nullptr);
     pixels[2] = 99; // Commands own their pixels, independent of reusable shape buffers.
@@ -58,6 +69,7 @@ int main() {
     CHECK(Shared().health.size() == 1);
     Begin(0, 0, 0, 20, 20);
     CHECK(Shared().commands.empty() && Shared().health.empty() && Shared().placement.empty() && !Shared().valid);
+    CHECK(Shared().selections.empty());
     RecordTile("CLEAR1.TEM", 4, -12, 0, 2, 2, pixels);
     CHECK(Shared().commands.front().asset == "CLEAR1");
     CHECK(Shared().commands.front().frame == 4 && Shared().commands.front().x == -12);

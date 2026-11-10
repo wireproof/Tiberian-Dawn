@@ -82,6 +82,8 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_production.h"
+#include "wireproof_controls.h"
 
 /*
 ** New sidebar for GlyphX multiplayer. ST - 8/7/2019 10:10AM
@@ -227,6 +229,7 @@ InfantryClass::InfantryClass(InfantryType classid, HousesType house)
  *=============================================================================================*/
 InfantryClass::~InfantryClass(void)
 {
+    RA_RallyForget(this);
     if (GameActive && Class.Is_Valid()) {
 
         /*
@@ -4257,7 +4260,7 @@ void InfantryClass::Movement_AI(void)
                 /*
                 **	Advance the infantry as far as it should go.
                 */
-                MPHType maxspeed = MPHType(min(Class->MaxSpeed * SpeedBias * House->GroundspeedBias, MPH_LIGHT_SPEED));
+                MPHType maxspeed = MPHType(min(RA_ScaleSpeed(House,int(Class->MaxSpeed * SpeedBias * House->GroundspeedBias),0), MPH_LIGHT_SPEED));
 
                 if (IsFormationMove)
                     maxspeed = FormationMaxSpeed;

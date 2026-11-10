@@ -98,6 +98,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_production.h"
 #include "keyframe.h"
 #include "common/miscasm.h"
 
@@ -222,6 +223,7 @@ void UnitClass::operator delete(void* ptr)
  *=============================================================================================*/
 UnitClass::~UnitClass(void)
 {
+    RA_RallyForget(this);
     if (GameActive && Class.Is_Valid()) {
 
         /*

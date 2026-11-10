@@ -371,9 +371,20 @@ void Main_Game(int argc, char* argv[])
     /*
     **	Perform one-time-only initializations
     */
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+    static bool initialized = false;
+    if (!initialized) {
+        if (!Init_Game(argc, argv)) return;
+        initialized = true;
+    } else {
+        // Exit Game faded the palette to black; reentry must restore it.
+        fade = true;
+    }
+#else
     if (!Init_Game(argc, argv)) {
         return;
     }
+#endif
 
     CCDebugString("C&C95 - Game initialisation complete.\n");
     /*
@@ -645,10 +656,11 @@ void Main_Game(int argc, char* argv[])
     /*
     **	Free the scenario description buffers
     */
+#if !defined(IPADOS_PORT) || !defined(WP_COMBINED_APP)
     Free_Scenario_Descriptions();
-
 #ifndef NOMEMCHECK
     Uninit_Game();
+#endif
 #endif
 }
 

@@ -33,8 +33,23 @@ if [[ $(plutil -extract CFBundleIdentifier raw "$app/Info.plist") != $(plutil -e
 fi
 
 codesign -d --entitlements :- "$app" > "$stage/entitlements.plist" 2>/dev/null
-cp "$built_app/TiberianDawn" "$app/TiberianDawn"
-cp "$built_app/Info.plist" "$app/Info.plist"
+# Overlay the full built bundle, not only the host executable. Combined builds
+# also update a separately loaded Red Alert engine and its private art pack.
+# ditto preserves complete base assets when an ordinary source build omits them.
+if [[ -f "$built_app/Frameworks/RedAlertEngine.dylib" ]]; then
+    for required in RAData/REDALERT.MIX RAData/allied/MAIN.MIX RAData/soviet/MAIN.MIX \
+                    RemasteredArtRA/frames.tsv RemasteredArtRA/teams.tsv RemasteredArtRA/manifest.ini; do
+        [[ -s "$built_app/$required" ]] || { echo "Combined build is missing $required" >&2; exit 1; }
+    done
+fi
+ditto "$built_app" "$app"
+# A source build must not replace the device's existing provisioning profile.
+unzip -p "$base_ipa" 'Payload/TiberianDawn.app/embedded.mobileprovision' > "$app/embedded.mobileprovision"
+if [[ -d "$app/Frameworks" ]]; then
+    while IFS= read -r -d '' library; do
+        codesign --force --sign "$identity" --timestamp=none "$library"
+    done < <(find "$app/Frameworks" -type f -name '*.dylib' -print0)
+fi
 codesign --force --sign "$identity" --entitlements "$stage/entitlements.plist" --timestamp=none "$app"
 codesign --verify --deep --strict "$app"
 
@@ -52,6 +67,13 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
         prefix = f"Payload/TiberianDawn.app/{folder}/"
         if not any(name.startswith(prefix) and not name.endswith("/") for name in names):
             raise SystemExit(f"Packaged IPA is missing {folder} files")
+    engine = "Payload/TiberianDawn.app/Frameworks/RedAlertEngine.dylib"
+    if engine in names:
+        for required in ("RAData/REDALERT.MIX", "RAData/allied/MAIN.MIX", "RAData/soviet/MAIN.MIX",
+                         "RemasteredArtRA/frames.tsv", "RemasteredArtRA/teams.tsv", "RemasteredArtRA/manifest.ini"):
+            path = "Payload/TiberianDawn.app/" + required
+            if path not in names or not archive.getinfo(path).file_size:
+                raise SystemExit(f"Packaged combined IPA is missing {required}")
 PY
 mv -f "$partial" "$output_ipa"
 shasum -a 256 "$output_ipa"

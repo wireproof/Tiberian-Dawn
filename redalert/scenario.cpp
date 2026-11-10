@@ -60,6 +60,10 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#endif
+#include "wireproof_controls.h"
 #include "msgbox.h"
 #include "textbtn.h"
 #include "factory.h"
@@ -477,6 +481,12 @@ void Set_Scenario_Difficulty(int difficulty)
  *=============================================================================================*/
 bool Read_Scenario(char* name)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    if (!Session.Play && Session.Type != GAME_NORMAL && Session.Type != GAME_SKIRMISH && RA_RulesRequireSinglePlayer()) {
+        RA_ShowMultiplayerRestriction(); return false;
+    }
+#endif
+    RA_ResetControls();
     BStart(BENCH_SCENARIO);
     Clear_Scenario();
     ScenarioInit++;
@@ -533,6 +543,9 @@ bool Read_Scenario(char* name)
                 Rule.Difficulty(ini);
             }
         }
+#endif
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+        RA_ApplyRules(); // MPLAYER.INI can override types again in skirmish.
 #endif
         Fill_In_Data();
 #ifdef REMASTER_BUILD
@@ -2211,6 +2224,9 @@ bool Read_Scenario_INI(char* fname, bool)
     BuildingTypeClass::As_Reference(STRUCT_LARVA2).Level = -1;
 #endif
 
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    RA_RestoreRules(); // Undo prior preset values before the next map reloads its rules.
+#endif
     Rule.General(RuleINI);
     Rule.Recharge(RuleINI);
     Rule.AI(RuleINI);
@@ -2256,6 +2272,9 @@ bool Read_Scenario_INI(char* fname, bool)
     Rule.IQ(ini);
     Rule.Objects(ini);
     Rule.Difficulty(ini);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    RA_ApplyRules(); // Before house totals and scenario objects are constructed.
+#endif
 
     /*
     **	- Use ore growth and spread values from the special settings.

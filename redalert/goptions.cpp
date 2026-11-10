@@ -34,6 +34,10 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "common/video.h"
+#include "common/wireproof_orders.h"
+#endif
 #include "msgbox.h"
 
 #include "goptions.h"
@@ -68,6 +72,12 @@ bool RedrawOptionsMenu;
  *=============================================================================================*/
 void GameOptionsClass::Process(void)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    struct RestoreWorldArtwork { ~RestoreWorldArtwork() { Video_Set_HD_World_Artwork_Visible(true); } } restoreWorld;
+    Video_Set_HD_World_Artwork_Visible(false);
+    WPOrders::Shared().publish(false,0);
+    Video_Set_Battlefield(false,0,0,SeenBuff.Get_Width(),SeenBuff.Get_Height(),1.f);
+#endif
     static struct
     {
         int ID;         // Button ID to use.

@@ -56,6 +56,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
 
 #ifdef NEVER
 void test(void)
@@ -645,7 +646,7 @@ bool DriveClass::While_Moving(void)
     ** Slow the unit down if he's carrying a flag.
     */
     MPHType maxspeed =
-        MPHType(min(Techno_Type_Class()->MaxSpeed * SpeedBias * House->GroundspeedBias, (int)MPH_LIGHT_SPEED));
+        MPHType(min(RA_ScaleSpeed(House,int(Techno_Type_Class()->MaxSpeed * SpeedBias * House->GroundspeedBias),1), (int)MPH_LIGHT_SPEED));
     if (IsFormationMove)
         maxspeed = FormationMaxSpeed;
 

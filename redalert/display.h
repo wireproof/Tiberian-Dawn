@@ -203,6 +203,7 @@ public:
     short const* Text_Overlap_List(char const* text, int x, int y) const;
     bool Is_Spot_Free(COORDINATE coord) const;
     COORDINATE Closest_Free_Spot(COORDINATE coord, bool any = false) const;
+    void Cancel_Player_Action() { Mouse_Right_Press(); }
     void Sell_Mode_Control(int control);
     void Repair_Mode_Control(int control);
 

@@ -2,8 +2,58 @@
 #include "common/paths.h"
 #include "common/savegame_transfer.h"
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#ifdef WP_BACKUP_RED_ALERT
+#define TiberianDawn_ValidateSaveGame RedAlert_ValidateSaveGame
+#define WP_ApplyPendingBackupSettings RA_ApplyPendingBackupSettings
+#define WPBackupPicker RABackupPicker
+#define WP_BACKUP_FORMAT @"wireproof-red-alert"
+#define WP_BACKUP_INI @"REDALERT.INI"
+#define WP_BACKUP_INI_KEY @"redalertINI"
+#define WP_BACKUP_FILENAME @"RedAlert-%@.rabackup"
+#define WP_BACKUP_UNSUPPORTED @"Not a supported Red Alert backup. Nothing was imported."
+#else
+#define WP_BACKUP_FORMAT @"wireproof-tiberian-dawn"
+#define WP_BACKUP_INI @"CONQUER.INI"
+#define WP_BACKUP_INI_KEY @"conquerINI"
+#define WP_BACKUP_FILENAME @"TiberianDawn-%@.tdbackup"
+#define WP_BACKUP_UNSUPPORTED @"Not a supported Tiberian Dawn backup. Nothing was imported."
+#endif
 extern "C" bool TiberianDawn_ValidateSaveGame(const char*,char*,size_t,unsigned*,int*);
 static NSURL* BackupDirectory() { return [NSURL fileURLWithPath:@(Paths.User_Path()) isDirectory:YES]; }
+#ifdef WP_BACKUP_RED_ALERT
+static BOOL BackupKey(NSString *key) {
+    if(![key isKindOfClass:NSString.class])return NO;
+    return [@[@"Wireproof.RedAlert.Joystick.v1",@"Wireproof.RedAlert.LaptopMode",@"Wireproof.RedAlert.PortraitDeckAlways",@"Wireproof.RedAlert.Cheats.v1",@"Wireproof.RedAlert.Workshop.Active.v1",@"Wireproof.RedAlert.Workshop.Rules.v1.Custom 1",@"Wireproof.RedAlert.Workshop.Rules.v1.Custom 2",@"Wireproof.RedAlert.Workshop.Rules.v1.Custom 3"] containsObject:key];
+}
+static BOOL BackupValue(NSString *key,id value) {
+    if([@[@"Wireproof.RedAlert.LaptopMode",@"Wireproof.RedAlert.PortraitDeckAlways"] containsObject:key])return [value isKindOfClass:NSNumber.class] && ([value doubleValue]==0 || [value doubleValue]==1);
+    if([key isEqual:@"Wireproof.RedAlert.Workshop.Active.v1"])return [@[@"Stock",@"Custom 1",@"Custom 2",@"Custom 3"] containsObject:value];
+    if(![value isKindOfClass:NSDictionary.class] || [value count]>4096)return NO;
+    if([key isEqual:@"Wireproof.RedAlert.Joystick.v1"]) {
+        for(id k in value) {
+            id v=value[k];if(![k isKindOfClass:NSString.class] || ![v isKindOfClass:NSNumber.class])return NO;
+            double n=[v doubleValue];if(!std::isfinite(n))return NO;
+            if([k isEqual:@"size"]) {if(n!=std::floor(n)||n<2||n>8)return NO;}
+            else if([k isEqual:@"speed"]) {if(n!=std::floor(n)||n<1||n>12)return NO;}
+            else if([@[@"coverPortraitX",@"coverPortraitY",@"coverLandscapeX",@"coverLandscapeY",@"innerPortraitX",@"innerPortraitY",@"innerLandscapeX",@"innerLandscapeY"] containsObject:k]) {if(n<0||n>1)return NO;}
+            else return NO;
+        }
+        return YES;
+    }
+    BOOL cheats=[key isEqual:@"Wireproof.RedAlert.Cheats.v1"];
+    for(id k in value) {
+        id v=value[k];
+        if(![k isKindOfClass:NSString.class] || ![v isKindOfClass:NSNumber.class])return NO;
+        double n=[v doubleValue];if(!std::isfinite(n))return NO;
+        if(cheats) {
+            if([@[@"infantry",@"vehicles",@"aircraft"] containsObject:k]) {if(n!=std::floor(n)||n<1||n>12)return NO;}
+            else if([@[@"invincible",@"reveal",@"instant",@"free",@"weapons",@"anywhere",@"unlock",@"damagedHealth"] containsObject:k]) {if(n!=0&&n!=1)return NO;}
+            else return NO;
+        }
+    }
+    return YES;
+}
+#else
 static BOOL BackupKey(NSString *key) {
     if([@[@"WPActiveRules",@"WPRules.Custom 1",@"WPRules.Custom 2",@"WPRules.Custom 3",@"Wireproof.CheatPreferences.v1",@"Wireproof.JoystickSize",@"Wireproof.JoystickSpeed",@"Wireproof.ZoomQuarters",@"TiberianDawn.LanguagePreference",@"TiberianDawnLanguagePreference"] containsObject:key])return YES;
     for(NSString *prefix in @[@"Wireproof.Zoom.",@"Wireproof.Joystick.",@"Wireproof.UIScale.",@"Wireproof.JoystickPosition",@"Wireproof.OrdersPosition"])
@@ -25,22 +75,23 @@ static BOOL BackupValue(NSString *key,id value) {
     if(![value isKindOfClass:NSNumber.class])return NO;
     double n=[value doubleValue];return std::isfinite(n) && n==std::floor(n) && n>=0 && n<=1000;
 }
+#endif
 static NSDictionary* BackupSettings() {
     NSMutableDictionary *prefs=[NSMutableDictionary new];
     NSDictionary *all=[NSUserDefaults.standardUserDefaults persistentDomainForName:NSBundle.mainBundle.bundleIdentifier];
     for(NSString *key in all)if(BackupKey(key) && BackupValue(key,all[key]))prefs[key]=all[key];
     NSMutableDictionary *result=[@{@"preferences":prefs} mutableCopy];
-    NSData *ini=[NSData dataWithContentsOfURL:[BackupDirectory() URLByAppendingPathComponent:@"CONQUER.INI"]];
-    if(ini.length && ini.length<=1024*1024)result[@"conquerINI"]=[ini base64EncodedStringWithOptions:0];
+    NSData *ini=[NSData dataWithContentsOfURL:[BackupDirectory() URLByAppendingPathComponent:WP_BACKUP_INI]];
+    if(ini.length && ini.length<=1024*1024)result[WP_BACKUP_INI_KEY]=[ini base64EncodedStringWithOptions:0];
     return result;
 }
 static BOOL ValidateBackupSettings(id settings) {
     if(![settings isKindOfClass:NSDictionary.class] || ![settings[@"preferences"] isKindOfClass:NSDictionary.class])return NO;
     NSDictionary *prefs=settings[@"preferences"];if(prefs.count>256)return NO;
     for(NSString *key in prefs)if(!BackupKey(key) || !BackupValue(key,prefs[key]))return NO;
-    if(settings[@"conquerINI"]) {
-        if(![settings[@"conquerINI"] isKindOfClass:NSString.class])return NO;
-        NSData *ini=[[NSData alloc] initWithBase64EncodedString:settings[@"conquerINI"] options:0];
+    if(settings[WP_BACKUP_INI_KEY]) {
+        if(![settings[WP_BACKUP_INI_KEY] isKindOfClass:NSString.class])return NO;
+        NSData *ini=[[NSData alloc] initWithBase64EncodedString:settings[WP_BACKUP_INI_KEY] options:0];
         if(!ini || ini.length>1024*1024)return NO;
     }
     return YES;
@@ -53,15 +104,15 @@ void WP_ApplyPendingBackupSettings(void) {
         NSData *data=[NSData dataWithContentsOfURL:pending];if(!data)return;
         NSDictionary *settings=[NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
         if(!ValidateBackupSettings(settings))return;
-        NSData *ini=settings[@"conquerINI"]?[[NSData alloc] initWithBase64EncodedString:settings[@"conquerINI"] options:0]:nil;
-        if(ini && ![ini writeToURL:[BackupDirectory() URLByAppendingPathComponent:@"CONQUER.INI"] options:NSDataWritingAtomic error:nil])return;
+        NSData *ini=settings[WP_BACKUP_INI_KEY]?[[NSData alloc] initWithBase64EncodedString:settings[WP_BACKUP_INI_KEY] options:0]:nil;
+        if(ini && ![ini writeToURL:[BackupDirectory() URLByAppendingPathComponent:WP_BACKUP_INI] options:NSDataWritingAtomic error:nil])return;
         for(NSString *key in settings[@"preferences"])[NSUserDefaults.standardUserDefaults setObject:settings[@"preferences"][key] forKey:key];
         [NSUserDefaults.standardUserDefaults synchronize];
         [NSFileManager.defaultManager removeItemAtURL:pending error:nil];
     }
 }
 static NSURL* CreateBackup(NSInteger mode,NSString **message) {
-    NSMutableDictionary *payload=[@{@"format":@"wireproof-tiberian-dawn",@"version":@1,@"created":NSDate.date.description} mutableCopy];
+    NSMutableDictionary *payload=[@{@"format":WP_BACKUP_FORMAT,@"version":@1,@"created":NSDate.date.description} mutableCopy];
     if(mode!=0)payload[@"settings"]=BackupSettings();
     if(mode!=1){
         NSMutableArray *saves=[NSMutableArray new];NSUInteger total=0;
@@ -80,7 +131,7 @@ static NSURL* CreateBackup(NSInteger mode,NSString **message) {
     NSURL *folder=[[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:NSUUID.UUID.UUIDString isDirectory:YES];
     [NSFileManager.defaultManager createDirectoryAtURL:folder withIntermediateDirectories:YES attributes:nil error:nil];
     NSString *kind=@[@"Saves",@"Settings",@"Saves-and-Settings"][mode];
-    NSURL *url=[folder URLByAppendingPathComponent:[NSString stringWithFormat:@"TiberianDawn-%@.tdbackup",kind]];
+    NSURL *url=[folder URLByAppendingPathComponent:[NSString stringWithFormat:WP_BACKUP_FILENAME,kind]];
     NSError *error=nil;if(!data || ![data writeToURL:url options:NSDataWritingAtomic error:&error]){*message=error.localizedDescription?:@"Backup could not be written.";return nil;}return url;
 }
 static NSString* RestoreBackup(NSURL *source) {
@@ -89,7 +140,7 @@ static NSString* RestoreBackup(NSURL *source) {
     NSData *data=size && size.unsignedLongLongValue<=192ULL*1024*1024?[NSData dataWithContentsOfURL:source]:nil;
     if(access)[source stopAccessingSecurityScopedResource];
     id payload=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;
-    if(![payload isKindOfClass:NSDictionary.class] || ![payload[@"format"] isEqual:@"wireproof-tiberian-dawn"] || ![payload[@"version"] isEqual:@1])return @"Not a supported Tiberian Dawn backup. Nothing was imported.";
+    if(![payload isKindOfClass:NSDictionary.class] || ![payload[@"format"] isEqual:WP_BACKUP_FORMAT] || ![payload[@"version"] isEqual:@1])return WP_BACKUP_UNSUPPORTED;
     id settings=payload[@"settings"],saves=payload[@"saves"];
     if((settings && !ValidateBackupSettings(settings)) || (saves && (![saves isKindOfClass:NSArray.class] || [saves count]>1000)) || (!settings && !saves))return @"Invalid backup contents. Nothing was imported.";
     NSFileManager *fm=NSFileManager.defaultManager;

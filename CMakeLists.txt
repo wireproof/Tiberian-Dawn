@@ -26,7 +26,7 @@ project(TiberianDawnApple VERSION 0.7.5 LANGUAGES C CXX)
 # All native Apple applications use the same public version and monotonically
 # increasing build number. Keep these values centralized so macOS, iPadOS,
 # local builds, and distributed releases cannot silently drift apart.
-set(TIBERIAN_DAWN_BUILD_VERSION "717")
+set(TIBERIAN_DAWN_BUILD_VERSION "718")
 
 option(BUILD_REMASTERTD "Build Tiberian Dawn remaster dll." OFF)
 option(BUILD_REMASTERRA "Build Red Alert remaster dll." OFF)
@@ -127,6 +127,7 @@ endif()
 set(RED_ALERT_DATA_DIR "" CACHE PATH "Private staged original Red Alert CD data")
 set(TIBERIAN_DAWN_DATA_DIR "" CACHE PATH "Private prepared original Tiberian Dawn game data for combined iOS app")
 set(TIBERIAN_DAWN_REMASTERED_ART_DIR "" CACHE PATH "Private RemasteredArt pack for combined iOS app")
+set(RED_ALERT_REMASTERED_ART_DIR "" CACHE PATH "Private Red Alert RemasteredArt pack (kept separate from TD)")
 add_feature_info(MapEditorTD MAP_EDITORTD "Include internal scenario editor in TiberianDawn")
 add_feature_info(MapEditorRA MAP_EDITORRA "Include internal scenario editor in VanillaRA")
 add_feature_info(Networking NETWORKING "Networking support")
@@ -282,6 +283,12 @@ add_subdirectory(redalert)
 add_subdirectory(tools)
 
 if(RED_ALERT_COMBINED_APP)
+    # User-provided launcher reference; runtime crops keep portrait and landscape
+    # faithful to the same source without adding duplicate derived artwork.
+    set(LAUNCHER_REFERENCE "${CMAKE_SOURCE_DIR}/resources/apple/artwork/selector-reference.png")
+    set_source_files_properties("${LAUNCHER_REFERENCE}" TARGET_DIRECTORY TiberianDawn
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    target_sources(TiberianDawn PRIVATE "${LAUNCHER_REFERENCE}")
     if(NOT TIBERIAN_DAWN_REMASTERED_ART_DIR)
         message(FATAL_ERROR "The combined iOS app requires TIBERIAN_DAWN_REMASTERED_ART_DIR")
     endif()
@@ -347,3 +354,26 @@ endif()
 
 feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled features:")
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "Disabled features:")
+
+# Private RA atlases share one source pack across Apple targets. Never mix them
+# with TD's identically named units or terrain assets.
+if(APPLE_NATIVE_PORT AND RED_ALERT_REMASTERED_ART_DIR)
+    foreach(required_art_file frames.tsv teams.tsv manifest.ini)
+        if(NOT EXISTS "${RED_ALERT_REMASTERED_ART_DIR}/${required_art_file}")
+            message(FATAL_ERROR "Missing Red Alert RemasteredArt file: ${required_art_file}")
+        endif()
+    endforeach()
+    file(GLOB RED_ALERT_REMASTERED_ART CONFIGURE_DEPENDS "${RED_ALERT_REMASTERED_ART_DIR}/*")
+    if(RED_ALERT_COMBINED_APP)
+        set(RA_ART_TARGET TiberianDawn)
+    elseif(TARGET VanillaRA)
+        set(RA_ART_TARGET VanillaRA)
+    endif()
+    if(RA_ART_TARGET)
+        foreach(asset IN LISTS RED_ALERT_REMASTERED_ART)
+            set_source_files_properties("${asset}" TARGET_DIRECTORY ${RA_ART_TARGET}
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RemasteredArtRA)
+        endforeach()
+        target_sources(${RA_ART_TARGET} PRIVATE ${RED_ALERT_REMASTERED_ART})
+    endif()
+endif()

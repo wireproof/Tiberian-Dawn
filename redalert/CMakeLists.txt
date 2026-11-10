@@ -248,8 +248,9 @@ if(BUILD_VANILLARA)
         set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=SDL_main")
         target_sources(VanillaRA PRIVATE
             ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp
-            ipados_bridge.mm)
-        set_source_files_properties(ipados_bridge.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+            ipados_bridge.mm wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
+            ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm)
+        set_source_files_properties(ipados_bridge.mm wireproof_workshop.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
         set_target_properties(VanillaRA PROPERTIES
             MACOSX_BUNDLE True
             MACOSX_BUNDLE_GUI_IDENTIFIER "com.wireproof.redalert.probe"
@@ -336,12 +337,13 @@ if(RED_ALERT_COMBINED_APP)
     set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=RedAlertEngineMain")
     add_library(RedAlertEngine SHARED
         ${REDALERT_SRC} ${REDALERT_NET_SRC} ${REDALERT_HEADERS}
-        ipados_bridge.mm ipados_engine_entry.cpp
+        ipados_bridge.mm ipados_engine_entry.cpp wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
+        ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm
         ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp)
-    set_source_files_properties(ipados_bridge.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+    set_source_files_properties(ipados_bridge.mm wireproof_workshop.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
     set(RA_ENGINE_LIBS ${VANILLA_LIBS})
     list(REMOVE_ITEM RA_ENGINE_LIBS SDL2::SDL2main)
-    target_compile_definitions(RedAlertEngine PRIVATE ${VANILLA_DEFS} SDL_MAIN_HANDLED)
+    target_compile_definitions(RedAlertEngine PRIVATE ${VANILLA_DEFS} SDL_MAIN_HANDLED WP_COMBINED_APP)
     target_include_directories(RedAlertEngine PRIVATE ${CMAKE_SOURCE_DIR} .)
     target_link_libraries(RedAlertEngine commonv ${RA_ENGINE_LIBS} ${STATIC_LIBS}
         "-framework UIKit" "-framework AVFAudio" "-framework Metal"

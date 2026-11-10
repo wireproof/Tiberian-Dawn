@@ -35,10 +35,18 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
 #include "language.h"
 #include "settings.h"
 #include "common/paths.h"
 #include "common/utfargs.h"
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "common/remastered_art.h"
+#endif
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+#include "common/ipados_audio_engine.h"
+#include "common/wireproof_orders.h"
+#endif
 
 extern char RedAlertINI[_MAX_PATH];
 
@@ -277,6 +285,24 @@ int DLL_Startup(const char* command_line_in)
 
 int main(int argc, char* argv[])
 {
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+    static bool prepared = false;
+    if (prepared) {
+        Video_Set_Game_Window_Visible(true);
+        IPad_Audio_Resume();
+        Main_Game(argc, argv);
+        CCFileClass config(CONFIG_FILE_NAME);
+        INIClass settings;
+        settings.Load(config);
+        Settings.Save(settings);
+        settings.Save(config);
+        WPOrders::Shared().publish(false, 0);
+        RA_ResetControls();
+        IPad_Audio_Pause();
+        Video_Set_Game_Window_Visible(false);
+        return EXIT_SUCCESS;
+    }
+#endif
     UtfArgs args(argc, argv);
     WWDebugString("RA95 - Starting up.\n");
 
@@ -290,6 +316,13 @@ int main(int argc, char* argv[])
     **	Remember the current working directory and drive.
     */
     Paths.Init("vanillara", CONFIG_FILE_NAME, "REDALERT.MIX", args.ArgV[0]);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    extern void RA_ApplyPendingBackupSettings(void);
+    extern void RA_CloudStart(void);
+    RA_CloudStart();
+    RA_ApplyPendingBackupSettings();
+    RemasteredArt_SetGame(true);
+#endif
     CDFileClass::Refresh_Search_Drives();
 
     if (Parse_Command_Line(args.ArgC, args.ArgV)) {
@@ -358,7 +391,10 @@ int main(int argc, char* argv[])
 #ifdef _WIN32
             MessageBoxA(MainWindow, TEXT_VIDEO_ERROR, TEXT_SHORT_TITLE, MB_ICONEXCLAMATION | MB_OK);
 #endif
-            // if (Palette) delete Palette;
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+            Sound_End();
+            SoundOn = false;
+#endif
             return (EXIT_FAILURE);
         }
 
@@ -381,6 +417,13 @@ int main(int argc, char* argv[])
             WWDebugString("\n");
 #ifdef _WIN32
             MessageBoxA(MainWindow, TEXT_DDRAW_ERROR, TEXT_SHORT_TITLE, MB_ICONEXCLAMATION | MB_OK);
+#endif
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+            VisiblePage.Un_Init();
+            HiddenPage.Un_Init();
+            Reset_Video_Mode();
+            Sound_End();
+            SoundOn = false;
 #endif
             return (EXIT_FAILURE);
         }
@@ -483,6 +526,14 @@ int main(int argc, char* argv[])
         Settings.Save(ini);
         ini.Save(cfile);
 
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+        prepared = true;
+        WPOrders::Shared().publish(false, 0);
+        RA_ResetControls();
+        IPad_Audio_Pause();
+        Video_Set_Game_Window_Visible(false);
+        return EXIT_SUCCESS;
+#endif
         VisiblePage.Clear();
         HiddenPage.Clear();
         Memory_Error_Exit = Print_Error_Exit;

@@ -77,6 +77,8 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "common/remastered_scene.h"
+#include "common/video.h"
 #include "vortex.h"
 
 /*
@@ -1099,6 +1101,21 @@ void CellClass::Draw_It(int x, int y, bool objects) const
             */
             if (ttype->Get_Image_Data()) {
                 LogicPage->Draw_Stamp(ttype->Get_Image_Data(), icon, x, y, NULL, WINDOW_TACTICAL);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                if (WPRemastered::Shared().capturing) {
+                    // Decode a complete classic cell as the fallback, including the
+                    // off-screen portion of edge cells. The presentation renderer
+                    // applies the same tactical clip after choosing the HD frame.
+                    uint8_t pixels[ICON_PIXEL_W * ICON_PIXEL_H] = {};
+                    GraphicBufferClass tile(ICON_PIXEL_W, ICON_PIXEL_H, pixels);
+                    Buffer_Draw_Stamp_Clip(&tile, ttype->Get_Image_Data(), icon, 0, 0, NULL,
+                        0, 0, ICON_PIXEL_W, ICON_PIXEL_H);
+                    WPRemastered::RecordTile(ttype->IniName, icon,
+                        x + WindowList[WINDOW_TACTICAL][WINDOWX] + LogicPage->Get_XPos(),
+                        y + WindowList[WINDOW_TACTICAL][WINDOWY] + LogicPage->Get_YPos(),
+                        ICON_PIXEL_W, ICON_PIXEL_H, pixels);
+                }
+#endif
                 if (remap) {
                     LogicPage->Remap(x + Map.TacPixelX, y + Map.TacPixelY, ICON_PIXEL_W, ICON_PIXEL_H, remap);
                 }
@@ -1222,6 +1239,8 @@ void CellClass::Draw_It(int x, int y, bool objects) const
                 /*
                 **	Draw the hash-mark cursor:
                 */
+                WPRemastered::RecordPlacement(x + Map.TacPixelX, y + Map.TacPixelY,
+                    Map.ProximityCheck && Is_Clear_To_Build(loco));
                 if (Map.ProximityCheck && Is_Clear_To_Build(loco)) {
                     LogicPage->Draw_Stamp(DisplayClass::TransIconset, 0, x, y, NULL, WINDOW_TACTICAL);
                 } else {

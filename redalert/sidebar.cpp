@@ -75,6 +75,25 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "common/remastered_scene.h"
+#include "common/video.h"
+static std::vector<uint8_t> WP_Sidebar_Pixels(int x, int y, int width, int height)
+{
+    std::vector<uint8_t> result(static_cast<size_t>(width) * height, 0);
+    if (!LogicPage->Lock()) return result;
+    const int pitch = LogicPage->Get_Width() + LogicPage->Get_XAdd() + LogicPage->Get_Pitch();
+    const uint8_t* source = reinterpret_cast<const uint8_t*>(LogicPage->Get_Offset());
+    for (int row = 0; row < height; ++row) {
+        if (y + row < 0 || y + row >= LogicPage->Get_Height()) continue;
+        for (int col = 0; col < width; ++col) {
+            if (x + col >= 0 && x + col < LogicPage->Get_Width())
+                result[static_cast<size_t>(row) * width + col] = source[(y + row) * pitch + x + col];
+        }
+    }
+    LogicPage->Unlock();
+    return result;
+}
+
 #include "factory.h"
 
 void* SidebarClass::SidebarShape = NULL;
@@ -742,6 +761,10 @@ bool SidebarClass::Scroll(bool up, int column)
  *=============================================================================================*/
 void SidebarClass::Draw_It(bool complete)
 {
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+    if (Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork()) complete = true;
+#endif
+    WPRemastered::ClearSidebar();
     PowerClass::Draw_It(complete);
 
     BStart(BENCH_SIDEBAR);
@@ -1647,9 +1670,11 @@ void SidebarClass::StripClass::Draw_It(bool complete)
         **	them. Their Y offset may be adjusted if the strip is in the process of scrolling.
         */
         for (int i = 0; i < MAX_VISIBLE + (IsScrolling ? 1 : 0); i++) {
-            bool production;
-            bool completed;
-            int stage;
+            bool production = false;
+            bool completed = false;
+            int stage = 0;
+            std::string hd_icon;
+            std::vector<uint8_t> hd_base;
             bool darken = false;
             void const* shapefile = 0;
             int shapenum = 0;
@@ -1704,6 +1729,7 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                             remapper = 0;
                         }
 
+                        hd_icon = std::string("ICON.") + obj->IniName;
                         shapefile = obj->Get_Cameo_Data();
                         shapenum = 0;
                         if (Buildables[index].Factory != -1) {
@@ -1730,6 +1756,9 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                 } else {
 
                     spc = SpecialWeaponType(Buildables[index].BuildableID);
+                    static const char* special_icons[] = {"SW_SONARPULSE", "SW_NUKE", "SW_CHRONO", "SW_PARABOMB",
+                        "SW_PARAINFANTRY", "SW_SPYMISSION", "SW_IRONCURTAIN", "SW_GPS"};
+                    if (spc >= SPC_FIRST && spc < SPC_COUNT) hd_icon = std::string("ICON.") + special_icons[spc];
                     shapefile = Get_Special_Cameo(spc);
                     shapenum = 0;
 
@@ -1776,6 +1805,11 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                               WINDOW_SIDEBAR,
                               SHAPE_NORMAL | SHAPE_WIN_REL | (remapper ? SHAPE_FADING : SHAPE_NORMAL),
                               remapper);
+#if defined(IPADOS_PORT) || defined(MACOS_PORT) || defined(VISIONOS_PORT)
+                if (!hd_icon.empty() && Video_Has_Full_Remastered_Artwork() && Video_Uses_Modern_Artwork())
+                    hd_base = WP_Sidebar_Pixels(x + LEFT_EDGE_OFFSET * RESFACTOR, y,
+                                               OBJECT_WIDTH * RESFACTOR, OBJECT_HEIGHT * RESFACTOR);
+#endif
 
                 /*
                 **	Darken this object because it cannot be produced or is otherwise
@@ -1832,6 +1866,18 @@ void SidebarClass::StripClass::Draw_It(bool complete)
                                       SHAPE_CENTER);
                     }
                 }
+            }
+            if (!hd_base.empty()) {
+                const auto final_pixels = WP_Sidebar_Pixels(x + LEFT_EDGE_OFFSET * RESFACTOR, y,
+                                                           OBJECT_WIDTH * RESFACTOR, OBJECT_HEIGHT * RESFACTOR);
+                WPRemastered::RecordSidebarIcon(hd_icon.c_str(),
+                    x + LEFT_EDGE_OFFSET * RESFACTOR + LogicPage->Get_XPos(), y + LogicPage->Get_YPos(),
+                    OBJECT_WIDTH * RESFACTOR, OBJECT_HEIGHT * RESFACTOR,
+                    WindowList[WINDOW_SIDEBAR][WINDOWX] + LogicPage->Get_XPos(),
+                    WindowList[WINDOW_SIDEBAR][WINDOWY] + LogicPage->Get_YPos(),
+                    WindowList[WINDOW_SIDEBAR][WINDOWWIDTH], WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT],
+                    hd_base.data(), final_pixels.data(), production && !completed ? stage : -1, darken, 0,
+                    production && completed ? 1 : (production && factory && !factory->Is_Building() ? 2 : 0));
             }
         }
 

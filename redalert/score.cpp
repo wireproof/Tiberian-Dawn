@@ -45,6 +45,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
 #include "interpal.h"
 #include "common/framelimit.h"
 #include "common/wsa.h"
@@ -332,6 +333,7 @@ static unsigned char const _yellowpal[] =
     {0x0, 0x0, 0xEC, 0x0, 0xEB, 0x0, 0xEA, 0x0, 0xE9, 0x0, 0x0, 0x0, 0x0, 0x0, 0xED, 0x0};
 void ScoreClass::Presentation(void)
 {
+    RA_BeginPresentation();
 #ifndef REMASTER_BUILD
     static int const _casuax[2] = {144, 150};
     static int const _casuay[2] = {78, 78};
@@ -1679,6 +1681,7 @@ char* Int_Print(int a)
  *=============================================================================================*/
 void Multi_Score_Presentation(void)
 {
+    RA_BeginPresentation();
 #ifndef REMASTER_BUILD
     char remap[16];
     GraphicBufferClass* pseudoseenbuff = new GraphicBufferClass(320, 200, (void*)NULL);

@@ -51,7 +51,10 @@ extern "C" void TiberianDawn_SetCompactWindowWarning(bool) {}
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include "common/app_lifecycle.h"
-#include "common/video.h"
+// Keep legacy video.h/Rect out of UIKit translation units (MacTypes defines Rect).
+extern SDL_Window* Video_Get_Game_Window(void);
+extern bool Video_Game_Window_Is_Visible(void);
+extern void Set_Video_Render_Active(bool);
 extern void Focus_Loss(void);
 extern void Focus_Restore(void);
 

@@ -10,7 +10,7 @@
         <string>de</string>
     </array>
     <key>CFBundleDisplayName</key>
-    <string>Tiberian Dawn</string>
+    <string>C&amp;C</string>
     <key>CFBundleExecutable</key>
     <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
     <key>CFBundleIdentifier</key>

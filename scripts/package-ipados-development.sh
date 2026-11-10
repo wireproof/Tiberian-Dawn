@@ -37,7 +37,7 @@ codesign -d --entitlements :- "$app" > "$stage/entitlements.plist" 2>/dev/null
 # also update a separately loaded Red Alert engine and its private art pack.
 # ditto preserves complete base assets when an ordinary source build omits them.
 if [[ -f "$built_app/Frameworks/RedAlertEngine.dylib" ]]; then
-    for required in RAData/REDALERT.MIX RAData/allied/MAIN.MIX RAData/soviet/MAIN.MIX \
+    for required in selector-reference.png RAData/REDALERT.MIX RAData/allied/MAIN.MIX RAData/soviet/MAIN.MIX \
                     RemasteredArtRA/frames.tsv RemasteredArtRA/teams.tsv RemasteredArtRA/manifest.ini; do
         [[ -s "$built_app/$required" ]] || { echo "Combined build is missing $required" >&2; exit 1; }
     done
@@ -69,7 +69,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
             raise SystemExit(f"Packaged IPA is missing {folder} files")
     engine = "Payload/TiberianDawn.app/Frameworks/RedAlertEngine.dylib"
     if engine in names:
-        for required in ("RAData/REDALERT.MIX", "RAData/allied/MAIN.MIX", "RAData/soviet/MAIN.MIX",
+        for required in ("selector-reference.png", "RAData/REDALERT.MIX", "RAData/allied/MAIN.MIX", "RAData/soviet/MAIN.MIX",
                          "RemasteredArtRA/frames.tsv", "RemasteredArtRA/teams.tsv", "RemasteredArtRA/manifest.ini"):
             path = "Payload/TiberianDawn.app/" + required
             if path not in names or not archive.getinfo(path).file_size:

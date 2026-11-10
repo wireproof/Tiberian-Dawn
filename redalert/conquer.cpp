@@ -76,6 +76,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef IPADOS_PORT
+#include <atomic>
+#include <SDL.h>
+
+namespace {
+std::atomic<bool> MovieTouchSkipRequested{false};
+
+int SDLCALL Capture_Movie_Touch(void*, SDL_Event* event)
+{
+    if (event->type == SDL_FINGERDOWN) {
+        MovieTouchSkipRequested.store(true, std::memory_order_relaxed);
+    }
+    return 0;
+}
+}
+#endif
 
 #include "interpal.h"
 #include "vortex.h"
@@ -2465,7 +2481,15 @@ void Play_Movie(char const* name, ThemeType theme, bool clrscrn, bool immediate)
                 // Set_Palette(BlackPalette);
                 SysMemPage.Clear();
                 InMovie = true;
+#ifdef IPADOS_PORT
+                MovieTouchSkipRequested.store(false, std::memory_order_relaxed);
+                SDL_AddEventWatch(Capture_Movie_Touch, nullptr);
+#endif
                 VQA_Play(vqa, VQAMODE_RUN);
+#ifdef IPADOS_PORT
+                SDL_DelEventWatch(Capture_Movie_Touch, nullptr);
+                MovieTouchSkipRequested.store(false, std::memory_order_relaxed);
+#endif
                 VQA_Close(vqa);
                 // Resume_Audio_Thread();
                 InMovie = false;
@@ -3205,7 +3229,11 @@ int VQ_Call_Back(unsigned char*, int)
 #endif
     Frame_Limiter();
 
-    if ((BreakoutAllowed || Debug_Flag) && key == KN_ESC) {
+    bool touch_skip = false;
+#ifdef IPADOS_PORT
+    touch_skip = MovieTouchSkipRequested.exchange(false, std::memory_order_relaxed);
+#endif
+    if ((BreakoutAllowed || Debug_Flag) && (key == KN_ESC || touch_skip)) {
         Keyboard->Clear();
         Brokeout = true;
         return (true);

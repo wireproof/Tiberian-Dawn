@@ -26,7 +26,7 @@ project(TiberianDawnApple VERSION 0.7.5 LANGUAGES C CXX)
 # All native Apple applications use the same public version and monotonically
 # increasing build number. Keep these values centralized so macOS, iPadOS,
 # local builds, and distributed releases cannot silently drift apart.
-set(TIBERIAN_DAWN_BUILD_VERSION "716")
+set(TIBERIAN_DAWN_BUILD_VERSION "717")
 
 option(BUILD_REMASTERTD "Build Tiberian Dawn remaster dll." OFF)
 option(BUILD_REMASTERRA "Build Red Alert remaster dll." OFF)
@@ -126,6 +126,7 @@ if(RED_ALERT_COMBINED_APP AND (NOT IPADOS_PORT OR NOT BUILD_VANILLATD))
 endif()
 set(RED_ALERT_DATA_DIR "" CACHE PATH "Private staged original Red Alert CD data")
 set(TIBERIAN_DAWN_DATA_DIR "" CACHE PATH "Private prepared original Tiberian Dawn game data for combined iOS app")
+set(TIBERIAN_DAWN_REMASTERED_ART_DIR "" CACHE PATH "Private RemasteredArt pack for combined iOS app")
 add_feature_info(MapEditorTD MAP_EDITORTD "Include internal scenario editor in TiberianDawn")
 add_feature_info(MapEditorRA MAP_EDITORRA "Include internal scenario editor in VanillaRA")
 add_feature_info(Networking NETWORKING "Networking support")
@@ -281,6 +282,23 @@ add_subdirectory(redalert)
 add_subdirectory(tools)
 
 if(RED_ALERT_COMBINED_APP)
+    if(NOT TIBERIAN_DAWN_REMASTERED_ART_DIR)
+        message(FATAL_ERROR "The combined iOS app requires TIBERIAN_DAWN_REMASTERED_ART_DIR")
+    endif()
+    if(TIBERIAN_DAWN_REMASTERED_ART_DIR)
+        foreach(required_art_file frames.tsv teams.tsv manifest.ini)
+            if(NOT EXISTS "${TIBERIAN_DAWN_REMASTERED_ART_DIR}/${required_art_file}")
+                message(FATAL_ERROR "Missing RemasteredArt file: ${required_art_file}")
+            endif()
+        endforeach()
+        file(GLOB TIBERIAN_DAWN_REMASTERED_ART CONFIGURE_DEPENDS
+            "${TIBERIAN_DAWN_REMASTERED_ART_DIR}/*")
+        foreach(asset IN LISTS TIBERIAN_DAWN_REMASTERED_ART)
+            set_source_files_properties("${asset}" TARGET_DIRECTORY TiberianDawn
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RemasteredArt)
+        endforeach()
+        target_sources(TiberianDawn PRIVATE ${TIBERIAN_DAWN_REMASTERED_ART})
+    endif()
     if(TIBERIAN_DAWN_DATA_DIR)
         file(GLOB_RECURSE TIBERIAN_DAWN_GAME_DATA CONFIGURE_DEPENDS
             "${TIBERIAN_DAWN_DATA_DIR}/*.MIX")

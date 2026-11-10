@@ -1,6 +1,6 @@
 # C&C Duo build 718 validation
 
-Current checkpoint: additional cross-engine state isolation, RA scene lifecycle routing, and transactional recovery autosave changes pass their focused tests, but their full app rebuild and replacement IPA are pending host recovery. Earlier full-build/package results below apply to the withdrawn pre-isolation candidate, not acceptance of the latest source.
+Current checkpoint: the post-isolation combined iOS device build succeeded and a complete replacement IPA was signed and archive-verified. Physical-device gameplay acceptance remains pending. The withdrawn pre-isolation candidate below must not be installed.
 
 ## Implemented
 
@@ -25,6 +25,8 @@ The `Artwork` control in each game's native Options panel selects classic or rem
 - Real-header native O0/O2 dlopen isolation tests: passed for all layout state addresses, wrapper behavior, distinct cheat defaults and save-callback ownership.
 - RA lifecycle edge/background-task tests and recovery transaction/validation tests: passed. Latest full app builds remain pending.
 - Final combined simulator/device builds after focus and partial-startup cleanup: succeeded.
+- Replacement full iOS device build from this source: succeeded with bundle ID `com.wireproof.tiberiandawn`, version `0.7.5`, build `718`.
+- Replacement full IPA: original Tiberian Dawn and Red Alert assets, music, movies, both remastered art packs, launcher image and nested Red Alert engine included; nested and outer signatures plus archive integrity verified. SHA-256 `e6cd53a800902af0cdbd55282cf067dc7ef1874edc0d120bf89796d4018d3738`.
 - TD backup regression and RA backup/cloud schema, validation, isolation and rollback fixtures: passed.
 - RA Workshop metadata/batch-edit fixtures: passed.
 - Real TD/RA remastered pack lookup, separation, theater, team-color and icon smoke tests: passed.
@@ -40,7 +42,7 @@ Do not treat a compile or installation as gameplay acceptance. At this checkpoin
 - Verify repeated TD → launcher → RA → launcher → TD transitions, including audio, palette, input, background/foreground and score/movie boundaries.
 - Verify portrait, landscape, cover/inner display and laptop layouts with screenshots and touch input.
 - Reconcile and validate the separate native macOS Red Alert/combined-engine work before any release/merge. The native TD/shared-code Universal 2 package check passed, but does not establish RA AppKit feature parity.
-- Validate on the physical device only after the user has saved/closed the game, backed-up save files are hash-verified, and the established installation workflow is authorized. No physical install or save changes occurred during this work.
+- Validate on the physical device only after the user has saved/closed the game and backed-up save files are hash-verified. No physical install or save changes occurred during this build/package checkpoint.
 - Validate real iCloud delivery only with a properly provisioned host and explicit opt-in. No account, entitlements or cloud preferences were enabled or changed by this implementation.
 
 ## Remaining feature gap

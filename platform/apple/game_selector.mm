@@ -98,13 +98,20 @@ extern "C" bool WireproofChooseAndRunGame(int argc, char **argv, int *result)
     if (testGame && std::strcmp(testGame, "tiberian") == 0) choice = 0;
 #endif
     UIWindowScene *gameScene = nil;
+    UIWindowScene *connectedScene = nil;
     for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
-        if ([scene isKindOfClass:UIWindowScene.class]
-            && scene.activationState == UISceneActivationStateForegroundActive) {
+        if (![scene isKindOfClass:UIWindowScene.class]) continue;
+        if (!connectedScene) connectedScene = (UIWindowScene *)scene;
+        if (scene.activationState == UISceneActivationStateForegroundActive) {
             gameScene = (UIWindowScene *)scene;
             break;
         }
     }
+    // SDL enters the game from scene:willConnectToSession:. On a physical
+    // device that scene may not have become foreground-active yet; returning
+    // here leaves the app on its blank launch window. Attach the chooser to
+    // the connected scene and let the nested run loop deliver activation.
+    if (!gameScene) gameScene = connectedScene;
     if (!gameScene) {
         NSLog(@"Game selection requires an active iOS window scene");
         *result = EXIT_FAILURE;

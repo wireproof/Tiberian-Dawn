@@ -28,6 +28,7 @@ The `Artwork` control in each game's native Options panel selects classic or rem
 - Replacement full iOS device build from this source: succeeded with bundle ID `com.wireproof.tiberiandawn`, version `0.7.5`, build `718`.
 - Replacement full IPA: original Tiberian Dawn and Red Alert assets, music, movies, both remastered art packs, launcher image and nested Red Alert engine included; nested and outer signatures plus archive integrity verified. SHA-256 `e6cd53a800902af0cdbd55282cf067dc7ef1874edc0d120bf89796d4018d3738`.
 - Complete IPA copied to the live Synology SMB mount at `Documents/Applications/iPhone/Games/CnC-Duo-0.7.5-build718-development-full.ipa`; local and destination SHA-256 hashes matched before promotion to the final name.
+- Physical Duo installation on 2026-11-10: `devicectl` installed the signed full app over the existing bundle, and installed-app readback reported `com.wireproof.tiberiandawn` version `0.7.5`, build `718`. The pre-install Documents data was copied twice with 22 matching file hashes; the post-install readback matched all 22 pre-install hashes. The app was not launched. These checks establish install and save preservation, not in-game acceptance.
 - TD backup regression and RA backup/cloud schema, validation, isolation and rollback fixtures: passed.
 - RA Workshop metadata/batch-edit fixtures: passed.
 - Real TD/RA remastered pack lookup, separation, theater, team-color and icon smoke tests: passed.
@@ -43,7 +44,7 @@ Do not treat a compile or installation as gameplay acceptance. At this checkpoin
 - Verify repeated TD → launcher → RA → launcher → TD transitions, including audio, palette, input, background/foreground and score/movie boundaries.
 - Verify portrait, landscape, cover/inner display and laptop layouts with screenshots and touch input.
 - Reconcile and validate the separate native macOS Red Alert/combined-engine work before any release/merge. The native TD/shared-code Universal 2 package check passed, but does not establish RA AppKit feature parity.
-- Validate on the physical device only after the user has saved/closed the game and backed-up save files are hash-verified. No physical install or save changes occurred during this build/package checkpoint.
+- Verify gameplay on the physical Duo, especially both games, Red Alert's command deck, Workshop, cheats, remastered artwork and game switching. Build 718 installation and save preservation are verified; no gameplay launch occurred during installation.
 - Validate real iCloud delivery only with a properly provisioned host and explicit opt-in. No account, entitlements or cloud preferences were enabled or changed by this implementation.
 
 ## Remaining feature gap

@@ -243,7 +243,7 @@ static void RASaveJoystickSetting(bool speed,int value) {
     [NSUserDefaults.standardUserDefaults setObject:settings forKey:@"Wireproof.RedAlert.Joystick.v1"];
 }
 @interface WPRAJoystick : UIView
-@property(nonatomic,strong) UILabel* arrows;
+@property(nonatomic,strong) UIView* thumb;
 @property(nonatomic,copy) NSString* profile;
 @property(nonatomic) BOOL positioning;
 @property(nonatomic) CGPoint dragOffset;
@@ -254,8 +254,8 @@ static void RASaveJoystickSetting(bool speed,int value) {
     if((self=[super initWithFrame:frame])) {
         self.backgroundColor=[UIColor colorWithWhite:.08 alpha:.7];self.layer.borderColor=[UIColor colorWithWhite:1 alpha:.45].CGColor;self.layer.borderWidth=2;
         self.accessibilityLabel=@"Pan battlefield. Hold and drag to reposition.";
-        self.arrows=[UILabel new];self.arrows.text=@"✥";self.arrows.textAlignment=NSTextAlignmentCenter;
-        self.arrows.textColor=UIColor.whiteColor;self.arrows.font=[UIFont systemFontOfSize:44];[self addSubview:self.arrows];
+        self.thumb=[UIView new];self.thumb.backgroundColor=UIColor.systemBlueColor;
+        self.thumb.userInteractionEnabled=NO;[self addSubview:self.thumb];
         UILongPressGestureRecognizer* move=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(reposition:)];move.minimumPressDuration=.45;[self addGestureRecognizer:move];
         NSDictionary* settings=RAJoystickSettings();for(NSString* key in @[@"size",@"speed"]){id v=settings[key];if([v isKindOfClass:NSNumber.class] && std::isfinite([v doubleValue]))WPOrders::Shared().setJoystickSetting([key isEqual:@"speed"],[v intValue]);}
     }return self;
@@ -269,7 +269,9 @@ static void RASaveJoystickSetting(bool speed,int value) {
     CGFloat diameter=WPOrders::Shared().joystickSetting(false)*24;
     CGFloat availableW=MAX(0,size.width-safe.left-safe.right-diameter),availableH=MAX(0,size.height-safe.top-safe.bottom-diameter);
     self.frame=CGRectMake(safe.left+value(@"X",.08)*availableW,safe.top+value(@"Y",.9)*availableH,diameter,diameter);
-    self.layer.cornerRadius=diameter/2;self.arrows.frame=self.bounds;
+    self.layer.cornerRadius=diameter/2;
+    CGFloat center=diameter*.40;self.thumb.frame=CGRectMake((diameter-center)/2,(diameter-center)/2,center,center);
+    self.thumb.layer.cornerRadius=center/2;
 }
 - (void)reposition:(UILongPressGestureRecognizer*)gesture {
     UIWindow* window=self.window;if(!window)return;CGPoint point=[gesture locationInView:window];
@@ -302,6 +304,9 @@ static void RASaveJoystickSetting(bool speed,int value) {
 @property(nonatomic,strong) UIScrollView* content;
 @property(nonatomic,strong) UILabel* title;
 @property(nonatomic) BOOL expanded;
+@property(nonatomic) BOOL dockTabs;
+@property(nonatomic) CGPoint floatingPosition;
+@property(nonatomic,copy) NSString* floatingProfile;
 @property(nonatomic) NSInteger group;
 @property(nonatomic) NSInteger buildCategory;
 @property(nonatomic,copy) NSString* fingerprint;
@@ -310,17 +315,40 @@ static void RASaveJoystickSetting(bool speed,int value) {
 @implementation WPRAToolbar
 - (instancetype)initWithFrame:(CGRect)frame {
     if((self=[super initWithFrame:frame])) {
-        self.backgroundColor=[UIColor colorWithRed:.08 green:.09 blue:.11 alpha:.96];self.layer.cornerRadius=16;
-        self.toggle=[UIButton buttonWithType:UIButtonTypeSystem];[self.toggle setTitle:@"RA • Command Deck" forState:UIControlStateNormal];
+        self.backgroundColor=[UIColor colorWithWhite:.05 alpha:.96];self.layer.cornerRadius=12;
+        self.floatingPosition=CGPointMake(.08,.12);
+        self.toggle=[UIButton buttonWithType:UIButtonTypeSystem];
         self.toggle.tintColor=UIColor.whiteColor;self.toggle.titleLabel.font=[UIFont boldSystemFontOfSize:16];
         [self.toggle addTarget:self action:@selector(toggleDeck) forControlEvents:UIControlEventTouchUpInside];[self addSubview:self.toggle];
-        self.tabs=[[UISegmentedControl alloc] initWithItems:@[@"Build",@"Commands",@"Radar",@"Cheats",@"Options"]];
+        UIPanGestureRecognizer* pan=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragFloating:)];
+        [self.toggle addGestureRecognizer:pan];
+        self.tabs=[[UISegmentedControl alloc] initWithItems:@[@"Cheats",@"Options"]];
         self.tabs.selectedSegmentIndex=0;[self.tabs addTarget:self action:@selector(changeTab) forControlEvents:UIControlEventValueChanged];[self addSubview:self.tabs];
         self.content=[UIScrollView new];[self addSubview:self.content];self.group=1;
     }return self;
 }
 - (void)toggleDeck {self.expanded=!self.expanded;self.fingerprint=nil;[self refresh];}
 - (void)changeTab {self.fingerprint=nil;self.content.contentOffset=CGPointZero;[self refresh];}
+- (NSInteger)page {return self.dockTabs?self.tabs.selectedSegmentIndex:self.tabs.selectedSegmentIndex+3;}
+- (void)setDockTabs:(BOOL)dock {
+    if(_dockTabs==dock)return;
+    _dockTabs=dock;
+    [self.tabs removeAllSegments];
+    NSArray* names=dock?@[@"Build",@"Commands",@"Radar",@"Cheats",@"Options"]:@[@"Cheats",@"Options"];
+    for(NSInteger i=0;i<names.count;++i)[self.tabs insertSegmentWithTitle:names[i] atIndex:i animated:NO];
+    self.tabs.selectedSegmentIndex=0;self.fingerprint=nil;self.content.contentOffset=CGPointZero;
+}
+- (void)dragFloating:(UIPanGestureRecognizer*)gesture {
+    if(!self.window || WPLaptop::Active())return;
+    CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+    CGPoint delta=[gesture translationInView:self.superview];
+    CGFloat dx=MAX(1,safe.size.width-self.bounds.size.width),dy=MAX(1,safe.size.height-self.bounds.size.height);
+    self.floatingPosition=CGPointMake(MIN(1,MAX(0,(self.frame.origin.x+delta.x-safe.origin.x)/dx)),
+                                     MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)));
+    [gesture setTranslation:CGPointZero inView:self.superview];[self refresh];
+    if(gesture.state==UIGestureRecognizerStateEnded || gesture.state==UIGestureRecognizerStateCancelled)
+        [NSUserDefaults.standardUserDefaults setObject:@[@(self.floatingPosition.x),@(self.floatingPosition.y)] forKey:self.floatingProfile];
+}
 - (UIButton*)button:(NSString*)text y:(CGFloat)y action:(void(^)(void))action {
     UIButton* b=[UIButton buttonWithType:UIButtonTypeSystem];b.frame=CGRectMake(10,y,self.bounds.size.width-20,42);
     [b setTitle:text forState:UIControlStateNormal];b.tintColor=UIColor.whiteColor;b.backgroundColor=[UIColor colorWithWhite:.19 alpha:1];b.layer.cornerRadius=8;
@@ -335,27 +363,41 @@ static void RASaveJoystickSetting(bool speed,int value) {
     UIEdgeInsets postureSafe=window.safeAreaInsets;
     const bool cover=WPCamera::CoverDisplay(window.bounds.size.width,window.bounds.size.height,postureSafe.left,postureSafe.top,postureSafe.right,postureSafe.bottom);
     WPLaptop::SetFoldedPortrait(RAHasPartialHinge && !cover && window.bounds.size.height>window.bounds.size.width*1.05);
-    const bool dock=WPLaptop::Active();if(dock)self.expanded=YES;
-    UIEdgeInsets safe=window.safeAreaInsets;CGFloat width=dock?window.bounds.size.width:MIN(430,window.bounds.size.width-safe.left-safe.right-20);
-    CGFloat height=dock?window.bounds.size.height/2:self.expanded?MIN(520,window.bounds.size.height-safe.top-safe.bottom-24):44;
-    self.frame=dock?CGRectMake(0,window.bounds.size.height/2,width,height):CGRectMake(window.bounds.size.width-safe.right-width-10,safe.top+10,width,height);
-    self.toggle.frame=CGRectMake(0,0,width,44);self.tabs.hidden=self.content.hidden=!self.expanded;
-    self.tabs.frame=CGRectMake(8,46,width-16,34);self.content.frame=CGRectMake(0,88,width,height-96-(dock?safe.bottom:0));
+    const bool dock=WPLaptop::Active();[self setDockTabs:dock];if(dock)self.expanded=YES;
+    UIEdgeInsets safe=window.safeAreaInsets;
+    CGFloat width=dock?window.bounds.size.width:self.expanded?MIN(window.bounds.size.width-safe.left-safe.right-16,window.bounds.size.width>window.bounds.size.height?900:280):56;
+    CGFloat height=dock?window.bounds.size.height/2:self.expanded?MIN(520,window.bounds.size.height-safe.top-safe.bottom-24):56;
+    if(dock)self.frame=CGRectMake(0,ceil(window.bounds.size.height*.5),width,height);
+    else {
+        NSString* profile=[NSString stringWithFormat:@"Wireproof.RedAlert.OptionsPosition.%@.%@",cover?@"Cover":@"Inner",window.bounds.size.width>window.bounds.size.height?@"Landscape":@"Portrait"];
+        if(![profile isEqual:self.floatingProfile]){
+            self.floatingProfile=profile;NSArray* saved=[NSUserDefaults.standardUserDefaults arrayForKey:profile];
+            self.floatingPosition=saved.count==2?CGPointMake(MIN(1,MAX(0,[saved[0] doubleValue])),MIN(1,MAX(0,[saved[1] doubleValue]))):CGPointMake(.08,.12);
+        }
+        CGRect usable=CGRectInset(window.safeAreaLayoutGuide.layoutFrame,8,8);
+        self.frame=CGRectMake(usable.origin.x+self.floatingPosition.x*MAX(0,usable.size.width-width),
+                              usable.origin.y+self.floatingPosition.y*MAX(0,usable.size.height-height),width,height);
+    }
+    [self.toggle setTitle:dock?[NSString stringWithFormat:@"Command deck · %d selected",state.selected]:self.expanded?@"Cheats & Options ▾":@"" forState:UIControlStateNormal];
+    [self.toggle setImage:!dock&&!self.expanded?[UIImage systemImageNamed:@"slider.horizontal.3"]:nil forState:UIControlStateNormal];
+    self.toggle.frame=CGRectMake(0,0,width,dock?36:56);self.tabs.hidden=self.content.hidden=!self.expanded;
+    self.tabs.frame=CGRectMake(8,dock?38:58,width-16,34);self.content.frame=CGRectMake(0,dock?80:100,width,height-(dock?88+(int)safe.bottom:108));
     if(!self.expanded)return;
-    self.content.scrollEnabled=self.tabs.selectedSegmentIndex!=2;
+    const NSInteger page=[self page];
+    self.content.scrollEnabled=page!=2;
     auto items=WPOrders::Shared().productionSnapshot();auto cheat=WPCheats::Shared().snapshot();
-    NSMutableString* key=[NSMutableString stringWithFormat:@"%ld.%f.%f.%d.%d",(long)self.tabs.selectedSegmentIndex,width,height,WPLaptop::Enabled().load(),WPLaptop::AlwaysPortrait().load()];
-    if(self.tabs.selectedSegmentIndex==0) {
+    NSMutableString* key=[NSMutableString stringWithFormat:@"%ld.%f.%f.%d.%d",(long)page,width,height,WPLaptop::Enabled().load(),WPLaptop::AlwaysPortrait().load()];
+    if(page==0) {
         [key appendFormat:@"/%ld",(long)self.buildCategory];
         for(const auto& p:items)[key appendFormat:@"/%d,%d,%d,%d,%d,%d",p.type,p.id,p.progress,p.ready,p.paused,p.queued];
-    } else if(self.tabs.selectedSegmentIndex==1) [key appendFormat:@"/%ld/%d/%d/%d/%d",(long)self.group,state.selected,state.force,state.rally,WPOrders::Shared().mapDrag()];
-    else if(self.tabs.selectedSegmentIndex==3) [key appendFormat:@"/%d/%d/%d/%d/%d/%d/%d/%d/%d/%d/%d",cheat.available,cheat.money,cheat.invincible,cheat.reveal,cheat.instant,cheat.free,cheat.weapons,cheat.anywhere,cheat.infantry,cheat.vehicles,cheat.aircraft];
-    if(self.tabs.selectedSegmentIndex==3)[key appendFormat:@"/%d/%d",cheat.unlock,cheat.damagedHealth];
-    else if(self.tabs.selectedSegmentIndex==4) [key appendFormat:@"/%d/%d/%d",state.remastered,WPOrders::Shared().joystickSetting(false),WPOrders::Shared().joystickSetting(true)];
+    } else if(page==1) [key appendFormat:@"/%ld/%d/%d/%d/%d",(long)self.group,state.selected,state.force,state.rally,WPOrders::Shared().mapDrag()];
+    else if(page==3) [key appendFormat:@"/%d/%d/%d/%d/%d/%d/%d/%d/%d/%d/%d",cheat.available,cheat.money,cheat.invincible,cheat.reveal,cheat.instant,cheat.free,cheat.weapons,cheat.anywhere,cheat.infantry,cheat.vehicles,cheat.aircraft];
+    if(page==3)[key appendFormat:@"/%d/%d",cheat.unlock,cheat.damagedHealth];
+    else if(page==4) [key appendFormat:@"/%d/%d/%d",state.remastered,WPOrders::Shared().joystickSetting(false),WPOrders::Shared().joystickSetting(true)];
     if([key isEqual:self.fingerprint]) {for(UIView* v in self.content.subviews)if([v isKindOfClass:WPRARadar.class])[v setNeedsDisplay];return;}
     self.fingerprint=key;for(UIView* v in self.content.subviews)[v removeFromSuperview];CGFloat y=0;
-    if(self.tabs.selectedSegmentIndex==0) {
-        UISegmentedControl* category=[[UISegmentedControl alloc] initWithItems:@[@"Structures",@"Infantry",@"Vehicles",@"Special"]];
+    if(page==0) {
+        UISegmentedControl* category=[[UISegmentedControl alloc] initWithItems:@[@"Buildings",@"Infantry",@"Vehicles",@"Powers"]];
         category.frame=CGRectMake(10,0,width-20,34);category.selectedSegmentIndex=self.buildCategory;
         [category addAction:[UIAction actionWithHandler:^(UIAction*){self.buildCategory=category.selectedSegmentIndex;self.fingerprint=nil;[self refresh];}] forControlEvents:UIControlEventValueChanged];[self.content addSubview:category];y=42;
         int columns=MAX(2,int((width-20)/150)),index=0;CGFloat tileWidth=(width-20-(columns-1)*8)/columns;
@@ -375,28 +417,46 @@ static void RASaveJoystickSetting(bool speed,int value) {
             ++index;
         }
         y+=((index+columns-1)/columns)*152;
-    } else if(self.tabs.selectedSegmentIndex==1) {
+    } else if(page==1) {
         NSArray* names=@[@"Stop",@"Guard area",@"Scatter",@"Force attack",@"Force move",@"Cancel action"];
         for(int i=0;i<6;++i){auto kind=(WPOrders::Kind)i;[self button:names[i] y:y action:^{WPOrders::Shared().enqueue(kind);if(kind==WPOrders::Attack || kind==WPOrders::Move){self.expanded=NO;[self refresh];}}];y+=46;}
         NSArray* rallies=@[@"Set infantry rally point",@"Set vehicle rally point",@"Clear rally points"];
         for(int i=0;i<3;++i){auto kind=(WPOrders::Kind)(WPOrders::RallyInfantry+i);[self button:rallies[i] y:y action:^{WPOrders::Shared().enqueue(kind);self.expanded=NO;[self refresh];}];y+=46;}
         UIScrollView* groups=[[UIScrollView alloc] initWithFrame:CGRectMake(10,y,width-20,48)];[self.content addSubview:groups];
         CGFloat groupWidth=MAX(44,(width-20-8*4)/9);
-        for(int group=1;group<=9;++group){UIButton* button=[self button:[NSString stringWithFormat:@"%d",group] y:y action:^{self.group=group;WPOrders::Shared().enqueue(WPOrders::Recall,group);self.fingerprint=nil;[self refresh];}];[groups addSubview:button];button.frame=CGRectMake((group-1)*(groupWidth+4),0,groupWidth,44);button.backgroundColor=self.group==group?UIColor.systemRedColor:[UIColor colorWithWhite:.19 alpha:1];}groups.contentSize=CGSizeMake(9*(groupWidth+4),44);y+=50;
-        for(int i=0;i<4;++i){auto kind=(WPOrders::Kind)(WPOrders::Recall+i);[self button:@[@"Recall group",@"Assign selection to group",@"Add group to selection",@"Center group"][i] y:y action:^{WPOrders::Shared().enqueue(kind,(int)self.group);}];y+=46;}
+        for(int group=1;group<=9;++group){UIButton* button=[self button:[NSString stringWithFormat:@"%d",group] y:y action:^{self.group=group;WPOrders::Shared().enqueue(WPOrders::Recall,group-1);self.fingerprint=nil;[self refresh];}];[groups addSubview:button];button.frame=CGRectMake((group-1)*(groupWidth+4),0,groupWidth,44);button.backgroundColor=self.group==group?UIColor.systemBlueColor:[UIColor colorWithWhite:.19 alpha:1];}groups.contentSize=CGSizeMake(9*(groupWidth+4),44);y+=50;
+        for(int i=0;i<4;++i){auto kind=(WPOrders::Kind)(WPOrders::Recall+i);[self button:@[@"Recall group",@"Assign selection to group",@"Add group to selection",@"Center group"][i] y:y action:^{WPOrders::Shared().enqueue(kind,(int)self.group-1);}];y+=46;}
         [self button:WPOrders::Shared().mapDrag()?@"Map drag: ON":@"Map drag: OFF" y:y action:^{WPOrders::Shared().setMapDrag(!WPOrders::Shared().mapDrag());self.fingerprint=nil;[self refresh];}];y+=46;
-    } else if(self.tabs.selectedSegmentIndex==2) {
+    } else if(page==2) {
         WPRARadar* radar=[[WPRARadar alloc] initWithFrame:CGRectMake(10,0,width-20,MAX(80,self.content.bounds.size.height-8))];[self.content addSubview:radar];y=radar.frame.size.height+10;
-    } else if(self.tabs.selectedSegmentIndex==3) {
+    } else if(page==3) {
         if(!cheat.available){[self button:@"Cheats are single-player only" y:y action:^{}];y+=46;}
         else {
-            [self button:[NSString stringWithFormat:@"Credits: %d • Add 10,000",cheat.money] y:y action:^{WPCheats::Shared().addMoney(10000);}];y+=46;
-            [self button:@"Add 100 power" y:y action:^{WPCheats::Shared().addPower(100);}];y+=46;
-            NSArray* names=@[@"Invincible forces",@"Reveal map",@"Instant production",@"Free production",@"Recharge available superweapons",@"Build anywhere",@"Unlock military roster",@"Damaged-building health"];
+            UILabel* credits=[[UILabel alloc] initWithFrame:CGRectMake(12,y,width-24,36)];
+            credits.text=[NSString stringWithFormat:@"Credits: %d",cheat.money];credits.textColor=UIColor.whiteColor;credits.font=[UIFont systemFontOfSize:14];
+            [self.content addSubview:credits];y+=38;
+            CGFloat column=(width-28)/2;
+            NSArray* grants=@[@[@"+$1,000",@1000],@[@"+$10,000",@10000],@[@"+100 power",@100],@[@"+1,000 power",@1000]];
+            for(NSInteger i=0;i<grants.count;++i){NSArray* grant=grants[i];int amount=[grant[1] intValue];
+                UIButton* button=[self button:grant[0] y:y+(i/2)*50 action:^{if(i<2)WPCheats::Shared().addMoney(amount);else WPCheats::Shared().addPower(amount);}];
+                button.frame=CGRectMake(10+(i%2)*(column+8),y+(i/2)*50,column,44);
+            }y+=108;
+            NSArray* names=@[@"Invincibility",@"Shroud",@"Instant Build",@"Zero Cost",@"Instant Weapons",@"Build Anywhere",@"Unlock military roster",@"Damaged building health"];
             bool values[]={cheat.invincible,cheat.reveal,cheat.instant,cheat.free,cheat.weapons,cheat.anywhere,cheat.unlock,cheat.damagedHealth};
-            for(int i=0;i<8;++i){bool value=values[i];[self button:[NSString stringWithFormat:@"%@: %@",names[i],value?@"ON":@"OFF"] y:y action:^{auto& c=WPCheats::Shared();switch(i){case 0:c.invincible(!value);break;case 1:c.reveal(!value);break;case 2:c.instant(!value);break;case 3:c.free(!value);break;case 4:c.weapons(!value);break;case 5:c.anywhere(!value);break;case 6:c.unlock(!value);break;case 7:c.damagedHealth(!value);break;}}];y+=46;}
+            BOOL twoColumns=width>=400;CGFloat cellWidth=twoColumns?column:width-20;
+            for(int i=0;i<8;++i){int control=i;CGFloat cellX=10+(twoColumns?i%2:0)*(column+8),cellY=y+(twoColumns?i/2:i)*54;
+                UIView* row=[[UIView alloc] initWithFrame:CGRectMake(cellX,cellY,cellWidth,48)];[self.content addSubview:row];
+                UISwitch* toggle=[UISwitch new];toggle.on=values[i];toggle.accessibilityLabel=names[i];toggle.frame=CGRectMake(cellWidth-toggle.bounds.size.width-2,7,toggle.bounds.size.width,toggle.bounds.size.height);
+                [toggle addAction:[UIAction actionWithHandler:^(UIAction*){auto& c=WPCheats::Shared();BOOL on=toggle.isOn;switch(control){case 0:c.invincible(on);break;case 1:c.reveal(on);break;case 2:c.instant(on);break;case 3:c.free(on);break;case 4:c.weapons(on);break;case 5:c.anywhere(on);break;case 6:c.unlock(on);break;case 7:c.damagedHealth(on);break;}}] forControlEvents:UIControlEventValueChanged];
+                UILabel* name=[[UILabel alloc] initWithFrame:CGRectMake(0,0,MAX(0,cellWidth-toggle.bounds.size.width-12),48)];name.text=names[i];name.numberOfLines=2;name.textColor=UIColor.whiteColor;name.font=[UIFont systemFontOfSize:13];
+                [row addSubview:name];[row addSubview:toggle];
+            }y+=(twoColumns?4:8)*54+8;
             int speeds[]={cheat.infantry,cheat.vehicles,cheat.aircraft};
-            for(int i=0;i<3;++i){int current=speeds[i];[self button:[NSString stringWithFormat:@"%@ speed: %.2fx • tap to increase",@[@"Infantry",@"Vehicles / ships",@"Aircraft"][i],current/4.] y:y action:^{WPCheats::Shared().speed(i,current>=12?1:current+1);}];y+=46;}
+            for(int i=0;i<3;++i){int current=speeds[i];int kind=i;CGFloat row=y;
+                UIButton* minus=[self button:@"−" y:row action:^{WPCheats::Shared().speed(kind,MAX(1,current-1));}];minus.frame=CGRectMake(10,row,44,44);
+                UILabel* label=[[UILabel alloc] initWithFrame:CGRectMake(60,row,width-120,44)];label.text=[NSString stringWithFormat:@"%@: %.2f×",@[@"Infantry",@"Vehicles / ships",@"Aircraft"][i],current/4.];label.textColor=UIColor.whiteColor;label.textAlignment=NSTextAlignmentCenter;label.font=[UIFont systemFontOfSize:13];[self.content addSubview:label];
+                UIButton* plus=[self button:@"+" y:row action:^{WPCheats::Shared().speed(kind,MIN(12,current+1));}];plus.frame=CGRectMake(width-54,row,44,44);y+=50;
+            }
         }
     } else {
         [self button:@"Save / Load / Game Options" y:y action:^{RA_RequestOptions();self.expanded=NO;[self refresh];}];y+=46;
@@ -412,24 +472,117 @@ static void RASaveJoystickSetting(bool speed,int value) {
         [self button:state.remastered?@"Artwork: Remastered":@"Artwork: Classic" y:y action:^{WPOrders::Shared().enqueue(WPOrders::ToggleArtwork);self.fingerprint=nil;}];y+=46;
         UILabel* help=[[UILabel alloc] initWithFrame:CGRectMake(12,y,width-24,90)];help.text=@"Red Alert uses its own save files and cheat preferences. Infantry and vehicle rally points persist for the current scenario. Hold and drag the joystick to reposition it. Workshop changes apply when starting a new game.";help.numberOfLines=0;help.textColor=UIColor.lightGrayColor;help.font=[UIFont systemFontOfSize:13];[self.content addSubview:help];y+=100;
     }
-    if(self.tabs.selectedSegmentIndex==3 && cheat.available) {
-        int index=0;CGFloat column=(width-28)/2;
-        for(UIView* child in self.content.subviews)if([child isKindOfClass:UIButton.class]){
-            child.frame=CGRectMake(10+(index%2)*(column+8),(index/2)*64,column,58);
-            UIButton* button=(UIButton*)child;button.titleLabel.numberOfLines=2;button.titleLabel.textAlignment=NSTextAlignmentCenter;++index;
-        }y=((index+1)/2)*64;
-    }
     self.content.contentSize=CGSizeMake(width,y+8);
+}
+@end
+
+// Red Alert owns this Objective-C class and its WPOrders image. It mirrors the
+// movable Game toolbar in Tiberian Dawn without reaching into TD engine state.
+@interface WPRAGameToolbar : UIView
+@property(nonatomic,strong) UIButton* bubble;
+@property(nonatomic,strong) UIButton* header;
+@property(nonatomic,strong) UIButton* orientation;
+@property(nonatomic,strong) UIScrollView* body;
+@property(nonatomic,strong) NSArray<UIButton*>* commands;
+@property(nonatomic,strong) NSArray<UIButton*>* groups;
+@property(nonatomic) BOOL expanded;
+@property(nonatomic) BOOL vertical;
+@property(nonatomic) CGPoint position;
+@property(nonatomic,copy) NSString* profile;
+- (void)refresh;
+@end
+@implementation WPRAGameToolbar
+- (UIButton*)button:(NSString*)title tag:(NSInteger)tag {
+    UIButton* b=[UIButton buttonWithType:UIButtonTypeSystem];b.tag=tag;
+    [b setTitle:title forState:UIControlStateNormal];b.tintColor=UIColor.whiteColor;
+    b.backgroundColor=[UIColor colorWithWhite:.18 alpha:.97];b.layer.cornerRadius=8;
+    b.titleLabel.font=[UIFont systemFontOfSize:13 weight:UIFontWeightSemibold];
+    b.titleLabel.adjustsFontSizeToFitWidth=YES;b.titleLabel.minimumScaleFactor=.72;
+    b.titleLabel.numberOfLines=2;b.titleLabel.textAlignment=NSTextAlignmentCenter;
+    [b addTarget:self action:@selector(pressed:) forControlEvents:UIControlEventTouchUpInside];return b;
+}
+- (instancetype)initWithFrame:(CGRect)frame {
+    if((self=[super initWithFrame:frame])){
+        self.backgroundColor=[UIColor colorWithWhite:.05 alpha:.94];self.layer.cornerRadius=12;
+        self.position=CGPointMake(.06,.72);
+        self.vertical=[NSUserDefaults.standardUserDefaults objectForKey:@"Wireproof.RedAlert.GameToolbarVertical"]?
+            [NSUserDefaults.standardUserDefaults boolForKey:@"Wireproof.RedAlert.GameToolbarVertical"]:YES;
+        self.bubble=[self button:@"" tag:1000];
+        [self.bubble setImage:[UIImage systemImageNamed:@"gamecontroller.fill"] forState:UIControlStateNormal];
+        self.bubble.accessibilityLabel=@"Game commands. Tap to open; drag to move.";
+        self.header=[self button:@"Game ▾" tag:1002];self.orientation=[self button:@"↔" tag:1001];
+        self.orientation.accessibilityLabel=@"Switch Game toolbar orientation";
+        self.body=[UIScrollView new];self.body.showsVerticalScrollIndicator=YES;
+        [self addSubview:self.body];[self addSubview:self.header];[self addSubview:self.orientation];[self addSubview:self.bubble];
+        NSArray* names=@[@"Stop",@"Guard",@"Scatter",@"Force Attack",@"Force Move",@"Cancel",@"Infantry rally",@"Vehicle rally",@"Clear rallies"];
+        NSInteger kinds[]={WPOrders::Stop,WPOrders::Guard,WPOrders::Scatter,WPOrders::Attack,WPOrders::Move,WPOrders::Cancel,WPOrders::RallyInfantry,WPOrders::RallyVehicles,WPOrders::ClearRallies};
+        NSMutableArray* commands=[NSMutableArray new];for(int i=0;i<9;++i){UIButton* b=[self button:names[i] tag:kinds[i]];[self.body addSubview:b];[commands addObject:b];}self.commands=commands;
+        NSMutableArray* groups=[NSMutableArray new];for(int i=0;i<9;++i){UIButton* b=[self button:[NSString stringWithFormat:@"%d",i+1] tag:200+i];
+            b.accessibilityHint=@"Tap to recall; hold to assign selected units.";
+            UILongPressGestureRecognizer* hold=[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(groupHeld:)];hold.minimumPressDuration=.5;[b addGestureRecognizer:hold];
+            [self.body addSubview:b];[groups addObject:b];}self.groups=groups;
+        for(UIView* handle in @[self.bubble,self.header])
+            [handle addGestureRecognizer:[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)]];
+    }return self;
+}
+- (void)pressed:(UIButton*)button {
+    if(button.tag==1000||button.tag==1002){self.expanded=!self.expanded;[self refresh];return;}
+    if(button.tag==1001){self.vertical=!self.vertical;[NSUserDefaults.standardUserDefaults setBool:self.vertical forKey:@"Wireproof.RedAlert.GameToolbarVertical"];[self refresh];return;}
+    if(button.tag>=200){WPOrders::Shared().enqueue(WPOrders::Recall,(int)button.tag-200);return;}
+    WPOrders::Shared().enqueue((WPOrders::Kind)button.tag);
+}
+- (void)groupHeld:(UILongPressGestureRecognizer*)hold {
+    if(hold.state==UIGestureRecognizerStateBegan && WPOrders::Shared().enqueue(WPOrders::Assign,(int)hold.view.tag-200))
+        [[UISelectionFeedbackGenerator new] selectionChanged];
+}
+- (void)drag:(UIPanGestureRecognizer*)gesture {
+    if(!self.window)return;CGRect safe=CGRectInset(self.window.safeAreaLayoutGuide.layoutFrame,8,8);
+    CGPoint delta=[gesture translationInView:self.superview];
+    CGFloat dx=MAX(1,safe.size.width-self.bounds.size.width),dy=MAX(1,safe.size.height-self.bounds.size.height);
+    self.position=CGPointMake(MIN(1,MAX(0,(self.frame.origin.x+delta.x-safe.origin.x)/dx)),
+                              MIN(1,MAX(0,(self.frame.origin.y+delta.y-safe.origin.y)/dy)));
+    [gesture setTranslation:CGPointZero inView:self.superview];[self refresh];
+    if(gesture.state==UIGestureRecognizerStateEnded||gesture.state==UIGestureRecognizerStateCancelled)
+        [NSUserDefaults.standardUserDefaults setObject:@[@(self.position.x),@(self.position.y)] forKey:self.profile];
+}
+- (void)refresh {
+    if(!self.window)return;auto state=WPOrders::Shared().snapshot();
+    self.hidden=!state.active||WPLaptop::Active()||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive;
+    if(self.hidden){self.expanded=NO;return;}
+    UIWindow* window=self.window;UIEdgeInsets inset=window.safeAreaInsets;
+    bool cover=WPCamera::CoverDisplay(window.bounds.size.width,window.bounds.size.height,inset.left,inset.top,inset.right,inset.bottom);
+    NSString* profile=[NSString stringWithFormat:@"Wireproof.RedAlert.GameToolbarPosition.%@.%@",cover?@"Cover":@"Inner",window.bounds.size.width>window.bounds.size.height?@"Landscape":@"Portrait"];
+    if(![profile isEqual:self.profile]){self.profile=profile;NSArray* saved=[NSUserDefaults.standardUserDefaults arrayForKey:profile];
+        self.position=saved.count==2?CGPointMake(MIN(1,MAX(0,[saved[0] doubleValue])),MIN(1,MAX(0,[saved[1] doubleValue]))):CGPointMake(.06,.72);}
+    CGRect safe=CGRectInset(window.safeAreaLayoutGuide.layoutFrame,8,8);
+    CGFloat width=self.expanded?MIN(safe.size.width,self.vertical?228:660):56;
+    CGFloat height=self.expanded?MIN(safe.size.height,self.vertical?500:260):56;
+    self.frame=CGRectMake(safe.origin.x+self.position.x*MAX(0,safe.size.width-width),
+                          safe.origin.y+self.position.y*MAX(0,safe.size.height-height),width,height);
+    self.bubble.hidden=self.expanded;self.header.hidden=self.orientation.hidden=self.body.hidden=!self.expanded;
+    self.bubble.frame=self.bounds;self.header.frame=CGRectMake(8,6,width-64,44);self.orientation.frame=CGRectMake(width-52,6,44,44);
+    self.body.frame=CGRectMake(8,56,width-16,MAX(0,height-62));
+    [self.orientation setTitle:self.vertical?@"↔":@"↕" forState:UIControlStateNormal];
+    [self.header setTitle:state.force==1?@"Force Attack: tap target":state.force==2?@"Force Move: tap target":state.rally==1?@"Infantry rally: tap map":state.rally==2?@"Vehicle rally: tap map":[NSString stringWithFormat:@"Game · %d selected",state.selected] forState:UIControlStateNormal];
+    CGFloat bodyWidth=self.body.bounds.size.width;
+    for(int i=0;i<9;++i){UIButton* b=self.groups[i];b.frame=self.vertical?CGRectMake((i%3)*(bodyWidth+6)/3,(i/3)*50,(bodyWidth-12)/3,44):CGRectMake(i*(bodyWidth+6)/9,0,(bodyWidth-48)/9,44);}
+    for(int i=0;i<9;++i){UIButton* b=self.commands[i];
+        if(self.vertical)b.frame=i<6?CGRectMake((i%2)*(bodyWidth+6)/2,154+(i/2)*50,(bodyWidth-6)/2,44):CGRectMake(0,304+(i-6)*50,bodyWidth,44);
+        else b.frame=i<6?CGRectMake((i%3)*(bodyWidth+6)/3,50+(i/3)*50,(bodyWidth-12)/3,44):CGRectMake((i-6)*(bodyWidth+6)/3,150,(bodyWidth-12)/3,44);
+        bool needsSelection=i<5;b.enabled=!needsSelection||state.selected>0;b.alpha=b.enabled?1:.45;
+        b.backgroundColor=((i==3&&state.force==1)||(i==4&&state.force==2))?UIColor.systemBlueColor:[UIColor colorWithWhite:.18 alpha:.97];
+    }
+    self.body.contentSize=CGSizeMake(bodyWidth,self.vertical?454:198);
 }
 @end
 
 static void RAInstallCommandDeck() {
     static dispatch_once_t once;dispatch_once(&once,^{
         NSTimer* timer=[NSTimer timerWithTimeInterval:.2 repeats:YES block:^(NSTimer*){
-            static WPRAToolbar* panel;static WPRAJoystick* joystick;
+            static WPRAToolbar* panel;static WPRAGameToolbar* gameToolbar;static WPRAJoystick* joystick;
             SDL_Window* sdl=SDL_GetKeyboardFocus();SDL_SysWMinfo info;SDL_VERSION(&info.version);
-            if(UIApplication.sharedApplication.applicationState!=UIApplicationStateActive || !sdl || !(SDL_GetWindowFlags(sdl)&SDL_WINDOW_SHOWN) || !SDL_GetWindowWMInfo(sdl,&info)) {panel.hidden=YES;joystick.hidden=YES;WPOrders::Shared().setStick(0,0);return;}
-            UIWindow* window=info.info.uikit.window;if(!window){panel.hidden=YES;joystick.hidden=YES;WPOrders::Shared().setStick(0,0);return;}
+            if(UIApplication.sharedApplication.applicationState!=UIApplicationStateActive || !sdl || !(SDL_GetWindowFlags(sdl)&SDL_WINDOW_SHOWN) || !SDL_GetWindowWMInfo(sdl,&info)) {panel.hidden=YES;gameToolbar.hidden=YES;joystick.hidden=YES;WPOrders::Shared().setStick(0,0);return;}
+            UIWindow* window=info.info.uikit.window;if(!window){panel.hidden=YES;gameToolbar.hidden=YES;joystick.hidden=YES;WPOrders::Shared().setStick(0,0);return;}
             if(!panel){panel=[[WPRAToolbar alloc] initWithFrame:CGRectZero];
                 WPLaptop::SetEnabled([NSUserDefaults.standardUserDefaults boolForKey:@"Wireproof.RedAlert.LaptopMode"]);
                 WPLaptop::SetAlwaysPortrait([NSUserDefaults.standardUserDefaults boolForKey:@"Wireproof.RedAlert.PortraitDeckAlways"]);
@@ -438,10 +591,15 @@ static void RAInstallCommandDeck() {
                 }
             }
             if(panel.superview!=window)[window addSubview:panel];[panel refresh];
+            if(!gameToolbar)gameToolbar=[[WPRAGameToolbar alloc] initWithFrame:CGRectZero];
+            if(gameToolbar.superview!=window)[window addSubview:gameToolbar];[gameToolbar refresh];
             if(!joystick)joystick=[[WPRAJoystick alloc] initWithFrame:CGRectMake(0,0,96,96)];
             if(joystick.superview!=window)[window addSubview:joystick];
             [joystick refreshInWindow:window];
-            joystick.hidden=panel.hidden || panel.expanded;
+            joystick.hidden=panel.hidden;
+            if(!joystick.hidden)[window bringSubviewToFront:joystick];
+            if(!panel.hidden)[window bringSubviewToFront:panel];
+            if(!gameToolbar.hidden)[window bringSubviewToFront:gameToolbar];
         }];[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
     });
 }

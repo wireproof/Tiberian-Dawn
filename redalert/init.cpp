@@ -79,6 +79,7 @@
 #include "common/vqaconfig.h"
 #include "common/winasm.h"
 #include "intro.h"
+#include "wireproof_controls.h"
 
 RemapControlType SidebarScheme;
 
@@ -439,6 +440,11 @@ bool Init_Game(int, char*[])
  *=============================================================================================*/
 bool Select_Game(bool fade)
 {
+    // Returning from an aborted mission enters this menu without playing a
+    // movie or opening a campaign map. Retire the tactical HD scene and crop
+    // before drawing the title page, so the last battlefield frame cannot
+    // cover the menu and the native command deck is hidden.
+    RA_BeginPresentation();
     //	Enums in Select_Game() must match order of buttons in Main_Menu().
 #ifdef FIXIT_VERSION_3
     enum

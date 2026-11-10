@@ -5,6 +5,7 @@
 #include "common/ipados_audio_engine.h"
 
 static void RAInstallCommandDeck();
+static void RAInstallLifecycleBridge();
 
 // The Red Alert engine is compiled independently during bring-up. Its
 // immutable disc folders are read from the app bundle; saves use the separate
@@ -29,6 +30,7 @@ extern "C" bool TiberianDawn_PrepareGameData(void)
                 return false;
             }
         }
+        RAInstallLifecycleBridge();
         dispatch_async(dispatch_get_main_queue(), ^{RAInstallCommandDeck();});
         NSLog(@"Red Alert bundle data is available");
         return true;
@@ -48,6 +50,101 @@ extern "C" void TiberianDawn_SetCompactWindowWarning(bool) {}
 #import <UIKit/UIKit.h>
 #include <SDL.h>
 #include <SDL_syswm.h>
+#include "common/app_lifecycle.h"
+#include "common/video.h"
+extern void Focus_Loss(void);
+extern void Focus_Restore(void);
+
+static UIWindowScene* RAEngineScene()
+{
+    SDL_Window* sdl = Video_Get_Game_Window();
+    SDL_SysWMinfo info;
+    SDL_VERSION(&info.version);
+    if (!sdl || !SDL_GetWindowWMInfo(sdl, &info)) return nil;
+    return info.info.uikit.window.windowScene;
+}
+
+static UIBackgroundTaskIdentifier RABackgroundTask = UIBackgroundTaskInvalid;
+
+extern "C" void RedAlert_EndBackgroundTask(void)
+{
+    if (!NSThread.isMainThread) {
+        dispatch_async(dispatch_get_main_queue(), ^{ RedAlert_EndBackgroundTask(); });
+        return;
+    }
+    if (RABackgroundTask == UIBackgroundTaskInvalid) return;
+    const UIBackgroundTaskIdentifier task = RABackgroundTask;
+    RABackgroundTask = UIBackgroundTaskInvalid;
+    [UIApplication.sharedApplication endBackgroundTask:task];
+}
+
+static void RABeginBackgroundTask()
+{
+    if (!Video_Game_Window_Is_Visible() || RABackgroundTask != UIBackgroundTaskInvalid) return;
+    RABackgroundTask = [UIApplication.sharedApplication
+        beginBackgroundTaskWithName:@"Red Alert recovery save"
+        expirationHandler:^{ RedAlert_EndBackgroundTask(); }];
+}
+
+static void RAHandleSceneLifecycle(bool foreground, bool enteredBackground)
+{
+    static bool sceneActive = true;
+    const bool changed = sceneActive != foreground;
+    sceneActive = foreground;
+    // Resigning active (Control Center, alerts) pauses immediately but is not
+    // a recovery-save request. Start the task before queuing real background.
+    if (enteredBackground && Is_App_In_Foreground()) RABeginBackgroundTask();
+    if (foreground || enteredBackground) {
+        Queue_App_Lifecycle_Event(foreground ? APP_LIFECYCLE_ENTERED_FOREGROUND
+                                            : APP_LIFECYCLE_ENTERED_BACKGROUND);
+    }
+    if (!changed) return;
+    if (foreground) {
+        if (Video_Game_Window_Is_Visible()) {
+            Focus_Restore();
+            Set_Video_Render_Active(true);
+        }
+    } else {
+        Focus_Loss();
+        Set_Video_Render_Active(false);
+    }
+}
+
+static void RAInstallLifecycleBridge()
+{
+#if defined(WP_COMBINED_APP)
+    // The existing scene delegate belongs to the host SDL image. Use blocks
+    // compiled into this image, not a duplicate SDL Objective-C observer class.
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSNotificationCenter* center = NSNotificationCenter.defaultCenter;
+        for (NSNotificationName name in @[UISceneWillDeactivateNotification,
+                                          UISceneDidEnterBackgroundNotification,
+                                          UISceneDidActivateNotification]) {
+            [center addObserverForName:name object:nil queue:NSOperationQueue.mainQueue
+                            usingBlock:^(NSNotification* notification) {
+                UIWindowScene* scene = RAEngineScene();
+                if (!scene || notification.object != scene) return;
+                const bool foreground = [notification.name isEqual:UISceneDidActivateNotification];
+                const bool background = [notification.name isEqual:UISceneDidEnterBackgroundNotification];
+                RAHandleSceneLifecycle(foreground, background);
+            }];
+        }
+        [center addObserverForName:UIApplicationDidReceiveMemoryWarningNotification object:nil
+                            queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
+            Queue_App_Lifecycle_Event(APP_LIFECYCLE_LOW_MEMORY);
+        }];
+        [center addObserverForName:UIApplicationWillTerminateNotification object:nil
+                            queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
+            RABeginBackgroundTask();
+            Queue_App_Lifecycle_Event(APP_LIFECYCLE_TERMINATING);
+            Focus_Loss();
+            Set_Video_Render_Active(false);
+        }];
+    });
+#endif
+}
+
 #include "common/wireproof_orders.h"
 #include "common/wireproof_laptop.h"
 #include "common/wireproof_camera.h"

@@ -1177,6 +1177,16 @@ int Video_Game_Pixels_For_Window_Points(float points)
  *   09/26/1995 PWG : Created.                                                                 *
  *=============================================================================================*/
 #ifdef IPADOS_PORT
+SDL_Window* Video_Get_Game_Window(void)
+{
+    return window;
+}
+
+bool Video_Game_Window_Is_Visible(void)
+{
+    return window && (SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN) != 0;
+}
+
 void Video_Set_Game_Window_Visible(bool visible)
 {
     if (!window) return;

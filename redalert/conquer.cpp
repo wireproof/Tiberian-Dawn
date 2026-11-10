@@ -66,6 +66,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#ifdef IPADOS_PORT
+#include "ipados_lifecycle.h"
+#endif
 #include "common/remastered_scene.h"
 #include "common/video.h"
 #include "msgbox.h"
@@ -253,6 +256,9 @@ void Main_Game(int argc, char* argv[])
         }
 
         Set_Video_Cursor_Clip(true);
+#ifdef IPADOS_PORT
+        RA_SetRecoveryTactical(true);
+#endif
 
 #ifdef SCENARIO_EDITOR
         /*
@@ -403,6 +409,10 @@ void Main_Game(int argc, char* argv[])
         }
 #endif
 
+#ifdef IPADOS_PORT
+        RA_SetRecoveryTactical(false);
+        RA_DiscardRecoveryAutosaves();
+#endif
         Set_Video_Cursor_Clip(false);
 
         /*

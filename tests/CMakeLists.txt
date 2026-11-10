@@ -37,6 +37,11 @@ add_executable(test_recovery_transaction recovery_transaction.cpp ../common/reco
 target_include_directories(test_recovery_transaction PUBLIC .. ../common)
 add_test(NAME recovery_transaction COMMAND $<TARGET_FILE:test_recovery_transaction>)
 
+add_executable(test_redalert_recovery redalert_recovery.cpp ../common/recovery_transaction.cpp ../common/sha.cpp)
+target_include_directories(test_redalert_recovery PUBLIC .. ../common)
+add_test(NAME redalert_recovery COMMAND $<TARGET_FILE:test_redalert_recovery>)
+add_dependencies(tests test_redalert_recovery)
+
 add_executable(test_install_transaction install_transaction.cpp ../common/install_transaction.cpp)
 target_include_directories(test_install_transaction PUBLIC .. ../common)
 add_test(NAME install_transaction COMMAND $<TARGET_FILE:test_install_transaction>)

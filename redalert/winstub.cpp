@@ -43,6 +43,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "common/video.h"
 #include "msgbox.h"
 #include "language.h"
 
@@ -88,6 +89,10 @@ void Focus_Loss(void)
 
 void Focus_Restore(void)
 {
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+    // The host scene delegate also delivers foreground events to hidden engines.
+    if (!Video_Game_Window_Is_Visible()) return;
+#endif
 #ifdef SDL_BUILD
     GameInFocus = true;
     VQA_ResumeAudio();

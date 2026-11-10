@@ -248,7 +248,7 @@ if(BUILD_VANILLARA)
         set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=SDL_main")
         target_sources(VanillaRA PRIVATE
             ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp
-            ipados_bridge.mm wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
+            ipados_bridge.mm ipados_lifecycle.cpp wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
             ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm)
         set_source_files_properties(ipados_bridge.mm wireproof_workshop.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
         set_target_properties(VanillaRA PROPERTIES
@@ -337,7 +337,7 @@ if(RED_ALERT_COMBINED_APP)
     set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=RedAlertEngineMain")
     add_library(RedAlertEngine SHARED
         ${REDALERT_SRC} ${REDALERT_NET_SRC} ${REDALERT_HEADERS}
-        ipados_bridge.mm ipados_engine_entry.cpp wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
+        ipados_bridge.mm ipados_lifecycle.cpp ipados_engine_entry.cpp wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
         ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm
         ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp)
     set_source_files_properties(ipados_bridge.mm wireproof_workshop.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")

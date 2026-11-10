@@ -57,6 +57,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#ifdef IPADOS_PORT
+#include "ipados_lifecycle.h"
+#endif
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
 #include "wireproof_rules.h"
 #endif
@@ -470,6 +473,10 @@ bool Select_Game(bool fade)
 #endif //	FIXIT_VERSION_3
 
     bool gameloaded = false; // Has the game been loaded from the menu?
+#ifdef IPADOS_PORT
+    static bool recoveryPrompted=false;
+    RA_SetRecoveryTactical(false);
+#endif
     int selection;           // the default selection
     bool process = true;     // false = break out of while loop
     bool display = true;
@@ -603,6 +610,20 @@ bool Select_Game(bool fade)
                 }
             }
 
+#ifdef IPADOS_PORT
+            if(!recoveryPrompted) {
+                recoveryPrompted=true;
+                if(RA_HasRecoveryAutosave()) {
+                    if(WWMessageBox().Process("Interrupted mission found. Continue?", "Continue", "Main menu")==0) {
+                        if(RA_LoadRecoveryAutosave()) {
+                            Theme.Queue_Song(THEME_FIRST);process=false;gameloaded=true;continue;
+                        }
+                        WWMessageBox().Process(TXT_ERROR_LOADING_GAME);
+                    }
+                    RA_DiscardRecoveryAutosaves();display=true;
+                }
+            }
+#endif
             /*
             **	Display menu and fetch selection from player.
             */

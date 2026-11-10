@@ -203,4 +203,6 @@ void Set_DD_Palette(void* palette);
 // Retain initialized legacy engines while switching their SDL windows.
 #if defined(IPADOS_PORT)
 void Video_Set_Game_Window_Visible(bool visible);
+bool Video_Game_Window_Is_Visible(void);
+struct SDL_Window* Video_Get_Game_Window(void);
 #endif

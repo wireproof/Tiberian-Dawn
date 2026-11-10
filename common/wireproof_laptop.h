@@ -3,7 +3,12 @@
 
 #include <atomic>
 
+#if defined(__APPLE__)
+// Inline local statics must remain per engine image, even under RTLD_LOCAL.
+namespace WPLaptop __attribute__((visibility("hidden"))) {
+#else
 namespace WPLaptop {
+#endif
 inline std::atomic<bool>& Enabled() { static std::atomic<bool> value{false}; return value; }
 inline std::atomic<bool>& FoldedPortrait() { static std::atomic<bool> value{false}; return value; }
 inline std::atomic<bool>& PortraitWindow() { static std::atomic<bool> value{false}; return value; }

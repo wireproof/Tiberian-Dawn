@@ -35,6 +35,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#ifdef IPADOS_PORT
+#include "ipados_lifecycle.h"
+#endif
 #include "wireproof_controls.h"
 #include "language.h"
 #include "settings.h"
@@ -319,6 +322,9 @@ int main(int argc, char* argv[])
 #if defined(IPADOS_PORT) || defined(MACOS_PORT)
     extern void RA_ApplyPendingBackupSettings(void);
     extern void RA_CloudStart(void);
+#ifdef IPADOS_PORT
+    RA_InstallLifecycleHandler();
+#endif
     RA_CloudStart();
     RA_ApplyPendingBackupSettings();
     RemasteredArt_SetGame(true);

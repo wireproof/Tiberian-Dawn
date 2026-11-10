@@ -23,15 +23,16 @@ The `Artwork` control in each game's native Options panel selects classic or rem
 - Real TD/RA remastered pack lookup, separation, theater, team-color and icon smoke tests: passed.
 - RA importer fixtures and full pack manifest/image-bound/hash checks: passed.
 - Native UIKit and AppKit/Foundation source syntax checks reported by feature implementations: passed.
+- Universal 2 native TD/shared-code build and package verification: passed for arm64 and x86_64, with ad-hoc signature and archive verification. A preexisting shared renderer include error was repaired. This is not native macOS Red Alert feature acceptance.
 
 ## Acceptance still required
 
-Do not treat a compile or installation as gameplay acceptance. At this checkpoint, the Mac's simulator, debugger and UI service were severely delayed by system load/disk waits. The first simulator launcher screenshot was captured before the supplied-art redesign. New reference-layout screenshots, gameplay and repeated Exit Game/switch/reenter cycles are not accepted yet.
+Do not treat a compile or installation as gameplay acceptance. At this checkpoint, the Mac's simulator, debugger and UI service were severely delayed by system load/disk waits. The first simulator launcher screenshot was captured before the supplied-art redesign. New reference-layout screenshots, gameplay and repeated Exit Game/switch/reenter cycles are not accepted yet. A subsequent simulator launch returned FBSOpenApplicationServiceErrorDomain code 3; another launch and UI reads stalled. The exact runtime cause is unproven and must be diagnosed on a responsive test host.
 
 - Verify Allied and Soviet gameplay with remastered art, production, naval units, superweapons, groups, rallies, cheats, Workshop and save/load.
 - Verify repeated TD → launcher → RA → launcher → TD transitions, including audio, palette, input, background/foreground and score/movie boundaries.
 - Verify portrait, landscape, cover/inner display and laptop layouts with screenshots and touch input.
-- Complete Universal 2 native macOS compile/package checks and reconcile the separate native macOS combined-engine work before any release/merge.
+- Reconcile and validate the separate native macOS Red Alert/combined-engine work before any release/merge. The native TD/shared-code Universal 2 package check passed, but does not establish RA AppKit feature parity.
 - Validate on the physical device only after the user has saved/closed the game, backed-up save files are hash-verified, and the established installation workflow is authorized. No physical install or save changes occurred during this work.
 - Validate real iCloud delivery only with a properly provisioned host and explicit opt-in. No account, entitlements or cloud preferences were enabled or changed by this implementation.
 

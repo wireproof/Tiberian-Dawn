@@ -60,9 +60,9 @@
 
 #ifdef IPADOS_PORT
 #include "../platform/apple/ipados_platform.h"
-#include "wireproof_laptop.h"
 #endif
 #ifdef TIBERIAN_DAWN_APPLE_PORT
+#include "wireproof_laptop.h"
 #include "hd_asset_pack.h"
 #include "remastered_art.h"
 #include "remastered_scene.h"

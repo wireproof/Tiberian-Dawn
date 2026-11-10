@@ -27,6 +27,7 @@ The `Artwork` control in each game's native Options panel selects classic or rem
 - Final combined simulator/device builds after focus and partial-startup cleanup: succeeded.
 - Replacement full iOS device build from this source: succeeded with bundle ID `com.wireproof.tiberiandawn`, version `0.7.5`, build `718`.
 - Replacement full IPA: original Tiberian Dawn and Red Alert assets, music, movies, both remastered art packs, launcher image and nested Red Alert engine included; nested and outer signatures plus archive integrity verified. SHA-256 `e6cd53a800902af0cdbd55282cf067dc7ef1874edc0d120bf89796d4018d3738`.
+- Complete IPA copied to the live Synology SMB mount at `Documents/Applications/iPhone/Games/CnC-Duo-0.7.5-build718-development-full.ipa`; local and destination SHA-256 hashes matched before promotion to the final name.
 - TD backup regression and RA backup/cloud schema, validation, isolation and rollback fixtures: passed.
 - RA Workshop metadata/batch-edit fixtures: passed.
 - Real TD/RA remastered pack lookup, separation, theater, team-color and icon smoke tests: passed.

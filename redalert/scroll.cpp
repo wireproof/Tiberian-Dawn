@@ -110,10 +110,13 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
         bool noscroll = false;
 
 #ifdef SDL2_BUILD
-        if (Keyboard->Is_Analog_Scroll_Active()) {
+        if (analog) {
             unsigned char scrollDirection = Keyboard->Get_Scroll_Direction();
-            int scrollDistance = max(1,int((7 - Options.ScrollRate) * 20 * Keyboard->Get_Scroll_Intensity()));
-            Scroll_Map((DirType)scrollDirection, scrollDistance, true);
+            float intensity = Keyboard->Get_Scroll_Intensity();
+            if (intensity < 0.15f) intensity = 0.15f;
+            if (intensity > 1.75f) intensity = 1.75f;
+            int scrollDistance = max(1,int(((7 - Options.ScrollRate) * 20 * intensity) + 0.5f));
+            player_scrolled = Scroll_Map((DirType)scrollDirection, scrollDistance, true);
         }
 #endif
 

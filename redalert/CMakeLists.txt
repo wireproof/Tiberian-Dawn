@@ -339,8 +339,9 @@ if(RED_ALERT_COMBINED_APP)
         ${REDALERT_SRC} ${REDALERT_NET_SRC} ${REDALERT_HEADERS}
         ipados_bridge.mm ipados_lifecycle.cpp ipados_engine_entry.cpp wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
         ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm
+        ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_orders_ra.mm
         ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp)
-    set_source_files_properties(ipados_bridge.mm wireproof_workshop.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+    set_source_files_properties(ipados_bridge.mm wireproof_workshop.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_orders_ra.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
     set(RA_ENGINE_LIBS ${VANILLA_LIBS})
     list(REMOVE_ITEM RA_ENGINE_LIBS SDL2::SDL2main)
     target_compile_definitions(RedAlertEngine PRIVATE ${VANILLA_DEFS} SDL_MAIN_HANDLED WP_COMBINED_APP)

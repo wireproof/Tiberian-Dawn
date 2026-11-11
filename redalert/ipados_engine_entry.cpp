@@ -4,9 +4,12 @@ extern int RedAlertEngineMain(int argc, char** argv);
 #include <os/log.h>
 #include <SDL.h>
 
-// The shared SDL video backend has a Tiberian Dawn dock icon hook. Red Alert
-// has no command dock yet, so keep that callback local to its engine image.
-void WP_Publish_Order_Icon(int, const unsigned char*, int, int) {}
+// Feed Red Alert's decoded order cursors to its copy of the shared native
+// command dock. The engine remains a separate Mach-O image from Dawn.
+void RA_Publish_Order_Icon(int, const unsigned char*, int, int);
+void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int height) {
+    RA_Publish_Order_Icon(kind, rgba, width, height);
+}
 
 extern "C" __attribute__((visibility("default"))) int WireproofRedAlertRun(int argc, char** argv)
 {

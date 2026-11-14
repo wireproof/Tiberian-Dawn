@@ -28,6 +28,10 @@ Version 0.7.4 adds an optional Duo laptop deck with pictured Build categories, C
 
 The [build 714 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4-build714) includes the complete iOS IPA with classic game data, music, and Remastered artwork. It must be signed for your device before installation. To preserve saves, update the existing app instead of uninstalling it.
 
+## Development status — v0.7.5 (iOS build 721)
+
+Build 721 is a newer development build, not the public release. The signed app was installed on iPhone Duo and iPad, and build 721 was verified on both devices. The app was not launched as part of that installation check. Gameplay and Red Alert verification remain open; see [Red Alert tracking issue #25](https://github.com/wireproof/Tiberian-Dawn/issues/25). The public iOS download remains **v0.7.4 build 714**.
+
 ## HD graphics — working in-game
 
 HD graphics are already working in-game, with enhanced terrain, buildings, units, and battlefield artwork. These are actual gameplay screenshots, not mockups or concept art. Their exact capture build is not recorded; they were added October 26, 2026 and do not verify v0.7.3.

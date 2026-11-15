@@ -63,5 +63,5 @@ if grep -R -n -E 'LegacyRTS|LEGACY_RTS' \
 fi
 
 # A blank display name also breaks LiveContainer-generated shortcut labels.
-grep -A1 '<key>CFBundleDisplayName</key>' platform/apple/Info-iPadOS.plist.in | grep -q '<string>Tiberian Dawn</string>'
+grep -A1 '<key>CFBundleDisplayName</key>' platform/apple/Info-iPadOS.plist.in | grep -q '<string>C&amp;C</string>'
 echo "Apple platform parity checks passed."

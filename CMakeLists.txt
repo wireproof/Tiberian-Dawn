@@ -26,7 +26,7 @@ project(TiberianDawnApple VERSION 0.7.5 LANGUAGES C CXX)
 # All native Apple applications use the same public version and monotonically
 # increasing build number. Keep these values centralized so macOS, iPadOS,
 # local builds, and distributed releases cannot silently drift apart.
-set(TIBERIAN_DAWN_BUILD_VERSION "721")
+set(TIBERIAN_DAWN_BUILD_VERSION "722")
 
 option(BUILD_REMASTERTD "Build Tiberian Dawn remaster dll." OFF)
 option(BUILD_REMASTERRA "Build Red Alert remaster dll." OFF)
@@ -61,7 +61,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "visionOS")
 else()
     option(VISIONOS_PORT "Build the native visionOS prototype." OFF)
 endif()
-set(IPADOS_BUNDLE_IDENTIFIER "org.tiberiandawn.ipad" CACHE STRING "Bundle identifier for the iPadOS application")
+set(IPADOS_BUNDLE_IDENTIFIER "com.wireproof.cnc" CACHE STRING "Bundle identifier for the iOS and iPadOS C&C application")
 set(IPADOS_DEVELOPMENT_TEAM "" CACHE STRING "Apple development team used to sign the iPadOS application")
 set(VISIONOS_BUNDLE_IDENTIFIER "org.tiberiandawn.visionos" CACHE STRING "Bundle identifier for the visionOS application")
 set(VISIONOS_DEVELOPMENT_TEAM "" CACHE STRING "Apple development team used to sign the visionOS application")

@@ -1,6 +1,6 @@
-# Tiberian Dawn — Wireproof
+# Command & Conquer — Wireproof
 
-Classic Command & Conquer, adapted for touch on iPhone and iPad and native play on macOS. Built on [Cesarus85’s Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and EA’s released source.
+Tiberian Dawn and Red Alert in one iPhone and iPad app, with a game chooser, touch controls, Remastered artwork, and game-specific saves. The macOS target also provides a game launcher. Built on [Cesarus85’s Apple port](https://github.com/Cesarus85/Tiberian-Dawn-for-iPad-and-macOS), [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer), and EA's released source.
 
 **[Latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest) · [Watch gameplay](https://wireproof.github.io/Tiberian-Dawn/) · [Screenshots](docs/showcase/README.md) · [Bugs and feature requests](https://github.com/wireproof/Tiberian-Dawn/issues)**
 
@@ -26,7 +26,7 @@ The project has progressed substantially since the early v0.2.7 and v0.5.2 build
 
 Version 0.7.4 adds an optional Duo laptop deck with pictured Build categories, Commands, Radar, Cheats, Options, production progress, special powers, and separate rally controls. The Remastered pass sharpens sprites and scenery and improves walls and effects. The [issue tracker](https://github.com/wireproof/Tiberian-Dawn/issues) distinguishes code implemented from fixes verified in gameplay; the owner verified rally point persistence after relaunch in [#7](https://github.com/wireproof/Tiberian-Dawn/issues/7) and the duplicate-controls fix in [#16](https://github.com/wireproof/Tiberian-Dawn/issues/16). [#10](https://github.com/wireproof/Tiberian-Dawn/issues/10) remains open.
 
-The [build 714 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.4-build714) includes the complete iOS IPA with classic game data, music, and Remastered artwork. It must be signed for your device before installation. To preserve saves, update the existing app instead of uninstalling it.
+The [build 722 prerelease](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.5-build722) combines Tiberian Dawn and Red Alert with their classic data and Remastered artwork. Its public IPA is unsigned and split into downloadable parts. Because the bundle ID changed, an existing installation's local saves must be migrated to the new app container; keep the old app until that copy is verified. Installation and save readback were verified on Duo and iPad Pro. This delivery was deliberately not launched for gameplay or visual testing.
 
 ## HD graphics — working in-game
 
@@ -125,11 +125,13 @@ Workshop changes apply after restarting and beginning a new mission. Type edits 
 
 ## Install or update
 
-1. Download the complete IPA from the [latest release](https://github.com/wireproof/Tiberian-Dawn/releases/latest).
-2. Sign it for your device and install with your sideloading tool or LiveContainer. iCloud sync requires a compatible signed entitlement.
-3. When updating LiveContainer, replace the app in its **existing data container** to preserve saves.
+1. Download both `CnC-0.7.5-build722-unsigned.ipa.part-*` files and `SHA256SUMS-IPA.txt` from the [build 722 release](https://github.com/wireproof/Tiberian-Dawn/releases/tag/v0.7.5-build722).
+2. Reassemble and check the IPA: `cat CnC-0.7.5-build722-unsigned.ipa.part-* > CnC-0.7.5-build722-unsigned.ipa`, then `shasum -a 256 -c SHA256SUMS-IPA.txt`.
+3. Sign the IPA for your device and install it. iCloud sync requires a compatible signed entitlement.
 
-The bundle identifier remains `com.wireproof.tiberiandawn`. macOS builds can be produced from source below. Review applicable licenses before redistributing builds or game data.
+Build 722 uses `com.wireproof.cnc`. The previous `com.wireproof.tiberiandawn` app is a separate installation; keep it until its Documents and preferences have been copied and verified in the new app. Installing build 722 alone does not move local saves.
+
+The release also provides `CnC-0.7.5-build722-game-assets.tar.zst.part-*` and `SHA256SUMS-ASSETS.txt` alongside the tagged source. Reassemble the asset archive with `cat CnC-0.7.5-build722-game-assets.tar.zst.part-* > CnC-0.7.5-build722-game-assets.tar.zst`, run `shasum -a 256 -c SHA256SUMS-ASSETS.txt`, then extract it with `zstd -dc CnC-0.7.5-build722-game-assets.tar.zst | tar -xf -`. The archive contains the two games' data and artwork without device saves, signing material, or personal files. macOS builds can be produced from source below.
 
 ## Build from source
 
@@ -138,8 +140,17 @@ The bundle identifier remains `com.wireproof.tiberiandawn`. macOS builds can be 
 ```sh
 git clone --recurse-submodules https://github.com/wireproof/Tiberian-Dawn.git
 cd Tiberian-Dawn
+git checkout v0.7.5-build722
+git submodule update --init --recursive
 sh scripts/prepare-ipados-dependencies.sh
-cmake --preset ipados-device
+mkdir -p assets
+zstd -dc CnC-0.7.5-build722-game-assets.tar.zst | tar -xf - -C assets
+cmake --preset ipados-device \
+  -DRED_ALERT_COMBINED_APP=ON \
+  -DTIBERIAN_DAWN_DATA_DIR="$PWD/assets/GameData" \
+  -DRED_ALERT_DATA_DIR="$PWD/assets/RAData" \
+  -DTIBERIAN_DAWN_REMASTERED_ART_DIR="$PWD/assets/RemasteredArt" \
+  -DRED_ALERT_REMASTERED_ART_DIR="$PWD/assets/RemasteredArtRA"
 cmake --build --preset ipados-device-release -- CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 ```
 
@@ -151,12 +162,13 @@ cmake --build --preset macos-universal
 sh scripts/package-macos-app.sh
 ```
 
-Keep SDL at its recorded submodule commit and apply the supplied patch through the dependency helper. Local source builds require game data separately: import it through the app, or add a GameData directory to the built bundle and re-sign before packaging.
+Keep SDL at its recorded submodule commit and apply the supplied patch through the dependency helper. The release asset archive provides the combined iOS build's game data. Device installations require signing and a provisioning profile for your own devices.
 
 ## Validation and limits
 
 | Area | Status |
 | --- | --- |
+| v0.7.5 build 722 | Combined iOS IPA installed on Duo and iPad Pro under `com.wireproof.cnc`; local Documents and preferences copied from the prior app and exact SHA256 readback verified on both. Neither app was launched for runtime or visual testing in this delivery. |
 | v0.7.4 source and build | iOS Release build 710 compiled, signed, and installed on Duo; public IPA is unsigned for device-specific signing |
 | v0.7.4 Duo gameplay | Owner verified the laptop deck controls, radar navigation, sidebar toggle, placement panning, and recent Remastered graphics fixes; see the [checklist](docs/TESTING-0.7.4.md) |
 | Duo gameplay | Owner-provided gameplay and screenshots are available above |

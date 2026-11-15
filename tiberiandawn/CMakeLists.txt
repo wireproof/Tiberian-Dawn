@@ -350,7 +350,7 @@ if(BUILD_VANILLATD)
             )
             set_target_properties(TiberianDawn PROPERTIES
                 MACOSX_BUNDLE_GUI_IDENTIFIER "${IPADOS_BUNDLE_IDENTIFIER}"
-                MACOSX_BUNDLE_BUNDLE_NAME "Tiberian Dawn for iPad"
+                MACOSX_BUNDLE_BUNDLE_NAME "C&C"
                 MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/platform/apple/Info-iPadOS.plist.in"
                 XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IPADOS_BUNDLE_IDENTIFIER}"
                 XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"

@@ -45,6 +45,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_production.h"
 #include "msgbox.h"
 #include "event.h"
 
@@ -597,6 +598,7 @@ void EventClass::Execute(void)
     */
     case PRODUCE:
         Houses.Raw_Ptr(ID)->Begin_Production(Data.Specific.Type, Data.Specific.ID);
+        RA_QueueAcknowledge(ID,Data.Specific.Type,Data.Specific.ID);
         break;
 
     /*
@@ -613,6 +615,7 @@ void EventClass::Execute(void)
     */
     case ABANDON:
         Houses.Raw_Ptr(ID)->Abandon_Production(Data.Specific.Type);
+        RA_QueueCancelled(ID,Data.Specific.Type);
         break;
 
     /*

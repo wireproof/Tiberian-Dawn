@@ -7,6 +7,12 @@
 #include "common/remastered_art.h"
 #include "third_party/SDL2/include/SDL.h"
 #include "third_party/SDL2/include/SDL_syswm.h"
+#ifdef WP_RA_UI
+extern "C" void RA_ShowWorkshop();
+extern void RA_ShowBackup();
+extern void RA_ShowCloud();
+extern void RA_RequestOptions();
+#endif
 
 // Hinge capability identifies Duo; window aspect ratio alone also matches iPads.
 // Keep the positive observation during temporary hierarchy transitions (nil hinge).
@@ -382,6 +388,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
         UIStackView *displayControls=[[UIStackView alloc] initWithArrangedSubviews:@[
             self.artworkButton,[self gridRow:@[self.laptopButton,self.portraitDeckButton]]]];
         displayControls.axis=UILayoutConstraintAxisVertical;displayControls.spacing=6;
+#ifdef WP_RA_UI
+        [displayControls addArrangedSubview:[self button:@"Game Options" tag:905]];
+        [displayControls addArrangedSubview:[self button:@"Red Alert Saves" tag:906]];
+        [displayControls addArrangedSubview:[self button:@"iCloud Sync" tag:907]];
+        [displayControls addArrangedSubview:[self button:@"Mod Workshop" tag:904]];
+#endif
         self.optionsPage=[[UIStackView alloc] initWithArrangedSubviews:@[zoomControls,uiControls,sizeControls,speedControls,displayControls]];self.optionsPage.spacing=8;
         self.groupControls=groups;
         self.numberGrid=[[UIStackView alloc] initWithArrangedSubviews:@[[self gridRow:[groups subarrayWithRange:NSMakeRange(0,5)]],[self gridRow:[groups subarrayWithRange:NSMakeRange(5,4)]]]];
@@ -499,6 +511,12 @@ void WP_Publish_Order_Icon(int kind, const unsigned char* rgba, int width, int h
     [self saveZoom];
 }
 - (void)pressed:(UIButton*)button {
+#ifdef WP_RA_UI
+    if(button.tag==904){RA_ShowWorkshop();return;}
+    if(button.tag==905){RA_RequestOptions();return;}
+    if(button.tag==906){RA_ShowBackup();return;}
+    if(button.tag==907){RA_ShowCloud();return;}
+#endif
     if(button.tag==900 || button.tag==901 || button.tag==903) {
         WPOrders::Shared().enqueue(button.tag==900?WPOrders::ToggleArtwork:
             button.tag==901?WPOrders::ToggleLaptop:WPOrders::TogglePortraitDeck);
@@ -849,12 +867,20 @@ static UIImage *WPBuildCameo(NSString *asset) {
     static NSString *root;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
+#ifdef WP_RA_UI
+        root=[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"RemasteredArtRA"];
+#else
         root=[NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"RemasteredArt"];
+#endif
         NSString *manifest=[NSString stringWithContentsOfFile:[root stringByAppendingPathComponent:@"frames.tsv"]
                                                    encoding:NSUTF8StringEncoding error:nil];
         NSMutableDictionary *entries=[NSMutableDictionary new];
         [manifest enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
+#ifdef WP_RA_UI
+            if(![line hasPrefix:@"RA_UI\tICON."])return;
+#else
             if(![line hasPrefix:@"TD_UI\tICON."])return;
+#endif
             NSArray<NSString*> *parts=[line componentsSeparatedByString:@"\t"];
             if(parts.count>=11 && [parts[2] isEqualToString:@"0"])
                 entries[parts[1]]=@[parts[6],parts[7],parts[8],parts[9],parts[10]];

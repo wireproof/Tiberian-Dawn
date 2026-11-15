@@ -50,6 +50,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
 #include "factory.h"
 
 /***********************************************************************************************
@@ -196,6 +197,13 @@ void FactoryClass::AI(void)
     assert(Factories.ID(this) == ID);
 
     if (!IsSuspended && (Object != NULL || SpecialItem)) {
+        if (RA_FreeProduction(House)) {
+            if(Object)Object->PurchasePrice=max(0,Object->PurchasePrice-Balance);
+            Balance=0;
+        }
+        if (RA_InstantProduction(House) && Balance<=House->Available_Money()) {
+            House->Spend_Money(Balance); Balance=0; Force_Complete(); return;
+        }
         for (int index = 0; index < 1; index++) {
             if (!Has_Completed() && Graphic_Logic()) {
                 IsDifferent = true;
@@ -338,7 +346,7 @@ bool FactoryClass::Set(TechnoTypeClass const& object, HouseClass& house)
 
     if (Object) {
         House = Object->House;
-        Balance = object.Cost_Of() * house.CostBias;
+        Balance = RA_FreeProduction(&house)?0:int(object.Cost_Of() * house.CostBias);
         Object->PurchasePrice = Balance;
     }
 
@@ -475,7 +483,7 @@ bool FactoryClass::Abandon(void)
             /*
             **	Refund all money expended so far, back to the owner of the object under construction.
             */
-            int money = Object->Class_Of().Cost_Of() * Object->House->CostBias;
+            int money = Object->PurchasePrice;
             House->Refund_Money(money - Balance);
             Balance = 0;
 

@@ -17,7 +17,7 @@ int main()
     assert(std::strcmp(IPad_Localized_Text(IPAD_EFFECTIVE_GERMAN, "multiplayer_local"), "Lokales Netzwerk") == 0);
     assert(std::strcmp(IPad_Localized_Text(IPAD_EFFECTIVE_ENGLISH, "visual_mode_sharp"), "Sharp") == 0);
     assert(std::strcmp(IPad_Localized_Text(IPAD_EFFECTIVE_GERMAN, "visual_mode_classic"), "Klassisch") == 0);
-    assert(std::strcmp(IPad_Localized_Text(IPAD_EFFECTIVE_ENGLISH, "visual_artwork_modern"), "Modern") == 0);
+    assert(std::strcmp(IPad_Localized_Text(IPAD_EFFECTIVE_ENGLISH, "visual_artwork_modern"), "Remastered") == 0);
     assert(std::strcmp(IPad_Localized_Text(IPAD_EFFECTIVE_GERMAN, "visual_artwork_original"), "Original") == 0);
     assert(std::strcmp(IPad_Localized_Text(IPAD_EFFECTIVE_ENGLISH, "touch_help_button"),
                        "Touch controls") == 0);

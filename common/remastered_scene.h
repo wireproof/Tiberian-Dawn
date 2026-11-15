@@ -33,6 +33,7 @@ struct Chrome {
 };
 struct Placement {int x=0,y=0;bool valid=false;};
 struct LaserLine {int x=0,y=0,x1=0,y1=0;uint8_t color=0;};
+struct Selection { int x=0,y=0,width=0,height=0; uint8_t color=0; };
 struct Health {
     int x = 0, y = 0, width = 0, fill = 0;
     uint8_t color = 0;
@@ -45,6 +46,7 @@ struct Scene {
     std::vector<SidebarIcon> sidebar;
     std::vector<Chrome> chrome;
     std::vector<Health> health;
+    std::vector<Selection> selections;
     std::vector<Placement> placement;
     std::vector<LaserLine> laserLines;
 };
@@ -55,6 +57,7 @@ void Clear();
 void ClearSidebar();
 void RecordPlacement(int x,int y,bool valid);
 void RecordLaserLine(int x,int y,int x1,int y1,uint8_t color);
+void RecordSelection(int x, int y, int width, int height, uint8_t color);
 void RecordHealth(int x, int y, int width, int fill, uint8_t color);
 void RecordSidebarIcon(const char* asset, int x, int y, int width, int height,
                        int clip_x, int clip_y, int clip_w, int clip_h,

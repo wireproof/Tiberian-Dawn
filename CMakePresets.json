@@ -119,7 +119,41 @@
             "cacheVariables": {
                 "CMAKE_OSX_SYSROOT": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk",
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "/private/tmp/TiberianDawnApple-iPad-Device-Products",
-                "IPADOS_BUNDLE_IDENTIFIER": "com.wireproof.tiberiandawn"
+                "IPADOS_BUNDLE_IDENTIFIER": "com.wireproof.cnc"
+            }
+        },
+        {
+            "name": "ipados-redalert-probe",
+            "inherits": "ipados-device",
+            "displayName": "Red Alert iOS engine link probe",
+            "binaryDir": "${sourceDir}/build/ipados-redalert-probe",
+            "cacheVariables": {
+                "BUILD_VANILLATD": "OFF",
+                "BUILD_VANILLARA": "ON",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "/private/tmp/VanillaRA-iOS-Probe"
+            }
+        },
+        {
+            "name": "ipados-redalert-simulator",
+            "inherits": "ipados-simulator",
+            "displayName": "Red Alert iOS simulator probe",
+            "binaryDir": "${sourceDir}/build/ipados-redalert-simulator",
+            "cacheVariables": {
+                "BUILD_VANILLATD": "OFF",
+                "BUILD_VANILLARA": "ON",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "/private/tmp/VanillaRA-iOS-Simulator-Probe"
+            }
+        },
+        {
+            "name": "ipados-combined-simulator",
+            "inherits": "ipados-simulator",
+            "displayName": "Tiberian Dawn and Red Alert combined iOS simulator probe",
+            "binaryDir": "${sourceDir}/build/ipados-combined-simulator",
+            "cacheVariables": {
+                "BUILD_VANILLATD": "ON",
+                "BUILD_VANILLARA": "OFF",
+                "RED_ALERT_COMBINED_APP": "ON",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "/private/tmp/TiberianDawnApple-Combined-Simulator-Products"
             }
         },
         {
@@ -242,6 +276,27 @@
             "name": "ipados-device-release",
             "configurePreset": "ipados-device",
             "displayName": "Tiberian Dawn for iPad — Release",
+            "configuration": "Release",
+            "targets": ["TiberianDawn"]
+        },
+        {
+            "name": "ipados-redalert-probe",
+            "configurePreset": "ipados-redalert-probe",
+            "displayName": "Red Alert iOS engine link probe",
+            "configuration": "Release",
+            "targets": ["VanillaRA"]
+        },
+        {
+            "name": "ipados-redalert-simulator",
+            "configurePreset": "ipados-redalert-simulator",
+            "displayName": "Red Alert iOS simulator probe",
+            "configuration": "Release",
+            "targets": ["VanillaRA"]
+        },
+        {
+            "name": "ipados-combined-simulator",
+            "configurePreset": "ipados-combined-simulator",
+            "displayName": "Tiberian Dawn and Red Alert combined iOS simulator probe",
             "configuration": "Release",
             "targets": ["TiberianDawn"]
         },

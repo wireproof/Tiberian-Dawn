@@ -1,6 +1,11 @@
 #pragma once
 #include <mutex>
+#if defined(__APPLE__)
+// Inline local statics must remain per engine image, even under RTLD_LOCAL.
+namespace WPCheats __attribute__((visibility("hidden"))) {
+#else
 namespace WPCheats {
+#endif
 struct Snapshot {
     bool available=false, invincible=false, reveal=false, instant=false, free=false, weapons=false, anywhere=false, unlock=false, damagedHealth=false;
     int infantry=4, vehicles=4, aircraft=4;

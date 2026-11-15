@@ -92,6 +92,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
 
 /***********************************************************************************************
  * _Counts_As_Civ_Evac -- Is the specified object a candidate for civilian evac logic?         *
@@ -3683,7 +3684,7 @@ void AircraftClass::Set_Speed(int speed)
 
     FootClass::Set_Speed(speed);
 
-    MPHType sp = MPHType(min(Class->MaxSpeed * SpeedBias * House->AirspeedBias, MPH_LIGHT_SPEED));
+    MPHType sp = MPHType(min(RA_ScaleSpeed(House,int(Class->MaxSpeed * SpeedBias * House->AirspeedBias),2), MPH_LIGHT_SPEED));
     Fly_Speed(speed, sp);
 }
 

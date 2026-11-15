@@ -241,7 +241,56 @@ if(BUILD_VANILLARA)
     # A target must include the icon for the custom command to run.
     add_executable(VanillaRA ${REDALERT_SRC} ${REDALERT_NET_SRC} ${REDALERT_HEADERS} ${VANILLARA_RC} ${VANILLARA_ICON})
 
-    if(MAKE_BUNDLE)
+    if(IPADOS_PORT)
+        # Red Alert already compiles for arm64 iOS. Give the standalone engine
+        # the same UIKit/SDL bridge and Apple frameworks as Tiberian Dawn so
+        # link failures identify engine differences rather than missing glue.
+        set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=SDL_main")
+        target_sources(VanillaRA PRIVATE
+            ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp
+            ipados_bridge.mm ipados_lifecycle.cpp wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
+            ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm)
+        set_source_files_properties(ipados_bridge.mm wireproof_workshop.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+        set_target_properties(VanillaRA PROPERTIES
+            MACOSX_BUNDLE True
+            MACOSX_BUNDLE_GUI_IDENTIFIER "com.wireproof.redalert.probe"
+            MACOSX_BUNDLE_BUNDLE_NAME "Red Alert"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${TIBERIAN_DAWN_BUILD_VERSION}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/platform/apple/Info-RedAlert-iPadOS.plist.in"
+            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.wireproof.redalert.probe"
+            XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+            XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST "NO")
+        if(RED_ALERT_DATA_DIR)
+            set(RED_ALERT_GAME_DATA
+                "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
+                "${RED_ALERT_DATA_DIR}/allied/MAIN.MIX"
+                "${RED_ALERT_DATA_DIR}/soviet/MAIN.MIX"
+                "${RED_ALERT_DATA_DIR}/manifest.json")
+            foreach(asset IN LISTS RED_ALERT_GAME_DATA)
+                if(NOT EXISTS "${asset}")
+                    message(FATAL_ERROR "Missing staged Red Alert asset: ${asset}")
+                endif()
+            endforeach()
+            set_source_files_properties(
+                "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
+                "${RED_ALERT_DATA_DIR}/manifest.json"
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData)
+            set_source_files_properties(
+                "${RED_ALERT_DATA_DIR}/allied/MAIN.MIX"
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData/allied)
+            set_source_files_properties(
+                "${RED_ALERT_DATA_DIR}/soviet/MAIN.MIX"
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData/soviet)
+            target_sources(VanillaRA PRIVATE ${RED_ALERT_GAME_DATA})
+        endif()
+        target_link_libraries(VanillaRA
+            "-framework UIKit" "-framework AVFAudio" "-framework Metal"
+            "-framework MetalKit" "-framework ImageIO" "-framework QuartzCore"
+            "-framework UniformTypeIdentifiers")
+    endif()
+
+    if(MAKE_BUNDLE AND NOT IPADOS_PORT)
         set_source_files_properties(${VANILLARA_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
         set_target_properties(VanillaRA PROPERTIES
             MACOSX_BUNDLE True
@@ -280,4 +329,28 @@ if(BUILD_VANILLARA)
                     -g3 -fno-omit-frame-pointer)
             target_link_options(VanillaRA PUBLIC -fsanitize=address)
     endif()
+endif()
+
+if(RED_ALERT_COMBINED_APP)
+    # Keep Red Alert's globals in a separately loaded Mach-O image. The two
+    # engines define many of the same C++ symbols and cannot share one link.
+    set_source_files_properties(startup.cpp PROPERTIES COMPILE_DEFINITIONS "main=RedAlertEngineMain")
+    add_library(RedAlertEngine SHARED
+        ${REDALERT_SRC} ${REDALERT_NET_SRC} ${REDALERT_HEADERS}
+        ipados_bridge.mm ipados_lifecycle.cpp ipados_engine_entry.cpp wireproof_controls.cpp wireproof_production.cpp wireproof_rules.cpp wireproof_workshop.mm
+        ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm
+        ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_orders_ra.mm
+        ${CMAKE_SOURCE_DIR}/common/wireproof_orders.cpp)
+    set_source_files_properties(ipados_bridge.mm wireproof_workshop.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_ra_backup.mm ${CMAKE_SOURCE_DIR}/platform/apple/wireproof_orders_ra.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
+    set(RA_ENGINE_LIBS ${VANILLA_LIBS})
+    list(REMOVE_ITEM RA_ENGINE_LIBS SDL2::SDL2main)
+    target_compile_definitions(RedAlertEngine PRIVATE ${VANILLA_DEFS} SDL_MAIN_HANDLED WP_COMBINED_APP)
+    target_include_directories(RedAlertEngine PRIVATE ${CMAKE_SOURCE_DIR} .)
+    target_link_libraries(RedAlertEngine commonv ${RA_ENGINE_LIBS} ${STATIC_LIBS}
+        "-framework UIKit" "-framework AVFAudio" "-framework Metal"
+        "-framework MetalKit" "-framework ImageIO" "-framework QuartzCore"
+        "-framework UniformTypeIdentifiers")
+    set_target_properties(RedAlertEngine PROPERTIES
+        OUTPUT_NAME RedAlertEngine
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.wireproof.tiberiandawn.redalert-engine")
 endif()

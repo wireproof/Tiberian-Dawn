@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+// Select before video initialization; each engine owns its private renderer state.
+void RemasteredArt_SetGame(bool redAlert);
 bool RemasteredArt_Load(const std::string& directory);
 bool RemasteredArt_Ready();
 #ifdef __OBJC__

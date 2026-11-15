@@ -60,9 +60,9 @@
 
 #ifdef IPADOS_PORT
 #include "../platform/apple/ipados_platform.h"
-#include "wireproof_laptop.h"
 #endif
 #ifdef TIBERIAN_DAWN_APPLE_PORT
+#include "wireproof_laptop.h"
 #include "hd_asset_pack.h"
 #include "remastered_art.h"
 #include "remastered_scene.h"
@@ -1176,6 +1176,46 @@ int Video_Game_Pixels_For_Window_Points(float points)
  * HISTORY:                                                                                    *
  *   09/26/1995 PWG : Created.                                                                 *
  *=============================================================================================*/
+#ifdef IPADOS_PORT
+SDL_Window* Video_Get_Game_Window(void)
+{
+    return window;
+}
+
+bool Video_Game_Window_Is_Visible(void)
+{
+    return window && (SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN) != 0;
+}
+
+void Video_Set_Game_Window_Visible(bool visible)
+{
+    if (!window) return;
+    extern void Focus_Loss(void);
+    extern void Focus_Restore(void);
+
+    // Clear pumps SDL events, including the previous session's HIDDEN event.
+    // Drain them before restoring focus/rendering, not after enabling render.
+    if (Keyboard) Keyboard->Clear();
+    if (visible) {
+        SDL_ShowWindow(window);
+        SDL_RaiseWindow(window);
+        if (Keyboard) Keyboard->Clear();
+        // UIKit hiding preserves SDL keyboard focus, so showing the same
+        // window need not emit FOCUS_GAINED. Restore each engine explicitly.
+        Focus_Restore();
+        Set_Video_Render_Active(true);
+        force_present = true;
+        Refresh_Video_Layout();
+    } else {
+        SDL_HideWindow(window);
+        if (Keyboard) Keyboard->Clear();
+        // Finish after queued events, which may otherwise resume paused audio.
+        Focus_Loss();
+        Set_Video_Render_Active(false);
+    }
+}
+#endif
+
 void Reset_Video_Mode(void)
 {
 #ifdef TIBERIAN_DAWN_APPLE_PORT

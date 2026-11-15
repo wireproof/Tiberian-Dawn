@@ -45,6 +45,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
 #include "factory.h"
 #include "xpipe.h"
 #include "blowpipe.h"
@@ -53,6 +54,7 @@
 #include "lcwstraw.h"
 #include "vortex.h"
 #include "carry.h"
+#include "savegame_validate.h"
 
 #ifdef REMASTER_BUILD
 extern bool DLLSave(Pipe& file);
@@ -78,6 +80,17 @@ extern bool DLLLoad(Straw& file);
         + sizeof(TriggerTypeClass) + sizeof(UnitClass) + sizeof(UnitTypeClass) + sizeof(VesselClass)                   \
         + sizeof(ScenarioClass) + sizeof(ChronalVortexClass)))
 //										sizeof(Waypoint)))
+
+extern "C" bool RedAlert_ValidateSaveGame(const char* path, char* title, size_t capacity, unsigned* scenario, int* faction)
+{
+    return RA_ValidateSaveFile<HousesType>(path,title,capacity,scenario,faction,DESCRIP_MAX,SAVEGAME_VERSION,
+#ifdef FIXIT_CSII
+                               true,
+#else
+                               false,
+#endif
+                               HOUSE_COUNT);
+}
 
 static int Reconcile_Players(void);
 extern bool Is_Mission_Counterstrike(char* file_name);
@@ -443,6 +456,10 @@ bool Save_Game(const char* file_name, const char* descr)
     Decode_All_Pointers();
 
     NowSavingGame = false; // TEMP MBL: Need to discuss better solution with Steve
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    extern void RA_CloudSaveCompleted(const char*);
+    RA_CloudSaveCompleted(file_name);
+#endif
 
     return (true);
 }
@@ -509,6 +526,7 @@ bool Load_Game(int id)
 */
 bool Load_Game(const char* file_name)
 {
+    RA_ResetControls();
     int i;
     unsigned scenario;
     HousesType house;

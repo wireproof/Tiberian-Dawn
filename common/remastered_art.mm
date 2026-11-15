@@ -18,15 +18,29 @@ std::string root;
 std::unordered_map<std::string,std::vector<Frame>> frames;
 std::unordered_map<std::string,std::array<float,20>> teams;
 bool ready=false;
+bool redAlert=false;
+const char* terrainSet(int theater) {
+ if(redAlert) return theater==1?"RA_Terrain_Snow":theater==2?"RA_Terrain_Interior":"RA_Terrain_Temperate";
+ return theater==0?"TD_Terrain_Desert":theater==3?"TD_Terrain_Winter":"TD_Terrain_Temperate";
+}
+std::string gameSet(const char* category) { return std::string(redAlert?"RA_":"TD_")+category; }
+std::string teamName(int owner, const std::string& tileset) {
+ if(redAlert) {
+  // The classic RA color enum differs from the Collection's new MULTI palette.
+  static const char* colors[]={"SPAIN","MULTI2","USSR","ENGLAND","UKRAINE","GERMANY","GREECE","TURKEY"};
+  return owner>=0&&owner<8?colors[owner]:"";
+ }
+ return owner==0?"GOOD":owner==1?(tileset=="TD_Structures"?"BAD_STRUCTURE":"BAD_UNIT"):owner==2?"NEUTRAL":owner>=4&&owner<=9?"MULTI"+std::to_string(owner-3):"";
+}
 std::vector<std::string> fields(const std::string&s){std::vector<std::string>r;std::stringstream ss(s);std::string x;while(std::getline(ss,x,'\t'))r.push_back(x);return r;}
 std::string key(const std::string&t,const std::string&a,int f){return t+"/"+a+"/"+std::to_string(f);}
 bool safe(const std::string&s){return !s.empty()&&s[0]!='/'&&s.find("..") == std::string::npos&&s.find('\\')==std::string::npos;}
 const Frame* lookup(const WPRemastered::Command& c){
  std::string asset=c.asset;for(char&x:asset)x=std::toupper((unsigned char)x);
- if(asset=="SHADOW") { char n[32];std::snprintf(n,sizeof(n),"SHADOW-%02d",c.frame);auto it=frames.find(key("TD_Terrain_Shroud",n,0));if(it!=frames.end())return &it->second[0];}
+ if(asset=="SHADOW") { char n[32];std::snprintf(n,sizeof(n),"SHADOW-%02d",c.frame);auto it=frames.find(key(gameSet("Terrain_Shroud"),n,0));if(it!=frames.end())return &it->second[0];}
  auto dot=asset.find_last_of('.');if(dot!=std::string::npos&&asset.substr(0,5)!="ICON."&&asset.substr(0,3)!="UI.")asset.resize(dot);
- const char* terrain=c.theater==0?"TD_Terrain_Desert":c.theater==3?"TD_Terrain_Winter":"TD_Terrain_Temperate";
- const char* sets[]={terrain,"TD_Units","TD_Structures","TD_VFX","TD_UI","TD_Terrain_Shroud"};
+ const char* terrain=terrainSet(c.theater);
+ const std::string sets[]={terrain,gameSet("Units"),gameSet("Structures"),gameSet("VFX"),gameSet("UI"),gameSet("Terrain_Shroud")};
  for(auto t:sets){auto it=frames.find(key(t,asset,c.frame));if(it==frames.end())continue;auto&v=it->second;
  auto millis=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
  return &v[v.size()>1&&v[0].fps>0?size_t(millis*v[0].fps/1000)%v.size():0];}return nullptr;
@@ -34,13 +48,13 @@ const Frame* lookup(const WPRemastered::Command& c){
 bool naturalWorldAsset(const WPRemastered::Command& c){
  std::string asset=c.asset;for(char&x:asset)x=std::toupper((unsigned char)x);
  auto dot=asset.find_last_of('.');if(dot!=std::string::npos)asset.resize(dot);
- const char* terrain=c.theater==0?"TD_Terrain_Desert":c.theater==3?"TD_Terrain_Winter":"TD_Terrain_Temperate";
+ const char* terrain=terrainSet(c.theater);
  if(frames.find(key(terrain,asset,c.frame))!=frames.end())return true;
  // Walls are cell overlays drawn with the classic ghost table, just like
  // trees and Tiberium. Permit only their named remastered frames here so
  // projectile shadow passes still cannot become duplicate full-color sprites.
  if(asset=="SBAG"||asset=="BRIK"||asset=="CYCL"||asset=="BARB"||asset=="WOOD")
-  return frames.find(key("TD_Structures",asset,c.frame))!=frames.end();
+  return frames.find(key(gameSet("Structures"),asset,c.frame))!=frames.end();
  return false;
 }
 const char* shader=R"METAL(
@@ -90,8 +104,9 @@ id<MTLTexture> texture(id<MTLDevice> device,const Frame&f){
  if(result){cacheTexture(nk,result);}return result;
 }
 }
+void RemasteredArt_SetGame(bool value){ redAlert=value; }
 bool RemasteredArt_Load(const std::string& directory){
- ready=false;frames.clear();teams.clear();root=directory;std::ifstream input(root+"/frames.tsv");if(!input)return false;std::string line;std::getline(input,line);
+ ready=false;frames.clear();teams.clear();root=directory+(redAlert?"RA":"");std::ifstream input(root+"/frames.tsv");if(!input)return false;std::string line;std::getline(input,line);
  try{while(std::getline(input,line)){auto f=fields(line);if(f.size()<16)continue;Frame r;r.tileset=f[0];r.asset=f[1];r.shape=std::stoi(f[2]);r.anim=std::stoi(f[3]);r.fps=std::stof(f[4]);r.page=f[6];r.x=std::stoi(f[7]);r.y=std::stoi(f[8]);r.w=std::stoi(f[9]);r.h=std::stoi(f[10]);r.cw=std::stoi(f[11]);r.ch=std::stoi(f[12]);r.cx=std::stoi(f[13]);r.cy=std::stoi(f[14]);if((r.page!="-"&&!safe(r.page))||r.w<0||r.h<0||r.cw<0||r.ch<0||r.w>4096||r.h>4096)return false;frames[key(r.tileset,r.asset,r.shape)].push_back(r);}
  std::ifstream colors(root+"/teams.tsv");std::getline(colors,line);while(std::getline(colors,line)){auto f=fields(line);if(f.size()!=21)continue;std::array<float,20>a;for(int i=0;i<20;++i)a[i]=std::stof(f[i+1]);teams[f[0]]=a;}}
  catch(...){frames.clear();return false;}
@@ -131,7 +146,7 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
     y=c.asset=="IONSFX"?c.y+c.height-f->ch*scale:c.y+(c.height-f->ch*scale)/2;
    }
    x+=f->cx*scale;y+=f->cy*scale;w=f->w*scale;h=f->h*scale;
-   std::string team=c.owner==0?"GOOD":c.owner==1?(f->tileset=="TD_Structures"?"BAD_STRUCTURE":"BAD_UNIT"):c.owner==2?"NEUTRAL":c.owner>=4&&c.owner<=9?"MULTI"+std::to_string(c.owner-3):"";
+   std::string team=teamName(c.owner,f->tileset);
    auto t=teams.find(team);if(t!=teams.end()&&t->second[12]>t->second[10]&&t->second[17]>t->second[15]){std::copy(t->second.begin(),t->second.end(),p.a);p.recolor=1;}
   }}
   if(!tex){if(c.pixels.size()!=size_t(c.width*c.height))continue;
@@ -224,6 +239,19 @@ void RemasteredArt_Render(id<MTLRenderCommandEncoder> encoder,id<MTLDevice> devi
   [encoder setViewport:MTLViewport{ox+x0*zoom*sx,oy+(mapTop+(y0-mapTop)*zoom)*sy,w*zoom*sx,h*zoom*sy,0,1}];
   [encoder setScissorRect:MTLScissorRect{NSUInteger(left),NSUInteger(top),NSUInteger(right-left),NSUInteger(bottom-top)}];
   [encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:laserTexture atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+ }
+ for(const auto&box:scene.selections){
+  const int w=box.width,h=box.height;std::vector<uint8_t>rgba(size_t(w)*h*4,0);
+  for(int y=0;y<h;++y)for(int x=0;x<w;++x){
+   bool horizontal=(y==0||y==h-1)&&(x<w/5||x>=w-w/5);
+   bool vertical=(x==0||x==w-1)&&(y<h/5||y>=h-h/5);
+   if(horizontal||vertical){size_t i=(size_t(y)*w+x)*4;rgba[i]=palette[box.color*3]<<2;rgba[i+1]=palette[box.color*3+1]<<2;rgba[i+2]=palette[box.color*3+2]<<2;rgba[i+3]=255;}
+  }
+  id<MTLTexture>tex=overlayTexture(device,w,h,rgba);if(!tex)continue;
+  struct Params{float a[20]={};uint32_t recolor=0;}p;
+  int left=std::max(0,ox),top=std::max(0,int(oy+mapTop*sy)),right=std::min(dw,int(ox+mapRight*sx)),bottom=std::min(dh,int(oy+mapBottom*sy));if(right<=left||bottom<=top)continue;
+  [encoder setViewport:MTLViewport{ox+box.x*zoom*sx,oy+(mapTop+(box.y-mapTop)*zoom)*sy,w*zoom*sx,h*zoom*sy,0,1}];
+  [encoder setScissorRect:MTLScissorRect{NSUInteger(left),NSUInteger(top),NSUInteger(right-left),NSUInteger(bottom-top)}];[encoder setFragmentBytes:&p length:sizeof(p) atIndex:0];[encoder setFragmentTexture:tex atIndex:0];[encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
  }
  for(const auto&bar:scene.health){
   if(bar.width<=0)continue;std::vector<uint8_t>rgba(bar.width*4*4,0);

@@ -66,7 +66,13 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#ifdef IPADOS_PORT
+#include "ipados_lifecycle.h"
+#endif
+#include "common/remastered_scene.h"
+#include "common/video.h"
 #include "msgbox.h"
+#include "wireproof_controls.h"
 #include "keyframe.h"
 #include "language.h"
 
@@ -76,6 +82,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef IPADOS_PORT
+#include <atomic>
+#include <SDL.h>
+
+namespace {
+std::atomic<bool> MovieTouchSkipRequested{false};
+
+int SDLCALL Capture_Movie_Touch(void*, SDL_Event* event)
+{
+    if (event->type == SDL_FINGERDOWN) {
+        MovieTouchSkipRequested.store(true, std::memory_order_relaxed);
+    }
+    return 0;
+}
+}
+#endif
 
 #include "interpal.h"
 #include "vortex.h"
@@ -177,9 +199,17 @@ void Main_Game(int argc, char* argv[])
     /*
     **	Perform one-time-only initializations
     */
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+    static bool initialized = false;
+    if (!initialized) {
+        if (!Init_Game(argc, argv)) return;
+        initialized = true;
+    }
+#else
     if (!Init_Game(argc, argv)) {
         return;
     }
+#endif
 
     /*
     **	Game processing loop:
@@ -226,6 +256,9 @@ void Main_Game(int argc, char* argv[])
         }
 
         Set_Video_Cursor_Clip(true);
+#ifdef IPADOS_PORT
+        RA_SetRecoveryTactical(true);
+#endif
 
 #ifdef SCENARIO_EDITOR
         /*
@@ -376,6 +409,10 @@ void Main_Game(int argc, char* argv[])
         }
 #endif
 
+#ifdef IPADOS_PORT
+        RA_SetRecoveryTactical(false);
+        RA_DiscardRecoveryAutosaves();
+#endif
         Set_Video_Cursor_Clip(false);
 
         /*
@@ -424,7 +461,9 @@ void Main_Game(int argc, char* argv[])
     /*
     **	Free the scenario description buffers
     */
+#if !defined(IPADOS_PORT) || !defined(WP_COMBINED_APP)
     Session.Free_Scenario_Descriptions();
+#endif
 }
 
 /***********************************************************************************************
@@ -1717,6 +1756,8 @@ bool Main_Loop()
     if (!GameActive)
         return (!GameActive);
 
+    RA_ProcessControls();
+
     /*
     ** Call the focus loss handler
     */
@@ -2359,6 +2400,7 @@ extern void Play_Movie_GlyphX(const char* movie_name, ThemeType theme, bool imme
 
 void Play_Movie(char const* name, ThemeType theme, bool clrscrn, bool immediate)
 {
+    RA_BeginPresentation();
 #ifdef REMASTER_BUILD
     if (strcmp(name, "x") == 0 || strcmp(name, "X") == 0) {
         return;
@@ -2465,7 +2507,15 @@ void Play_Movie(char const* name, ThemeType theme, bool clrscrn, bool immediate)
                 // Set_Palette(BlackPalette);
                 SysMemPage.Clear();
                 InMovie = true;
+#ifdef IPADOS_PORT
+                MovieTouchSkipRequested.store(false, std::memory_order_relaxed);
+                SDL_AddEventWatch(Capture_Movie_Touch, nullptr);
+#endif
                 VQA_Play(vqa, VQAMODE_RUN);
+#ifdef IPADOS_PORT
+                SDL_DelEventWatch(Capture_Movie_Touch, nullptr);
+                MovieTouchSkipRequested.store(false, std::memory_order_relaxed);
+#endif
                 VQA_Close(vqa);
                 // Resume_Audio_Thread();
                 InMovie = false;
@@ -2778,7 +2828,13 @@ void CC_Draw_Shape(const ObjectClass* object,
         return;
     }
 #endif
+    const int previous_owner = WPRemastered::Shared().owner;
+    if (object && object->Owner() != HOUSE_NONE) {
+        const HouseClass* house = HouseClass::As_Pointer(object->Owner());
+        if (house) WPRemastered::Shared().owner = static_cast<int>(house->RemapColor);
+    }
     CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
+    WPRemastered::Shared().owner = previous_owner;
 }
 
 void CC_Draw_Shape(const ObjectClass* object,
@@ -2804,7 +2860,13 @@ void CC_Draw_Shape(const ObjectClass* object,
         return;
     }
 #endif
+    const int previous_owner = WPRemastered::Shared().owner;
+    if (object && object->Owner() != HOUSE_NONE) {
+        const HouseClass* house = HouseClass::As_Pointer(object->Owner());
+        if (house) WPRemastered::Shared().owner = static_cast<int>(house->RemapColor);
+    }
     CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
+    WPRemastered::Shared().owner = previous_owner;
 }
 
 void CC_Draw_Pip(const ObjectClass* object,
@@ -2964,6 +3026,19 @@ void CC_Draw_Shape(void const* shapefile,
                 flags = flags & ~(SHAPE_FADING | SHAPE_PREDATOR);
                 flags = flags | SHAPE_GHOST;
                 ghostdata = DisplayClass::SpecialGhost;
+            }
+
+            if (window == WINDOW_TACTICAL && WPRemastered::Shared().capturing) {
+                // Rotated effects retain the engine's exact transformed pixels.
+                // They must not be replaced by an unrotated atlas frame.
+                const void* asset = rotation == DIR_N ? shapefile : nullptr;
+                const uint8_t* pixels = rotation == DIR_N
+                    ? static_cast<const uint8_t*>(Get_Shape_Header_Data((void*)shape_pointer)) : buffer;
+                WPRemastered::RecordSprite(asset, shapenum,
+                    x + WindowList[window][WINDOWX] + LogicPage->Get_XPos(),
+                    y + WindowList[window][WINDOWY] + LogicPage->Get_YPos(),
+                    width, height, static_cast<unsigned>(flags), pixels,
+                    static_cast<const uint8_t*>(fadingdata), static_cast<const uint8_t*>(ghostdata));
             }
 
             predoffset = Frame;
@@ -3205,7 +3280,11 @@ int VQ_Call_Back(unsigned char*, int)
 #endif
     Frame_Limiter();
 
-    if ((BreakoutAllowed || Debug_Flag) && key == KN_ESC) {
+    bool touch_skip = false;
+#ifdef IPADOS_PORT
+    touch_skip = MovieTouchSkipRequested.exchange(false, std::memory_order_relaxed);
+#endif
+    if ((BreakoutAllowed || Debug_Flag) && (key == KN_ESC || touch_skip)) {
         Keyboard->Clear();
         Brokeout = true;
         return (true);

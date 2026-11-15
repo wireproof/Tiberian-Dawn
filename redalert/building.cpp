@@ -105,6 +105,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_production.h"
 #include "utracker.h"
 #include "event.h"
 #include "rules.h"
@@ -2023,6 +2024,7 @@ int BuildingClass::Exit_Object(TechnoClass* base)
                 Transmit_Message(RADIO_HELLO, air);
                 Transmit_Message(RADIO_TETHER);
                 ScenarioInit--;
+                RA_RallyNew(base);
                 return (2);
             }
             ScenarioInit--;
@@ -2040,6 +2042,7 @@ int BuildingClass::Exit_Object(TechnoClass* base)
                 /*BG*/ air->Assign_Destination(::As_Target(air->Nearby_Location(this)));
                 air->Assign_Mission(MISSION_MOVE);
                 ScenarioInit--;
+                RA_RallyNew(base);
                 return (2);
             }
             ScenarioInit--;
@@ -2055,6 +2058,7 @@ int BuildingClass::Exit_Object(TechnoClass* base)
             if (cell != 0 && base->Unlimbo(Cell_Coord(cell), Direction(Cell_Coord(cell)))) {
                 base->Assign_Mission(MISSION_GUARD);
                 ScenarioInit--;
+                RA_RallyNew(base);
                 return (2);
             }
             ScenarioInit--;
@@ -2111,6 +2115,7 @@ int BuildingClass::Exit_Object(TechnoClass* base)
                 Transmit_Message(RADIO_TETHER);
                 Assign_Mission(MISSION_UNLOAD);
                 ScenarioInit--;
+                RA_RallyNew(base);
                 return (2);
             }
             ScenarioInit--;
@@ -2148,7 +2153,8 @@ int BuildingClass::Exit_Object(TechnoClass* base)
                         Transmit_Message(RADIO_UNLOAD);
                     }
                     ScenarioInit--;
-                    return (2);
+                    RA_RallyNew(base);
+                return (2);
                 }
                 ScenarioInit--;
             }
@@ -2175,7 +2181,8 @@ int BuildingClass::Exit_Object(TechnoClass* base)
                         base->ArchiveTarget = ::As_Target(House->Where_To_Go((FootClass*)base));
                     }
                     ScenarioInit--;
-                    return (2);
+                    RA_RallyNew(base);
+                return (2);
                 }
                 ScenarioInit--;
             }
@@ -2213,7 +2220,8 @@ int BuildingClass::Exit_Object(TechnoClass* base)
                     if (node && ((BuildingClass*)base)->Class->Type == House->BuildStructure) {
                         House->BuildStructure = STRUCT_NONE;
                     }
-                    return (2);
+                    RA_RallyNew(base);
+                return (2);
                 }
             }
         }

@@ -131,6 +131,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
 #include "vortex.h"
 #include "rules.h"
 #include "utracker.h"
@@ -856,6 +857,10 @@ bool HouseClass::Can_Build(ObjectTypeClass const* type, HousesType house) const
         }
     }
 #endif
+
+    // Keep unavailable/expansion types filtered above; only the player's
+    // explicit military roster bypasses ownership, tech and prerequisites.
+    if(RA_UnlockBuildType(this,type->IniName))return true;
 
     /*
     **	The computer can always build everything.

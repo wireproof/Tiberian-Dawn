@@ -36,6 +36,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "common/settings.h"
 
 #define SCROLL_DELAY 1
 
@@ -87,11 +88,21 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
     bool player_scrolled = false;
     static DirType direction;
     int rate;
+#ifdef SDL2_BUILD
+    const bool analog=Keyboard->Is_Analog_Scroll_Active();
+#else
+    const bool analog=false;
+#endif
+    bool edgeEnabled=true;
+#ifdef IPADOS_PORT
+    edgeEnabled=Settings.Touch.EdgeScroll;
+    if(!edgeEnabled || analog)Inertia=0;
+#endif
 
     /*
 	**	If rubber band mode is in progress, then don't allow scrolling of the tactical map.
 	*/
-    if (!IsRubberBand /*&& !IsTentative*/) {
+    if (!IsRubberBand || analog /*&& !IsTentative*/) {
 
         /*
 		**	Special check to not scroll within the special no-scroll regions.
@@ -99,14 +110,17 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
         bool noscroll = false;
 
 #ifdef SDL2_BUILD
-        if (Keyboard->Is_Analog_Scroll_Active()) {
+        if (analog) {
             unsigned char scrollDirection = Keyboard->Get_Scroll_Direction();
-            int scrollDistance = (7 - Options.ScrollRate) * 20;
-            Scroll_Map((DirType)scrollDirection, scrollDistance, true);
+            float intensity = Keyboard->Get_Scroll_Intensity();
+            if (intensity < 0.15f) intensity = 0.15f;
+            if (intensity > 1.75f) intensity = 1.75f;
+            int scrollDistance = max(1,int(((7 - Options.ScrollRate) * 20 * intensity) + 0.5f));
+            player_scrolled = Scroll_Map((DirType)scrollDirection, scrollDistance, true);
         }
 #endif
 
-        if (!noscroll) {
+        if (!noscroll && edgeEnabled && !analog && !IsRubberBand) {
             bool at_screen_edge = (y == 0 || x == 0 || x >= SeenBuff.Get_Width() - 1 || y >= SeenBuff.Get_Height() - 1);
 
             /*

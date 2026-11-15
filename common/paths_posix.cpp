@@ -185,6 +185,13 @@ const char* PathsClass::Data_Path()
         }
 
 #if defined(__APPLE__) && TARGET_OS_IPHONE
+        if (Suffix == "vanillara") {
+            // Red Alert's immutable disc directories live in the app bundle.
+            // The engine's local-CD switcher looks for allied/ and soviet/
+            // beneath Data_Path; saves still go to User_Path/vanillara.
+            DataPath = ProgramPath + "/RAData";
+            return DataPath.c_str();
+        }
         // Immutable CD assets belong in Application Support. Documents stays
         // small, writable and useful for settings/save-game exchange in Files.
         DataPath = User_Home() + "/Library/Application Support/TiberianDawn";

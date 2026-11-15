@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import authentic, privately owned C&C Remastered TD artwork.
+"""Import authentic, privately owned C&C Remastered TD or RA artwork.
 
 Requires Pillow (including DDS decoding). Art is never downloaded. Output contains
 proprietary game artwork and MUST NOT be committed or published. Metadata follows
@@ -171,9 +171,10 @@ TEAM_FIELDS = [('LowerBounds', 'RGB'), ('UpperBounds', 'RGB'), ('Fudge', ''), ('
                ('OverallOutputLevels', 'XY')]
 
 
-def teams(collection, output):
-    raw = collection.read('DATA/XML/CNCTDTEAMCOLORS.XML')
-    (output / 'CNCTDTEAMCOLORS.XML').write_bytes(raw)
+def teams(collection, output, game='td'):
+    filename = 'CNC' + game.upper() + 'TEAMCOLORS.XML'
+    raw = collection.read('DATA/XML/' + filename)
+    (output / filename).write_bytes(raw)
     root = ET.fromstring(raw)
     by_name = {n.attrib['Name']: n for n in root}
     def value(name, tag, keys):
@@ -190,9 +191,9 @@ def teams(collection, output):
             writer.writerow([name] + [v for tag, keys in TEAM_FIELDS for v in value(name, tag, keys)])
 
 
-def mappings(collection):
+def mappings(collection, game='td'):
     result = []
-    names = sorted(n for n in collection.entries if '/TILESETS/TD_' in n and n.endswith('.XML'))
+    names = sorted(n for n in collection.entries if ('/TILESETS/' + game.upper() + '_') in n and n.endswith('.XML'))
     for name in names:
         root = ET.fromstring(collection.read(name))
         for tileset in root.findall('TilesetTypeClass'):
@@ -207,7 +208,7 @@ def mappings(collection):
     return sorted(result, key=lambda x: (x[0], x[1], x[2], x[3]))
 
 
-def import_ui(collection, output, edge):
+def import_ui(collection, output, edge, game='td'):
     """Decode original MTD atlas geometry and XML build-icon assignments."""
     atlas_name = 'DATA/ART/TEXTURES/SRGB/MT_COMMANDBAR_COMMON.TGA'
     raw = collection.read(atlas_name.rsplit('.', 1)[0] + '.MTD')
@@ -229,13 +230,14 @@ def import_ui(collection, output, edge):
         raise ValueError('MTD trailing bytes')
     # Pillow normalizes TGA bottom-left origin to top-left. MTD y is top-left.
     source = Image.open(io.BytesIO(collection.read(atlas_name))).convert('RGBA')
-    root = ET.fromstring(collection.read('DATA/XML/OBJECTS/UNITS/CNCBUILDABLES.XML'))
-    atlas = Atlas(output, 'td_ui', edge)
+    root = ET.fromstring(collection.read('DATA/XML/OBJECTS/UNITS/' + ('RABUILDABLES.XML' if game == 'ra' else 'CNCBUILDABLES.XML')))
+    prefix = game.upper()
+    atlas = Atlas(output, game + '_ui', edge)
     rows, mapped, errors = [], set(), []
     for node in root.findall('ObjectTypeClass'):
         classic = node.get('Name', '')
         icon = node.findtext('CNCEncyclopediaComponent/BuildIcon')
-        if not classic.startswith('TD_') or not icon:
+        if not classic.startswith(prefix + '_') or not icon:
             continue
         key = norm(icon) + '.TGA'
         if key not in records:
@@ -245,29 +247,31 @@ def import_ui(collection, output, edge):
         if x+w > source.width or y+h > source.height or cx+w > cw or cy+h > ch:
             raise ValueError('MTD crop outside bounds: ' + key)
         rect = atlas.add(source.crop((x, y, x+w, y+h)))
-        rows.append(['TD_UI', 'ICON.' + classic[3:].upper(), 0, 0, 0, 'SOURCE',
+        rows.append([prefix + '_UI', 'ICON.' + classic[3:].upper(), 0, 0, 0, 'SOURCE',
                      *rect, cw, ch, cx, cy, atlas_name + '#' + key])
         mapped.add(key)
     atlas.flush()
-    return rows, atlas.pages, errors, sorted(k for k in records if k.startswith('BUILDICON_TD_') and k not in mapped)
+    return rows, atlas.pages, errors, sorted(k for k in records if k.startswith('BUILDICON_' + prefix + '_') and k not in mapped)
 
 
-def append_ui(collection, output, edge):
+def append_ui(collection, output, edge, game='td'):
     report_path = output / 'coverage.json'
     report = json.loads(report_path.read_text())
-    if 'TD_UI' in report['tilesets']:
+    require_game(report, game)
+    ui_set = game.upper() + '_UI'
+    if ui_set in report['tilesets']:
         raise ValueError('Sidebar has already been imported')
-    rows, pages, errors, unmapped = import_ui(collection, output, edge)
+    rows, pages, errors, unmapped = import_ui(collection, output, edge, game)
     with (output / 'frames.tsv').open('a', newline='') as f:
         csv.writer(f, delimiter='\t', lineterminator='\n').writerows(rows)
     report['pages'].extend(pages)
-    report['tilesets']['TD_UI'] = {'references': len(rows) + len(errors), 'mapped': len(rows), 'unresolved': len(errors)}
+    report['tilesets'][ui_set] = {'references': len(rows) + len(errors), 'mapped': len(rows), 'unresolved': len(errors)}
     report['totals']['mapped'] += len(rows)
     report['totals']['unique_decoded'] += len(rows)
     report['references'] += len(rows) + len(errors)
     report['unresolved'].extend(errors)
     report['sidebar_icons_without_buildable_mapping'] = unmapped
-    report['scope'] = 'All TD Map Editor tilesets and XML-mapped sidebar build icons. Original UI layout retained.'
+    report['scope'] = 'All ' + game.upper() + ' Map Editor tilesets and XML-mapped sidebar build icons. Original UI layout retained.'
     report_path.write_text(json.dumps(report, indent=2) + '\n')
     provenance_path = output / 'provenance.json'
     provenance = json.loads(provenance_path.read_text())
@@ -276,8 +280,17 @@ def append_ui(collection, output, edge):
     print('Sidebar:', len(rows), 'exact XML mappings;', len(errors), 'unresolved;', len(unmapped), 'unassigned source icons', flush=True)
 
 
-def append_chrome(collection, output, edge):
-    """Import the Collection's TD control artwork without redistributing it."""
+def require_game(report, game):
+    """Never append one game's assets to another game's private pack."""
+    if any(not name.startswith(game.upper() + '_') for name in report['tilesets']):
+        raise ValueError('Output belongs to a different game; choose its matching --game')
+
+
+def append_chrome(collection, output, edge, game='td'):
+    """Import the Collection's game-specific control artwork without redistributing it."""
+    report_path = output / 'coverage.json'
+    report = json.loads(report_path.read_text())
+    require_game(report, game)
     source_name = 'DATA/ART/TEXTURES/SRGB/MT_COMMANDBAR_COMMON.TGA'
     raw = collection.read(source_name[:-4]+'.MTD')
     version, count = struct.unpack_from('<ii', raw)
@@ -291,14 +304,19 @@ def append_chrome(collection, output, edge):
     names = ['TOPBUTTON','RADARBG','FACTIONLOGO_GDI','FACTIONLOGO_NOD',
              'BUTTON_REPAIR_OFF','BUTTON_REPAIR_ON','BUTTON_SELL_OFF','BUTTON_SELL_ON',
              'BUTTON_MAP_OFF','BUILDFRAME','SELLREPAIRBG','POWERBG','POWERFRAMING']
-    atlas = Atlas(output, 'td_chrome', edge)
+    if game == 'ra':
+        names = sorted(key[len('UI_RA_SIDEBAR_'):-4] for key in records if key.startswith('UI_RA_SIDEBAR_') and key.endswith('.TGA'))
+        names += ['FACTIONLOGO_ALLIES', 'FACTIONLOGO_SOVIET']
+    atlas = Atlas(output, game + '_chrome', edge)
     rows = []
     for name in names:
-        key = 'UI_SIDEBAR_'+name+'.TGA'
+        key = ('UI_RA_SIDEBAR_' if game == 'ra' else 'UI_SIDEBAR_') + name + '.TGA'
+        if game == 'ra' and name.startswith('FACTIONLOGO_'):
+            key = 'UI_SIDEBAR_' + name + '.TGA'
         x,y,w,h,cx,cy,cw,ch = records[key]
         if x+w>source.width or y+h>source.height: raise ValueError(key)
         rect = atlas.add(source.crop((x,y,x+w,y+h)))
-        rows.append(['TD_UI','UI.'+name,0,0,0,'SOURCE',*rect,cw,ch,cx,cy,source_name+'#'+key])
+        rows.append([game.upper() + '_UI','UI.'+name,0,0,0,'SOURCE',*rect,cw,ch,cx,cy,source_name+'#'+key])
     atlas.flush()
     path = output/'frames.tsv'
     with path.open() as f: previous=list(csv.reader(f,delimiter='\t'))
@@ -308,7 +326,7 @@ def append_chrome(collection, output, edge):
         writer.writerows(rows)
     report_path=output/'coverage.json';report=json.loads(report_path.read_text())
     report['chrome']={'mapped':len(rows),'source':source_name,'layout':'Existing touch targets retained'}
-    report['pages']=[page for page in report['pages'] if not str(page).startswith('td_chrome-')]+atlas.pages
+    report['pages']=[page for page in report['pages'] if not (page.get('file', '') if isinstance(page, dict) else str(page)).startswith(game + '_chrome-')]+atlas.pages
     report_path.write_text(json.dumps(report,indent=2)+'\n')
     provenance_path=output/'provenance.json';provenance=json.loads(provenance_path.read_text());provenance.update(collection.receipts);provenance_path.write_text(json.dumps(provenance,indent=2)+'\n')
     print('Remastered chrome:',len(rows),'source images')
@@ -318,6 +336,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('installation', type=pathlib.Path)
     parser.add_argument('output', type=pathlib.Path)
+    parser.add_argument('--game', choices=['td', 'ra'], default='td', help='Keep each game in a separate private output directory')
     parser.add_argument('--atlas-size', type=int, choices=[1024, 2048, 4096], default=2048)
     parser.add_argument('--metadata-only', action='store_true')
     parser.add_argument('--append-chrome', action='store_true')
@@ -326,18 +345,18 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     if args.append_chrome:
-        append_chrome(Collection(args.installation), args.output, args.atlas_size)
+        append_chrome(Collection(args.installation), args.output, args.atlas_size, args.game)
         return
     if args.append_ui:
-        append_ui(Collection(args.installation), args.output, args.atlas_size)
+        append_ui(Collection(args.installation), args.output, args.atlas_size, args.game)
         return
     if (args.output / 'frames.tsv').exists():
         parser.error('Output already contains frames.tsv; choose a fresh directory to preserve prior assets')
     collection = Collection(args.installation)
-    rows = mappings(collection)
+    rows = mappings(collection, args.game)
     if args.tileset:
         rows = [r for r in rows if r[0] in args.tileset]
-    teams(collection, args.output)
+    teams(collection, args.output, args.game)
     with (args.output / 'mapping.tsv').open('w', newline='') as f:
         w = csv.writer(f, delimiter='\t', lineterminator='\n')
         w.writerow(['tileset', 'asset', 'shape', 'animation_index', 'fps', 'source_filename'])
@@ -387,16 +406,16 @@ def main():
         print(previous, dict(per_tileset[previous]), flush=True)
     report = {'format': 1, 'private_artwork': True, 'references': len(rows), 'totals': totals,
               'decode_modes': collection.decode_modes, 'tilesets': per_tileset, 'pages': pages,
-              'unresolved': missing, 'scope': 'All TD Map Editor tilesets; sidebar/UI require separate UI mappings.',
+              'unresolved': missing, 'scope': 'All ' + args.game.upper() + ' Map Editor tilesets; sidebar/UI require separate UI mappings.', 'game': args.game,
               'native_pixels_per_cell': 128, 'classic_pixels_per_cell': 24,
               'animation': 'Original FPS and ordered Frame list retained, including intentional empty entries.',
               'atlas': 'Native crop pixels, 1px transparent gutters, top-left origin; lazy-load pages at runtime.'}
     (args.output / 'coverage.json').write_text(json.dumps(report, indent=2) + '\n')
     (args.output / 'provenance.json').write_text(json.dumps(collection.receipts, indent=2) + '\n')
-    (args.output / 'manifest.ini').write_text('[pack]\nformat=2\nid=org.tiberiandawn.remastered-local-full\nname=Private Remastered Collection\nframes=frames.tsv\nteams=teams.tsv\nnative_cell=128\nclassic_cell=24\n')
+    (args.output / 'manifest.ini').write_text('[pack]\nformat=2\nid=org.' + ('redalert' if args.game == 'ra' else 'tiberiandawn') + '.remastered-local-full\nname=Private Remastered Collection\ngame=' + args.game + '\nframes=frames.tsv\nteams=teams.tsv\nnative_cell=128\nclassic_cell=24\n')
     print(json.dumps({'references': len(rows), **totals, 'pages': len(pages), 'unresolved': len(missing)}), flush=True)
     if not args.tileset:
-        append_ui(collection, args.output, args.atlas_size)
+        append_ui(collection, args.output, args.atlas_size, args.game)
     if missing:
         raise SystemExit(2)
 

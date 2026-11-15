@@ -95,6 +95,10 @@ void Focus_Loss(void)
 
 void Focus_Restore(void)
 {
+#if defined(IPADOS_PORT) && defined(WP_COMBINED_APP)
+    // The host scene delegate also delivers foreground events to hidden engines.
+    if (!Video_Game_Window_Is_Visible()) return;
+#endif
 #ifdef IPADOS_PORT
     Set_Video_Render_Active(true);
 #endif

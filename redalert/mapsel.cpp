@@ -36,6 +36,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "wireproof_controls.h"
 #include "interpal.h"
 #include "common/settings.h"
 #include "common/winasm.h"
@@ -98,6 +99,7 @@ struct point
 extern bool StreamLowImpact;
 char const* Map_Selection(void)
 {
+    RA_BeginPresentation();
 #ifdef REMASTER_BUILD
     return NULL;
 #else

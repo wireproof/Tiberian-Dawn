@@ -57,6 +57,12 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#ifdef IPADOS_PORT
+#include "ipados_lifecycle.h"
+#endif
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+#include "wireproof_rules.h"
+#endif
 #include "language.h"
 #include "msgbox.h"
 #include "loaddlg.h"
@@ -73,6 +79,7 @@
 #include "common/vqaconfig.h"
 #include "common/winasm.h"
 #include "intro.h"
+#include "wireproof_controls.h"
 
 RemapControlType SidebarScheme;
 
@@ -365,6 +372,9 @@ bool Init_Game(int, char*[])
     **	before the regular game starts.
     */
     Init_Bulk_Data();
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+    RA_InitRules(); // Capture stock types after RULES/Aftermath and localized strings.
+#endif
 
     /*
     **	Initialize the multiplayer score values
@@ -430,6 +440,11 @@ bool Init_Game(int, char*[])
  *=============================================================================================*/
 bool Select_Game(bool fade)
 {
+    // Returning from an aborted mission enters this menu without playing a
+    // movie or opening a campaign map. Retire the tactical HD scene and crop
+    // before drawing the title page, so the last battlefield frame cannot
+    // cover the menu and the native command deck is hidden.
+    RA_BeginPresentation();
     //	Enums in Select_Game() must match order of buttons in Main_Menu().
 #ifdef FIXIT_VERSION_3
     enum
@@ -464,6 +479,10 @@ bool Select_Game(bool fade)
 #endif //	FIXIT_VERSION_3
 
     bool gameloaded = false; // Has the game been loaded from the menu?
+#ifdef IPADOS_PORT
+    static bool recoveryPrompted=false;
+    RA_SetRecoveryTactical(false);
+#endif
     int selection;           // the default selection
     bool process = true;     // false = break out of while loop
     bool display = true;
@@ -597,6 +616,20 @@ bool Select_Game(bool fade)
                 }
             }
 
+#ifdef IPADOS_PORT
+            if(!recoveryPrompted) {
+                recoveryPrompted=true;
+                if(RA_HasRecoveryAutosave()) {
+                    if(WWMessageBox().Process("Interrupted mission found. Continue?", "Continue", "Main menu")==0) {
+                        if(RA_LoadRecoveryAutosave()) {
+                            Theme.Queue_Song(THEME_FIRST);process=false;gameloaded=true;continue;
+                        }
+                        WWMessageBox().Process(TXT_ERROR_LOADING_GAME);
+                    }
+                    RA_DiscardRecoveryAutosaves();display=true;
+                }
+            }
+#endif
             /*
             **	Display menu and fetch selection from player.
             */
@@ -824,6 +857,12 @@ bool Select_Game(bool fade)
             **	network play.
             */
             case SEL_MULTIPLAYER_GAME:
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+                if (RA_RulesRequireSinglePlayer() && Session.Type != GAME_NORMAL && Session.Type != GAME_SKIRMISH) {
+                    RA_ShowMultiplayerRestriction();
+                    Session.Type = GAME_NORMAL; display = true; selection = SEL_NONE; break;
+                }
+#endif
 #ifdef WOLAPI_INTEGRATION
                 if (!pWolapi) {
 #endif
@@ -836,6 +875,11 @@ bool Select_Game(bool fade)
                     */
                     case GAME_NORMAL:
                         Session.Type = Select_MPlayer_Game();
+#if defined(IPADOS_PORT) || defined(MACOS_PORT)
+                        if (RA_RulesRequireSinglePlayer() && Session.Type != GAME_NORMAL && Session.Type != GAME_SKIRMISH) {
+                            RA_ShowMultiplayerRestriction(); Session.Type = GAME_NORMAL;
+                        }
+#endif
                         if (Session.Type == GAME_NORMAL) { // 'Cancel'
                             display = true;
                             selection = SEL_NONE;

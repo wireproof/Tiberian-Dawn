@@ -21,12 +21,12 @@ if(NOT DEFINED CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo" FORCE)
 endif()
 
-project(TiberianDawnApple VERSION 0.7.4 LANGUAGES C CXX)
+project(TiberianDawnApple VERSION 0.7.5 LANGUAGES C CXX)
 
 # All native Apple applications use the same public version and monotonically
 # increasing build number. Keep these values centralized so macOS, iPadOS,
 # local builds, and distributed releases cannot silently drift apart.
-set(TIBERIAN_DAWN_BUILD_VERSION "714")
+set(TIBERIAN_DAWN_BUILD_VERSION "722")
 
 option(BUILD_REMASTERTD "Build Tiberian Dawn remaster dll." OFF)
 option(BUILD_REMASTERRA "Build Red Alert remaster dll." OFF)
@@ -61,7 +61,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "visionOS")
 else()
     option(VISIONOS_PORT "Build the native visionOS prototype." OFF)
 endif()
-set(IPADOS_BUNDLE_IDENTIFIER "org.tiberiandawn.ipad" CACHE STRING "Bundle identifier for the iPadOS application")
+set(IPADOS_BUNDLE_IDENTIFIER "com.wireproof.cnc" CACHE STRING "Bundle identifier for the iOS and iPadOS C&C application")
 set(IPADOS_DEVELOPMENT_TEAM "" CACHE STRING "Apple development team used to sign the iPadOS application")
 set(VISIONOS_BUNDLE_IDENTIFIER "org.tiberiandawn.visionos" CACHE STRING "Bundle identifier for the visionOS application")
 set(VISIONOS_DEVELOPMENT_TEAM "" CACHE STRING "Apple development team used to sign the visionOS application")
@@ -119,6 +119,15 @@ add_feature_info(RemasterTD BUILD_REMASTERTD, "Remastered Tiberian Dawn dll")
 add_feature_info(RemasterRA BUILD_REMASTERRA "Remastered Red Alert dll")
 add_feature_info(TiberianDawn BUILD_VANILLATD "Tiberian Dawn executable")
 add_feature_info(VanillaRA BUILD_VANILLARA "Red Alert executable")
+option(RED_ALERT_COMBINED_APP "Build the experimental iOS game chooser with both engines" OFF)
+add_feature_info(RedAlertCombinedApp RED_ALERT_COMBINED_APP "Experimental combined Tiberian Dawn and Red Alert iOS app")
+if(RED_ALERT_COMBINED_APP AND (NOT IPADOS_PORT OR NOT BUILD_VANILLATD))
+    message(FATAL_ERROR "RED_ALERT_COMBINED_APP requires IPADOS_PORT and BUILD_VANILLATD")
+endif()
+set(RED_ALERT_DATA_DIR "" CACHE PATH "Private staged original Red Alert CD data")
+set(TIBERIAN_DAWN_DATA_DIR "" CACHE PATH "Private prepared original Tiberian Dawn game data for combined iOS app")
+set(TIBERIAN_DAWN_REMASTERED_ART_DIR "" CACHE PATH "Private RemasteredArt pack for combined iOS app")
+set(RED_ALERT_REMASTERED_ART_DIR "" CACHE PATH "Private Red Alert RemasteredArt pack (kept separate from TD)")
 add_feature_info(MapEditorTD MAP_EDITORTD "Include internal scenario editor in TiberianDawn")
 add_feature_info(MapEditorRA MAP_EDITORRA "Include internal scenario editor in VanillaRA")
 add_feature_info(Networking NETWORKING "Networking support")
@@ -273,5 +282,98 @@ add_subdirectory(tiberiandawn)
 add_subdirectory(redalert)
 add_subdirectory(tools)
 
+if(RED_ALERT_COMBINED_APP)
+    # User-provided launcher reference; runtime crops keep portrait and landscape
+    # faithful to the same source without adding duplicate derived artwork.
+    set(LAUNCHER_REFERENCE "${CMAKE_SOURCE_DIR}/resources/apple/artwork/selector-reference.png")
+    set_source_files_properties("${LAUNCHER_REFERENCE}" TARGET_DIRECTORY TiberianDawn
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    target_sources(TiberianDawn PRIVATE "${LAUNCHER_REFERENCE}")
+    if(NOT TIBERIAN_DAWN_REMASTERED_ART_DIR)
+        message(FATAL_ERROR "The combined iOS app requires TIBERIAN_DAWN_REMASTERED_ART_DIR")
+    endif()
+    if(TIBERIAN_DAWN_REMASTERED_ART_DIR)
+        foreach(required_art_file frames.tsv teams.tsv manifest.ini)
+            if(NOT EXISTS "${TIBERIAN_DAWN_REMASTERED_ART_DIR}/${required_art_file}")
+                message(FATAL_ERROR "Missing RemasteredArt file: ${required_art_file}")
+            endif()
+        endforeach()
+        file(GLOB TIBERIAN_DAWN_REMASTERED_ART CONFIGURE_DEPENDS
+            "${TIBERIAN_DAWN_REMASTERED_ART_DIR}/*")
+        foreach(asset IN LISTS TIBERIAN_DAWN_REMASTERED_ART)
+            set_source_files_properties("${asset}" TARGET_DIRECTORY TiberianDawn
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RemasteredArt)
+        endforeach()
+        target_sources(TiberianDawn PRIVATE ${TIBERIAN_DAWN_REMASTERED_ART})
+    endif()
+    if(TIBERIAN_DAWN_DATA_DIR)
+        file(GLOB_RECURSE TIBERIAN_DAWN_GAME_DATA CONFIGURE_DEPENDS
+            "${TIBERIAN_DAWN_DATA_DIR}/*.MIX")
+        if(NOT TIBERIAN_DAWN_GAME_DATA)
+            message(FATAL_ERROR "No Tiberian Dawn MIX files found in ${TIBERIAN_DAWN_DATA_DIR}")
+        endif()
+        foreach(asset IN LISTS TIBERIAN_DAWN_GAME_DATA)
+            file(RELATIVE_PATH relative_asset "${TIBERIAN_DAWN_DATA_DIR}" "${asset}")
+            get_filename_component(relative_directory "${relative_asset}" DIRECTORY)
+            if(relative_directory)
+                set(bundle_location "Resources/GameData/${relative_directory}")
+            else()
+                set(bundle_location "Resources/GameData")
+            endif()
+            set_source_files_properties("${asset}" TARGET_DIRECTORY TiberianDawn
+                PROPERTIES MACOSX_PACKAGE_LOCATION "${bundle_location}")
+        endforeach()
+        target_sources(TiberianDawn PRIVATE ${TIBERIAN_DAWN_GAME_DATA})
+    endif()
+    set(RED_ALERT_GAME_DATA
+        "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
+        "${RED_ALERT_DATA_DIR}/allied/MAIN.MIX"
+        "${RED_ALERT_DATA_DIR}/soviet/MAIN.MIX"
+        "${RED_ALERT_DATA_DIR}/manifest.json")
+    foreach(asset IN LISTS RED_ALERT_GAME_DATA)
+        if(NOT EXISTS "${asset}")
+            message(FATAL_ERROR "Missing staged Red Alert asset: ${asset}")
+        endif()
+    endforeach()
+    set_source_files_properties(
+        "${RED_ALERT_DATA_DIR}/REDALERT.MIX"
+        "${RED_ALERT_DATA_DIR}/manifest.json"
+        TARGET_DIRECTORY TiberianDawn
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData)
+    set_source_files_properties(
+        "${RED_ALERT_DATA_DIR}/allied/MAIN.MIX"
+        TARGET_DIRECTORY TiberianDawn
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData/allied)
+    set_source_files_properties(
+        "${RED_ALERT_DATA_DIR}/soviet/MAIN.MIX"
+        TARGET_DIRECTORY TiberianDawn
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RAData/soviet)
+    target_sources(TiberianDawn PRIVATE ${RED_ALERT_GAME_DATA})
+    add_dependencies(TiberianDawn RedAlertEngine)
+endif()
+
 feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled features:")
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "Disabled features:")
+
+# Private RA atlases share one source pack across Apple targets. Never mix them
+# with TD's identically named units or terrain assets.
+if(APPLE_NATIVE_PORT AND RED_ALERT_REMASTERED_ART_DIR)
+    foreach(required_art_file frames.tsv teams.tsv manifest.ini)
+        if(NOT EXISTS "${RED_ALERT_REMASTERED_ART_DIR}/${required_art_file}")
+            message(FATAL_ERROR "Missing Red Alert RemasteredArt file: ${required_art_file}")
+        endif()
+    endforeach()
+    file(GLOB RED_ALERT_REMASTERED_ART CONFIGURE_DEPENDS "${RED_ALERT_REMASTERED_ART_DIR}/*")
+    if(RED_ALERT_COMBINED_APP)
+        set(RA_ART_TARGET TiberianDawn)
+    elseif(TARGET VanillaRA)
+        set(RA_ART_TARGET VanillaRA)
+    endif()
+    if(RA_ART_TARGET)
+        foreach(asset IN LISTS RED_ALERT_REMASTERED_ART)
+            set_source_files_properties("${asset}" TARGET_DIRECTORY ${RA_ART_TARGET}
+                PROPERTIES MACOSX_PACKAGE_LOCATION Resources/RemasteredArtRA)
+        endforeach()
+        target_sources(${RA_ART_TARGET} PRIVATE ${RED_ALERT_REMASTERED_ART})
+    endif()
+endif()

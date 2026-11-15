@@ -1,8 +1,33 @@
 // Optional iCloud Documents transport. Immutable, content-addressed snapshots
 // preserve divergent saves. Device layout and presentation preferences stay local.
 #import <CommonCrypto/CommonDigest.h>
-static NSString *const CloudSaveKey=@"Wireproof.Cloud.Saves";
-static NSString *const CloudSettingsKey=@"Wireproof.Cloud.Settings";
+#ifndef WP_CLOUD_DEFAULTS
+#define WP_CLOUD_DEFAULTS NSUserDefaults.standardUserDefaults
+#endif
+#ifdef WP_BACKUP_RED_ALERT
+#define WP_CloudSaveCompleted RA_CloudSaveCompleted
+#define WP_CloudStart RA_CloudStart
+#define WPCloudPicker RACloudPicker
+#define WP_CLOUD_PREFIX @"Wireproof.RedAlert.Cloud."
+#define WP_CLOUD_FORMAT @"wireproof-red-alert-cloud"
+#define WP_CLOUD_EXTENSION @"racloud"
+#define WP_CLOUD_FOLDER @"Documents/RedAlert/Sync-v1"
+#else
+#define WP_CLOUD_PREFIX @"Wireproof.Cloud."
+#define WP_CLOUD_FORMAT @"wireproof-cloud"
+#define WP_CLOUD_EXTENSION @"tdcloud"
+#define WP_CLOUD_FOLDER @"Documents/Sync-v1"
+#endif
+static NSString *CloudPreferenceKey(NSString *suffix) {return [WP_CLOUD_PREFIX stringByAppendingString:suffix];}
+static NSArray *CloudSharedKeys() {
+#ifdef WP_BACKUP_RED_ALERT
+    return @[@"Wireproof.RedAlert.Workshop.Active.v1",@"Wireproof.RedAlert.Workshop.Rules.v1.Custom 1",@"Wireproof.RedAlert.Workshop.Rules.v1.Custom 2",@"Wireproof.RedAlert.Workshop.Rules.v1.Custom 3",@"Wireproof.RedAlert.Cheats.v1"];
+#else
+    return @[@"WPActiveRules",@"WPRules.Custom 1",@"WPRules.Custom 2",@"WPRules.Custom 3",@"Wireproof.CheatPreferences.v1",@"TiberianDawn.LanguagePreference",@"TiberianDawnLanguagePreference"];
+#endif
+}
+static NSString *const CloudSaveKey=CloudPreferenceKey(@"Saves");
+static NSString *const CloudSettingsKey=CloudPreferenceKey(@"Settings");
 static NSString *cloudStatus=@"iCloud sync is off.";
 static NSURL *cloudRoot;
 static NSMetadataQuery *cloudQuery;
@@ -14,7 +39,7 @@ static NSString *CloudHash(NSData *data) {
     NSMutableString *s=[NSMutableString new];for(unsigned char b:digest)[s appendFormat:@"%02x",b];return s;
 }
 static BOOL CloudSharedKey(NSString *key) {
-    return [@[@"WPActiveRules",@"WPRules.Custom 1",@"WPRules.Custom 2",@"WPRules.Custom 3",@"Wireproof.CheatPreferences.v1",@"TiberianDawn.LanguagePreference",@"TiberianDawnLanguagePreference"] containsObject:key];
+    return [CloudSharedKeys() containsObject:key];
 }
 static NSDictionary *CloudSettings() {
     NSMutableDictionary *prefs=[NSMutableDictionary new];
@@ -32,28 +57,28 @@ static BOOL CloudQueue(NSDictionary *payload,NSString *name) {
 }
 void WP_CloudSaveCompleted(const char *path) {
     @autoreleasepool {
-        if(![NSUserDefaults.standardUserDefaults boolForKey:CloudSaveKey])return;
+        if(![WP_CLOUD_DEFAULTS boolForKey:CloudSaveKey])return;
         NSString *name=[@(path) lastPathComponent];if(!Is_Manual_Savegame_Name(name.UTF8String))return;
         NSURL *url=[BackupDirectory() URLByAppendingPathComponent:name];
         NSData *bytes=[NSData dataWithContentsOfURL:url];if(!bytes.length || bytes.length>128*1024*1024)return;
         NSString *hash=CloudHash(bytes);
-        if(!CloudQueue(@{@"format":@"wireproof-cloud",@"version":@1,@"kind":@"save",@"hash":hash,@"data":[bytes base64EncodedStringWithOptions:0]},[hash stringByAppendingString:@".tdcloud"]))cloudStatus=@"Could not queue save. Your local save is intact.";
+        if(!CloudQueue(@{@"format":WP_CLOUD_FORMAT,@"version":@1,@"kind":@"save",@"hash":hash,@"data":[bytes base64EncodedStringWithOptions:0]},[hash stringByAppendingString:[@"." stringByAppendingString:WP_CLOUD_EXTENSION]]))cloudStatus=@"Could not queue save. Your local save is intact.";
     }
 }
 static void CloudQueueSettings() {
-    if(![NSUserDefaults.standardUserDefaults boolForKey:CloudSettingsKey])return;
+    if(![WP_CLOUD_DEFAULTS boolForKey:CloudSettingsKey])return;
     NSDictionary *settings=CloudSettings();NSData *bytes=[NSJSONSerialization dataWithJSONObject:settings options:NSJSONWritingSortedKeys error:nil];
-    NSString *hash=CloudHash(bytes);NSUserDefaults *d=NSUserDefaults.standardUserDefaults;
-    if([hash isEqual:[d stringForKey:@"Wireproof.Cloud.LastLocalSettings"]])return;
-    NSString *name=[NSString stringWithFormat:@"settings-%@.tdcloud",NSUUID.UUID.UUIDString];
-    if(CloudQueue(@{@"format":@"wireproof-cloud",@"version":@1,@"kind":@"settings",@"settings":settings,@"hash":hash,@"time":@(NSDate.date.timeIntervalSince1970)},name)) {
-        [d setObject:hash forKey:@"Wireproof.Cloud.LastLocalSettings"];
+    NSString *hash=CloudHash(bytes);NSUserDefaults *d=WP_CLOUD_DEFAULTS;
+    if([hash isEqual:[d stringForKey:CloudPreferenceKey(@"LastLocalSettings")]])return;
+    NSString *name=[NSString stringWithFormat:@"settings-%@.%@",NSUUID.UUID.UUIDString,WP_CLOUD_EXTENSION];
+    if(CloudQueue(@{@"format":WP_CLOUD_FORMAT,@"version":@1,@"kind":@"settings",@"settings":settings,@"hash":hash,@"time":@(NSDate.date.timeIntervalSince1970)},name)) {
+        [d setObject:hash forKey:CloudPreferenceKey(@"LastLocalSettings")];
         [NSFileManager.defaultManager removeItemAtURL:[BackupDirectory() URLByAppendingPathComponent:@".cloud-settings-pending.json"] error:nil];
     }
 }
 static void CloudTick() {
     if(cloudBusy)return;
-    NSUserDefaults *d=NSUserDefaults.standardUserDefaults;
+    NSUserDefaults *d=WP_CLOUD_DEFAULTS;
     BOOL saves=[d boolForKey:CloudSaveKey],settings=[d boolForKey:CloudSettingsKey];
     if(!saves && !settings){cloudStatus=@"iCloud sync is off. Local saves are retained.";return;}
     cloudBusy=YES;
@@ -74,21 +99,21 @@ static void CloudTick() {
             NSURL *root=[fm URLForUbiquityContainerIdentifier:@"iCloud.com.wireproof.tiberiandawn"];
             dispatch_async(dispatch_get_main_queue(),^{
                 if(![identity isEqual:fm.ubiquityIdentityToken]){cloudBusy=NO;return;}
-                cloudRoot=root?[root URLByAppendingPathComponent:@"Documents/Sync-v1" isDirectory:YES]:nil;
+                cloudRoot=root?[root URLByAppendingPathComponent:WP_CLOUD_FOLDER isDirectory:YES]:nil;
                 if(cloudRoot) {
                     NSData *token=[NSKeyedArchiver archivedDataWithRootObject:identity requiringSecureCoding:NO error:nil];
                     cloudAccount=CloudHash(token?:[NSData data]);
                     [fm createDirectoryAtURL:cloudRoot withIntermediateDirectories:YES attributes:nil error:nil];
                     cloudQuery=[NSMetadataQuery new];cloudQuery.searchScopes=@[NSMetadataQueryUbiquitousDocumentsScope];
-                    cloudQuery.predicate=[NSPredicate predicateWithFormat:@"%K ENDSWITH %@",NSMetadataItemFSNameKey,@".tdcloud"];
+                    cloudQuery.predicate=[NSPredicate predicateWithFormat:@"%K ENDSWITH %@",NSMetadataItemFSNameKey,[@"." stringByAppendingString:WP_CLOUD_EXTENSION]];
                     [cloudQuery startQuery];cloudStatus=@"iCloud available. Checking snapshots…";
                 } else cloudStatus=@"iCloud is unavailable for this signed app. Local backups still work.";
                 cloudBusy=NO;
             });
         });return;
     }
-    if(!cloudQuery.isGathering && [d boolForKey:[@"Wireproof.Cloud.InitialSettings." stringByAppendingString:cloudAccount]])CloudQueueSettings();
-    NSString *seenKey=[@"Wireproof.Cloud.Seen." stringByAppendingString:cloudAccount];
+    if(!cloudQuery.isGathering && [d boolForKey:[CloudPreferenceKey(@"InitialSettings.") stringByAppendingString:cloudAccount]])CloudQueueSettings();
+    NSString *seenKey=[CloudPreferenceKey(@"Seen.") stringByAppendingString:cloudAccount];
     NSMutableSet *seen=[NSMutableSet setWithArray:[d arrayForKey:seenKey]?:@[]];
     NSUInteger queued=0;BOOL failed=NO;
     // Coordinated atomic writes never replace an existing snapshot.
@@ -102,7 +127,7 @@ static void CloudTick() {
             else copied=[fm copyItemAtURL:url toURL:target error:nil];
         }];
         if(copied && !error){
-            if(isSettings){NSDictionary *p=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfURL:url] options:0 error:nil];NSString *k=[@"Wireproof.Cloud.SettingsTime." stringByAppendingString:cloudAccount];[d setDouble:MAX([d doubleForKey:k],[p[@"time"] doubleValue]) forKey:k];}
+            if(isSettings){NSDictionary *p=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfURL:url] options:0 error:nil];NSString *k=[CloudPreferenceKey(@"SettingsTime.") stringByAppendingString:cloudAccount];[d setDouble:MAX([d doubleForKey:k],[p[@"time"] doubleValue]) forKey:k];}
             [seen addObject:url.lastPathComponent];[fm removeItemAtURL:url error:nil];}else{queued++;failed=YES;}
     }
     // Discover placeholders and request downloads. Only complete local snapshots
@@ -111,7 +136,7 @@ static void CloudTick() {
     NSArray *items=[cloudQuery.results copy];
     [cloudQuery enableUpdates];
     NSDictionary *latest=nil;NSString *latestName=nil;
-    double newest=[d doubleForKey:[@"Wireproof.Cloud.SettingsTime." stringByAppendingString:cloudAccount]];
+    double newest=[d doubleForKey:[CloudPreferenceKey(@"SettingsTime.") stringByAppendingString:cloudAccount]];
     NSUInteger imported=0,waiting=0;
     for(NSMetadataItem *item in items) {
         NSURL *url=[item valueForAttribute:NSMetadataItemURLKey];
@@ -126,9 +151,9 @@ static void CloudTick() {
             if(size.unsignedLongLongValue<=192ULL*1024*1024)data=[NSData dataWithContentsOfURL:source];
         }];
         id p=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;
-        if(error || ![p isKindOfClass:NSDictionary.class] || ![p[@"format"] isEqual:@"wireproof-cloud"] || ![p[@"version"] isEqual:@1]){failed=YES;continue;}
+        if(error || ![p isKindOfClass:NSDictionary.class] || ![p[@"format"] isEqual:WP_CLOUD_FORMAT] || ![p[@"version"] isEqual:@1]){failed=YES;continue;}
         if(isSettings) {
-            id s=p[@"settings"];BOOL valid=ValidateBackupSettings(s) && !s[@"conquerINI"];
+            id s=p[@"settings"];BOOL valid=ValidateBackupSettings(s) && !s[WP_BACKUP_INI_KEY];
             if(valid)for(NSString *key in s[@"preferences"])if(!CloudSharedKey(key))valid=NO;
             NSData *bytes=valid?[NSJSONSerialization dataWithJSONObject:s options:NSJSONWritingSortedKeys error:nil]:nil;
             if(!valid || ![CloudHash(bytes) isEqual:p[@"hash"]] || ![p[@"time"] isKindOfClass:NSNumber.class] || !std::isfinite([p[@"time"] doubleValue])){failed=YES;continue;}
@@ -143,23 +168,23 @@ static void CloudTick() {
             }
             if(!duplicate) {
                 NSURL *temp=[[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
-                NSData *backup=[NSJSONSerialization dataWithJSONObject:@{@"format":@"wireproof-tiberian-dawn",@"version":@1,@"saves":@[@{@"data":p[@"data"]}]} options:0 error:nil];
+                NSData *backup=[NSJSONSerialization dataWithJSONObject:@{@"format":WP_BACKUP_FORMAT,@"version":@1,@"saves":@[@{@"data":p[@"data"]}]} options:0 error:nil];
                 [backup writeToURL:temp options:NSDataWritingAtomic error:nil];NSString *result=RestoreBackup(temp);[fm removeItemAtURL:temp error:nil];
                 if(![result hasPrefix:@"Imported 1 saves"]){failed=YES;continue;}imported++;
             }
             [seen addObject:name];
         }
     }
-    if(settings && !cloudQuery.isGathering && ![d boolForKey:[@"Wireproof.Cloud.InitialSettings." stringByAppendingString:cloudAccount]]) {
-        if(latest || waiting)[d setObject:CloudHash([NSJSONSerialization dataWithJSONObject:CloudSettings() options:NSJSONWritingSortedKeys error:nil]) forKey:@"Wireproof.Cloud.LastLocalSettings"];
-        if(!latest && !waiting)[d removeObjectForKey:@"Wireproof.Cloud.LastLocalSettings"];
-        if(!waiting)[d setBool:YES forKey:[@"Wireproof.Cloud.InitialSettings." stringByAppendingString:cloudAccount]];
+    if(settings && !cloudQuery.isGathering && ![d boolForKey:[CloudPreferenceKey(@"InitialSettings.") stringByAppendingString:cloudAccount]]) {
+        if(latest || waiting)[d setObject:CloudHash([NSJSONSerialization dataWithJSONObject:CloudSettings() options:NSJSONWritingSortedKeys error:nil]) forKey:CloudPreferenceKey(@"LastLocalSettings")];
+        if(!latest && !waiting)[d removeObjectForKey:CloudPreferenceKey(@"LastLocalSettings")];
+        if(!waiting)[d setBool:YES forKey:[CloudPreferenceKey(@"InitialSettings.") stringByAppendingString:cloudAccount]];
     }
     if(latest) {
         // Keep manual-import staging separate. A running game's settings never change.
         NSData *bytes=[NSJSONSerialization dataWithJSONObject:latest options:0 error:nil];
         if([bytes writeToURL:[BackupDirectory() URLByAppendingPathComponent:@".cloud-settings-pending.json"] options:NSDataWritingAtomic error:nil]){
-            [d setObject:cloudAccount forKey:@"Wireproof.Cloud.PendingAccount"];[d setDouble:newest forKey:[@"Wireproof.Cloud.SettingsTime." stringByAppendingString:cloudAccount]];[seen addObject:latestName];
+            [d setObject:cloudAccount forKey:CloudPreferenceKey(@"PendingAccount")];[d setDouble:newest forKey:[CloudPreferenceKey(@"SettingsTime.") stringByAppendingString:cloudAccount]];[seen addObject:latestName];
         }else failed=YES;
     }
     [d setObject:seen.allObjects forKey:seenKey];
@@ -168,14 +193,14 @@ static void CloudTick() {
     // each local snapshot's upload state and retain receipt history across ticks.
     NSUInteger uploaded=0,uploading=0,unknown=0;
     for(NSURL *url in [fm contentsOfDirectoryAtURL:cloudRoot includingPropertiesForKeys:@[NSURLUbiquitousItemIsUploadedKey,NSURLUbiquitousItemUploadingErrorKey] options:0 error:nil]) {
-        if(![url.pathExtension isEqual:@"tdcloud"])continue;
+        if(![url.pathExtension isEqual:WP_CLOUD_EXTENSION])continue;
         NSNumber *complete=nil;NSError *uploadError=nil;
         [url getResourceValue:&complete forKey:NSURLUbiquitousItemIsUploadedKey error:nil];
         [url getResourceValue:&uploadError forKey:NSURLUbiquitousItemUploadingErrorKey error:nil];
         if(uploadError)failed=YES;
         if(!complete)unknown++;else if(complete.boolValue)uploaded++;else uploading++;
     }
-    NSString *receiptKey=[@"Wireproof.Cloud.LastReceipt." stringByAppendingString:cloudAccount];
+    NSString *receiptKey=[CloudPreferenceKey(@"LastReceipt.") stringByAppendingString:cloudAccount];
     if(imported)[d setObject:[NSString stringWithFormat:@"Received %lu save(s) at %@",(unsigned long)imported,[NSDateFormatter localizedStringFromDate:NSDate.date dateStyle:NSDateFormatterShortStyle timeStyle:NSDateFormatterShortStyle]] forKey:receiptKey];
     NSString *receipt=[d stringForKey:receiptKey]?:@"No saves received on this device yet.";
     cloudStatus=[NSString stringWithFormat:@"Checked %@\n%lu snapshots uploaded • %lu waiting to upload • %lu upload states unknown\n%lu downloads pending • %lu local items queued\n%@\n%@%@%@",
@@ -191,16 +216,16 @@ void WP_CloudStart() {
         NSURL *pending=[BackupDirectory() URLByAppendingPathComponent:@".cloud-settings-pending.json"];
         id token=NSFileManager.defaultManager.ubiquityIdentityToken;
         NSString *account=token?CloudHash([NSKeyedArchiver archivedDataWithRootObject:token requiringSecureCoding:NO error:nil]):nil;
-        if(account && [account isEqual:[NSUserDefaults.standardUserDefaults stringForKey:@"Wireproof.Cloud.PendingAccount"]] && [NSUserDefaults.standardUserDefaults boolForKey:CloudSettingsKey]) {
+        if(account && [account isEqual:[WP_CLOUD_DEFAULTS stringForKey:CloudPreferenceKey(@"PendingAccount")]] && [WP_CLOUD_DEFAULTS boolForKey:CloudSettingsKey]) {
             NSData *data=[NSData dataWithContentsOfURL:pending];id s=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;
             if(ValidateBackupSettings(s)) {
-                for(NSString *key in @[@"WPActiveRules",@"WPRules.Custom 1",@"WPRules.Custom 2",@"WPRules.Custom 3",@"Wireproof.CheatPreferences.v1",@"TiberianDawn.LanguagePreference",@"TiberianDawnLanguagePreference"]) {
+                for(NSString *key in CloudSharedKeys()) {
                     id value=s[@"preferences"][key];
-                    if(value)[NSUserDefaults.standardUserDefaults setObject:value forKey:key];
-                    else [NSUserDefaults.standardUserDefaults removeObjectForKey:key];
+                    if(value)[WP_CLOUD_DEFAULTS setObject:value forKey:key];
+                    else [WP_CLOUD_DEFAULTS removeObjectForKey:key];
                 }
                 // Do not echo received preferences as a new local edit.
-                [NSUserDefaults.standardUserDefaults setObject:CloudHash([NSJSONSerialization dataWithJSONObject:CloudSettings() options:NSJSONWritingSortedKeys error:nil]) forKey:@"Wireproof.Cloud.LastLocalSettings"];
+                [WP_CLOUD_DEFAULTS setObject:CloudHash([NSJSONSerialization dataWithJSONObject:CloudSettings() options:NSJSONWritingSortedKeys error:nil]) forKey:CloudPreferenceKey(@"LastLocalSettings")];
                 [NSFileManager.defaultManager removeItemAtURL:pending error:nil];
             }
         }
@@ -211,7 +236,7 @@ void WP_CloudStart() {
     }
 }
 static void CloudToggle(NSString *key,BOOL enabled) {
-    [NSUserDefaults.standardUserDefaults setBool:enabled forKey:key];
+    [WP_CLOUD_DEFAULTS setBool:enabled forKey:key];
     if(enabled && [key isEqual:CloudSaveKey])for(NSString *name in [NSFileManager.defaultManager contentsOfDirectoryAtPath:BackupDirectory().path error:nil])WP_CloudSaveCompleted(name.UTF8String);
     CloudTick();
 }
@@ -229,7 +254,7 @@ static void CloudToggle(NSString *key,BOOL enabled) {
 - (NSString*)tableView:(UITableView*)t titleForFooterInSection:(NSInteger)s {return [@"Same Apple Account and iCloud Drive required. Saves stay available offline; different versions are kept in separate slots. Settings and cheats apply after restarting. Zoom, controls, icon and display layout stay on this device. Cloud snapshots are retained; deleting a local save does not delete other devices' copies.\n\n" stringByAppendingString:cloudStatus];}
 - (UITableViewCell*)tableView:(UITableView*)t cellForRowAtIndexPath:(NSIndexPath*)p {
     UITableViewCell *c=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];c.textLabel.numberOfLines=0;c.textLabel.text=@[@"Sync saves",@"Sync settings / cheats / Workshop",@"Check iCloud now"][p.row];
-    if(p.row<2){UISwitch *s=[UISwitch new];s.tag=p.row;s.on=[NSUserDefaults.standardUserDefaults boolForKey:p.row?CloudSettingsKey:CloudSaveKey];[s addTarget:self action:@selector(changed:) forControlEvents:UIControlEventValueChanged];c.accessoryView=s;}return c;
+    if(p.row<2){UISwitch *s=[UISwitch new];s.tag=p.row;s.on=[WP_CLOUD_DEFAULTS boolForKey:p.row?CloudSettingsKey:CloudSaveKey];[s addTarget:self action:@selector(changed:) forControlEvents:UIControlEventValueChanged];c.accessoryView=s;}return c;
 }
 - (void)changed:(UISwitch*)s {CloudToggle(s.tag?CloudSettingsKey:CloudSaveKey,s.on);[self.tableView reloadData];}
 - (void)tableView:(UITableView*)t didSelectRowAtIndexPath:(NSIndexPath*)p {[t deselectRowAtIndexPath:p animated:YES];if(p.row==2){CloudTick();[t reloadData];}}
@@ -237,7 +262,7 @@ static void CloudToggle(NSString *key,BOOL enabled) {
 #else
 static void ShowCloudPicker() {
     NSAlert *a=[NSAlert new];a.messageText=@"iCloud Sync";a.informativeText=[@"Same Apple Account and iCloud Drive required. Different save versions use separate slots. Settings/cheats/Workshop apply after restart. Display, zoom, controls and icon stay local. Requires an iCloud-provisioned signed app.\n\n" stringByAppendingString:cloudStatus];
-    NSView *v=[[NSView alloc] initWithFrame:NSMakeRect(0,0,360,65)];NSButton *s=[NSButton checkboxWithTitle:@"Sync saves" target:nil action:nil];s.frame=NSMakeRect(0,35,360,25);s.state=[NSUserDefaults.standardUserDefaults boolForKey:CloudSaveKey];[v addSubview:s];NSButton *p=[NSButton checkboxWithTitle:@"Sync settings / cheats / Workshop" target:nil action:nil];p.frame=NSMakeRect(0,0,360,25);p.state=[NSUserDefaults.standardUserDefaults boolForKey:CloudSettingsKey];[v addSubview:p];a.accessoryView=v;[a addButtonWithTitle:@"Apply / Check"];[a addButtonWithTitle:@"Cancel"];
+    NSView *v=[[NSView alloc] initWithFrame:NSMakeRect(0,0,360,65)];NSButton *s=[NSButton checkboxWithTitle:@"Sync saves" target:nil action:nil];s.frame=NSMakeRect(0,35,360,25);s.state=[WP_CLOUD_DEFAULTS boolForKey:CloudSaveKey];[v addSubview:s];NSButton *p=[NSButton checkboxWithTitle:@"Sync settings / cheats / Workshop" target:nil action:nil];p.frame=NSMakeRect(0,0,360,25);p.state=[WP_CLOUD_DEFAULTS boolForKey:CloudSettingsKey];[v addSubview:p];a.accessoryView=v;[a addButtonWithTitle:@"Apply / Check"];[a addButtonWithTitle:@"Cancel"];
     if([a runModal]==NSAlertFirstButtonReturn){CloudToggle(CloudSaveKey,s.state==NSControlStateValueOn);CloudToggle(CloudSettingsKey,p.state==NSControlStateValueOn);}
 }
 #endif
